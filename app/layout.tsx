@@ -4,6 +4,8 @@ import "./globals.css";
 import Sidebar from "@/components/sidebar";
 import { SupabaseProvider } from "@/providers/SupabaseProvider";
 import { UserProvider } from "@/providers/UserProvider";
+import { ModalProvider } from "@/providers/ModalProvider";
+import { ToasterProvider } from "@/providers/ToasterProvider";
 
 const figtree = Figtree({subsets: ["latin"]});
 
@@ -23,8 +25,10 @@ export default function RootLayout({
       <body
         className={figtree.className}
       >
+        <ToasterProvider/>
         <SupabaseProvider>
           <UserProvider>
+            <ModalProvider/>
               <Sidebar>
                 {children}
               </Sidebar>
