@@ -8,6 +8,7 @@ type Props =  {
         title: string;
     }
 }
+export const revalidate = 0 
 
 const SearchPage  = async ({searchParams}:Props) => {
     const songs = await getSongsByTitle(searchParams.title);
