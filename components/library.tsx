@@ -5,6 +5,8 @@ import { Song } from "@/types"
 import { AiOutlinePlus } from "react-icons/ai"
 import { TbPlaylist } from "react-icons/tb"
 import MediaItem from "./media-item"
+import useOnPlay from "@/hooks/useOnPlay"
+import usePlayer from "@/hooks/usePlayer"
 
 type Props  = {
     songs: Song[]
@@ -13,6 +15,8 @@ export const Library = ({songs}:Props) => {
     const authModal = useAuthModal()
     const uploadModal = useUploadModal()
     const { user } = useUser();
+    const onPlay = useOnPlay(songs)
+    const {activeId} = usePlayer()
     const onClick = () => {
         if (!user) {
             return authModal.onOpen();
@@ -33,7 +37,8 @@ export const Library = ({songs}:Props) => {
             <div className='flex flex-col gap-y-2 mt-4 px-3'>
         {songs.map((item) => (
           <MediaItem
-            onClick={(id: string) => {}}
+            reactive={activeId === item.id}
+            onClick={(id: string) => {onPlay(id)}}
             key={item.id}
             data={item}
           />

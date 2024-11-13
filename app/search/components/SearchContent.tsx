@@ -1,6 +1,8 @@
 "use client"
 import { LikeButton } from "@/components/like-button";
 import MediaItem from "@/components/media-item";
+import useOnPlay from "@/hooks/useOnPlay";
+import usePlayer from "@/hooks/usePlayer";
 import { Song } from "@/types"
 
 type Props = {
@@ -8,6 +10,8 @@ type Props = {
 }
 
 export const SearchContent = ({songs}:Props) => {
+    const onPlay = useOnPlay(songs)
+    const {activeId} = usePlayer()
     if (songs.length === 0) {
         return (
             <div className="flex flex-col gap-y-2 w-full px-6 text-neutral-400">
@@ -20,7 +24,7 @@ export const SearchContent = ({songs}:Props) => {
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">
-                        <MediaItem onClick={() => {}} data={song}/>
+                        <MediaItem onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
                     <LikeButton songId={song.id}/>
                 </div>

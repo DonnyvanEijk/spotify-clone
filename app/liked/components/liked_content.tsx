@@ -1,6 +1,8 @@
 "use client"
 import { LikeButton } from "@/components/like-button"
 import MediaItem from "@/components/media-item"
+import useOnPlay from "@/hooks/useOnPlay"
+import usePlayer from "@/hooks/usePlayer"
 import { useUser } from "@/hooks/useUser"
 import { Song } from "@/types"
 import { useRouter } from "next/navigation"
@@ -11,8 +13,10 @@ type Props = {
 }
 
 export const LikedContent  = ({songs}:Props) => {
+    const onPlay = useOnPlay(songs)
     const router = useRouter();
     const {isLoading, user} = useUser();
+    const {activeId} = usePlayer();
 
     useEffect(() => {
         if(!user && !isLoading) {
@@ -32,7 +36,7 @@ export const LikedContent  = ({songs}:Props) => {
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">
-                        <MediaItem onClick={() => {}} data={song}/>
+                        <MediaItem onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
                     <LikeButton songId={song.id}/>
                 </div>

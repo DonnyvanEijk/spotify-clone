@@ -6,13 +6,15 @@ import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
 
 import PlayButton from './playbutton';
+import { twMerge } from 'tailwind-merge';
 
 interface SongItemProps {
   data: Song;
   onClick: (id: string) => void;
+  reactive?: boolean;
 }
 
-const SongItem: React.FC<SongItemProps> = ({ data, onClick }) => {
+const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive }) => {
   const imagePath = useLoadImage(data);
 
   return (
@@ -53,7 +55,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick }) => {
         />
       </div>
       <div className='flex flex-col items-start w-full pt-4 gap-y-1'>
-        <p className='font-semibold truncate w-full'>{data.title}</p>
+        <p className={twMerge(`font-semibold truncate w-full`, reactive && "text-green-500 font-semibold")}>{data.title}</p>
         <p
           className='
             text-neutral-400 

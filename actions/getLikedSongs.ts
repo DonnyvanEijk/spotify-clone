@@ -16,7 +16,7 @@ const getLikedSongs = async (): Promise<Song[]> => {
     .from('liked_songs')
     .select('*, songs(*)')
     .eq('user_id', session?.user?.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error(error.message);
