@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 
-// import useLoadImage from '@/hooks/useLoadImage';
+import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
 
-
+import PlayButton from './playbutton';
 
 interface SongItemProps {
   data: Song;
@@ -13,7 +13,7 @@ interface SongItemProps {
 }
 
 const SongItem: React.FC<SongItemProps> = ({ data, onClick }) => {
-//   const imagePath = useLoadImage(data);
+  const imagePath = useLoadImage(data);
 
   return (
     <div
@@ -47,7 +47,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick }) => {
       >
         <Image
           className='object-cover'
-          src={'/images/music-placeholder.png'}
+          src={imagePath || '/images/music-placeholder.png'}
           fill
           alt='Image'
         />
@@ -73,7 +73,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick }) => {
           right-5
         '
       >
-        {/* <PlayButton /> */}
+        <PlayButton />
       </div>
     </div>
   );

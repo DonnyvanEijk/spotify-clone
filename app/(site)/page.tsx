@@ -7,46 +7,23 @@ import  PageContent  from './components/page-content';
 export const revalidate = 0;
 
 export default async function Home() {
-  const songs = await getSongs();
+  let songs:any = [];
+  let errorMessage = '';
+
+  try {
+    songs = await getSongs();
+  } catch (error) {
+    console.error(error);
+    errorMessage = 'Failed to load songs. Please try again later.';
+  }
 
   return (
-    <div
-      className='
-        bg-neutral-900 
-        rounded-lg 
-        h-full 
-        w-full 
-        overflow-hidden 
-        overflow-y-auto
-      '
-    >
+    <div className='bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto'>
       <Header>
         <div className='mb-2'>
-          <h1
-            className='
-            text-white 
-              text-3xl 
-              font-semibold
-            '
-          >
-            Welcome back
-          </h1>
-          <div
-            className='
-              grid 
-              grid-cols-1 
-              sm:grid-cols-2 
-              xl:grid-cols-3 
-              2xl:grid-cols-4 
-              gap-3 
-              mt-4
-            '
-          >
-            <ListItem
-              name='Liked Songs'
-              image='/images/liked.png'
-              href='liked'
-            />
+          <h1 className='text-white text-3xl font-semibold'>Welcome back</h1>
+          <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 mt-4'>
+            <ListItem name='Liked Songs' image='/images/liked.png' href='liked' />
           </div>
         </div>
       </Header>
@@ -54,7 +31,11 @@ export default async function Home() {
         <div className='flex justify-between items-center'>
           <h1 className='text-white text-2xl font-semibold'>Newest songs</h1>
         </div>
-        <PageContent songs={songs} />
+        {errorMessage ? (
+          <div className='text-red-500'>{errorMessage}</div>
+        ) : (
+          <PageContent songs={songs} />
+        )}
       </div>
     </div>
   );
