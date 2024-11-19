@@ -2,7 +2,7 @@
 
 import { Song } from "@/types";
 import MediaItem from "./media-item";
-import {LikeButton} from "./like-button";
+import { LikeButton } from "./like-button";
 import { BsPauseFill, BsPlayFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
@@ -24,12 +24,14 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
     songUrl
 }) => {
     const player = usePlayer();
-    const [volume, setVolume] = useState(1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState<string | null>(null);
     const [durationInSeconds, setDurationInSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState<string | null>(null);
     const [currentTimeInSeconds, setCurrentTimeInSeconds] = useState<number | null>(null);
+
+    const volume = player.volume;
+    const setVolume = player.setVolume;
 
     const Icon = isPlaying ? BsPauseFill : BsPlayFill;
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
@@ -39,7 +41,6 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             sound.seek(value); // Adjust the audio playback position
         }
     };
-    
 
     const onPlayNext = () => {
         if (player.ids.length === 0) {
@@ -94,6 +95,12 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             sound?.unload();
         }
     }, [sound])
+
+    useEffect(() => {
+        if (sound) {
+            sound.volume(volume);
+        }
+    }, [volume, sound]);
 
     const handlePlay = () => {
         if (!isPlaying) {
@@ -214,7 +221,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                     duration={durationInSeconds}
                     currentTime={currentTimeInSeconds}
                     onSeek={handleSeek}
-                        />
+                />
 
                     <p className="mt-2 text-center">{duration}</p>
                 </div>
