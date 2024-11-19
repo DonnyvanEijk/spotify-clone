@@ -34,6 +34,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
     const Icon = isPlaying ? BsPauseFill : BsPlayFill;
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
+    const handleSeek = (value: number) => {
+        if (sound) {
+            sound.seek(value); // Adjust the audio playback position
+        }
+    };
+    
+
     const onPlayNext = () => {
         if (player.ids.length === 0) {
             return;
@@ -203,7 +210,12 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                 </div>
                 <div className="flex flex-row">
                     <p className="mt-2 text-center">{currentTime}</p>
-                    <PlayerSlider duration={durationInSeconds} currentTime={currentTimeInSeconds} />
+                    <PlayerSlider
+                    duration={durationInSeconds}
+                    currentTime={currentTimeInSeconds}
+                    onSeek={handleSeek}
+                        />
+
                     <p className="mt-2 text-center">{duration}</p>
                 </div>
             </div>

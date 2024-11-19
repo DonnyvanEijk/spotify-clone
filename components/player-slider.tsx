@@ -1,61 +1,54 @@
-"use client"
+"use client";
 
 import * as RadixSlider from "@radix-ui/react-slider";
 
 interface PlayerSliderProps {
     duration: number | null;
     currentTime: number | null;
-    // handleChange?: (value: number) => void;
+    onSeek: (value: number) => void; // Add an `onSeek` prop
 }
 
 const PlayerSlider: React.FC<PlayerSliderProps> = ({
     duration,
     currentTime,
-    // handleChange
+    onSeek,
 }) => {
-    if (!duration)
-    {
-        duration = 1;
-    }
-    if (!currentTime)
-    {
-        currentTime = 0;
-    }
-    const realduration = 1;
+    if (!duration) duration = 1; // Avoid division by zero
+    if (!currentTime) currentTime = 0;
 
-    // console.log(`currentTime: ${currentTime} / duration: ${duration} = ${currentTime / duration}`);
+    const percentage = (currentTime / duration) * 100; // Calculate the percentage of the current time
 
-    const realcurrentTime = (currentTime / duration) * realduration;
-
-    // console.log(realcurrentTime);
+    const handleValueChange = (value: number[]) => {
+        const newTime = (value[0] / 100) * duration!; // Calculate the new time based on slider value
+        onSeek(newTime); // Call the `onSeek` handler with the new time
+    };
 
     return (
         <RadixSlider.Root
             className="
-        relative
-        flex
-        items-center
-        select-none
-        touch-none
-        w-[30vw]
-        mx-2
-        h-10
-        "
-            defaultValue={[1]}
-            value={[realcurrentTime]}
-            // onValueChange={handleChange}
-            max={1}
+                relative
+                flex
+                items-center
+                select-none
+                touch-none
+                w-[30vw]
+                mx-2
+                h-10
+            "
+            value={[percentage]}
+            onValueChange={handleValueChange} // Attach handler
+            max={100}
             step={0.1}
             aria-label="Duration"
         >
             <RadixSlider.Track
                 className="
-            bg-neutral-600
-            relative
-            grow
-            rounded-full
-            h-[3px]
-            "
+                    bg-neutral-600
+                    relative
+                    grow
+                    rounded-full
+                    h-[3px]
+                "
             >
                 <RadixSlider.Range
                     className="absolute bg-white rounded-full h-full"
@@ -63,6 +56,6 @@ const PlayerSlider: React.FC<PlayerSliderProps> = ({
             </RadixSlider.Track>
         </RadixSlider.Root>
     );
-}
+};
 
 export default PlayerSlider;
