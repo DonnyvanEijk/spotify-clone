@@ -33,9 +33,6 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
 
     const volume = player.volume;
     const setVolume = player.setVolume;
-    const loop = player.loop;
-    const toggleLoop = player.toggleLoop;
-
     const Icon = isPlaying ? BsPauseFill : BsPlayFill;
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
@@ -81,16 +78,14 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         songUrl,
         {
             volume,
-            loop,
+       
             onplay: () => setIsPlaying(true),
             onend: () => {
                 setIsPlaying(false);
-                if (loop) {
-                    sound.seek(0);
-                    play();
-                } else {
+           
+            
                     onPlayNext();
-                }
+                
             },
             onpause: () => setIsPlaying(false),
             format: ["mp3"]
@@ -223,7 +218,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                         <Icon size={30} className="text-black" />
                     </div>
                     <AiFillStepForward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayNext} />
-                    <BiRepeat size={30} className={`text-neutral-400 cursor-pointer hover:text-white transition ${loop ? 'text-white' : ''}`} onClick={toggleLoop} />
+                    
                 </div>
                 <div className="flex flex-row">
                     <p className="mt-2 text-center">{currentTime}</p>
