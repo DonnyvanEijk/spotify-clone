@@ -1,7 +1,6 @@
 import getSongs from '@/actions/getSongs';
 import { Header } from '@/components/header';
 import {ListItem } from '@/components/list-item';
-import Link from 'next/link';
 import PageContent from './components/page-content';
 export const revalidate = 0;
 
