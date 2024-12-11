@@ -6,7 +6,6 @@ import { LikeButton } from "./like-button";
 import { BsPauseFill, BsPlayFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
-import { BiRepeat } from "react-icons/bi";
 import Slider from "./slider";
 import usePlayer from "@/hooks/usePlayer";
 import { useEffect, useState } from "react";

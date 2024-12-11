@@ -4,20 +4,18 @@ import Image from 'next/image';
 
 import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
-import usePlayer from '@/hooks/usePlayer';
 import { twMerge } from 'tailwind-merge';
-import SongItem from './songitem';
 
 
 interface MediaItemProps {
   data: Song;
   onClick?: (id: string) => void;
   className?: string;
-  color?: string;
+
   reactive?: boolean;   
 }
 
-const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, color = "white", reactive }) => {
+const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactive }) => {
 //   const player = usePlayer();
   const imageUrl = useLoadImage(data);
    

@@ -2,7 +2,6 @@
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUser } from "@/hooks/useUser";
 import { useSessionContext } from "@supabase/auth-helpers-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
@@ -13,7 +12,6 @@ type Props  ={
 
 
 export const LikeButton = ({ songId }:Props) => {
-    const router = useRouter();
     const { supabaseClient} = useSessionContext();
 
     const authModal = useAuthModal();

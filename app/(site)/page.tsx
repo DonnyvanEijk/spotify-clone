@@ -7,7 +7,8 @@ import  PageContent  from './components/page-content';
 export const revalidate = 0;
 
 export default async function Home() {
-  let songs:any = [];
+  //@ts-expect-error Songs is allowed to be null
+  let songs = [];
   let errorMessage = '';
 
   try {
@@ -34,6 +35,7 @@ export default async function Home() {
         {errorMessage ? (
           <div className='text-red-500'>{errorMessage}</div>
         ) : (
+          // @ts-expect-error allowed to be null
           <PageContent songs={songs} />
         )}
       </div>

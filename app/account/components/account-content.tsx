@@ -5,7 +5,7 @@ import { useSubscribeModal } from "@/hooks/useSubscribeModal"
 import { useUser } from "@/hooks/useUser"
 import { postData } from "@/lib/helper"
 import { useRouter } from "next/navigation"
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
 export const AccountContent = () => {
@@ -25,7 +25,8 @@ export const AccountContent = () => {
     const redirectToCustomerPortal = async () => {
         setLoading(true)
         try {
-            const {url, error} = await postData({
+            const {url
+            } = await postData({
                 url: '/api/create-portal-link',
             });
             window.location.assign(url)
