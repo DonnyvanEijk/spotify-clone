@@ -10,6 +10,7 @@ import { useSupabaseClient  } from "@supabase/auth-helpers-react";
 import { useUser } from "@/hooks/useUser";
 import { FaUserAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
+import usePlayer from "@/hooks/usePlayer";
 
 type Props = {
     children: React.ReactNode;
@@ -17,12 +18,14 @@ type Props = {
 }
 
 export const Header  = ({children, className}:Props) => {
+    const player = usePlayer()
     const router = useRouter();
     const supabaseClient = useSupabaseClient()
     const { user } = useUser();
     const authModal = useAuthModal()
     const handleLogout = async () => {
         const { error } = await supabaseClient.auth.signOut()
+        player.reset()
         router.refresh()
 
         if(error) {
