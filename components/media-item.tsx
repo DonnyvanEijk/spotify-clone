@@ -5,6 +5,7 @@ import Image from 'next/image';
 import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
 import { twMerge } from 'tailwind-merge';
+import usePlayer from '@/hooks/usePlayer';
 
 
 interface MediaItemProps {
@@ -16,7 +17,7 @@ interface MediaItemProps {
 }
 
 const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactive }) => {
-//   const player = usePlayer();
+  const player = usePlayer();
   const imageUrl = useLoadImage(data);
    
     
@@ -25,7 +26,7 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactiv
       return onClick(data.id);
     }
 
-
+    return player.setId(data.id);
   };
 
   return (
