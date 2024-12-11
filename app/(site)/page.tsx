@@ -1,15 +1,15 @@
 import getSongs from '@/actions/getSongs';
 import { Header } from '@/components/header';
 import {ListItem } from '@/components/list-item';
-
-import  PageContent  from './components/page-content';
-
+import Link from 'next/link';
+import SongContent from './components/song-content';
 export const revalidate = 0;
 
 export default async function Home() {
   //@ts-expect-error Songs is allowed to be null
   let songs = [];
   let errorMessage = '';
+
 
   try {
     songs = await getSongs();
@@ -28,15 +28,54 @@ export default async function Home() {
           </div>
         </div>
       </Header>
-      <div className='mt-2 mb-[10vh] px-6'>
+      <div className='mt-2 mb-[3vh] px-6'>
         <div className='flex justify-between items-center'>
           <h1 className='text-white text-2xl font-semibold'>Newest songs</h1>
+          <div className='mt-4'>
+            <Link href="/songs">
+                <button
+              className='px-4 py-2 bg-green-600 text-white rounded'
+            >
+              All songs
+            </button>
+            </Link>
+       
+      </div>
         </div>
         {errorMessage ? (
           <div className='text-red-500'>{errorMessage}</div>
         ) : (
           // @ts-expect-error allowed to be null
-          <PageContent songs={songs} />
+          <SongContent songs={songs} />
+        )}
+      </div>
+
+      <div className='mt-2 mb-[3vh] px-6'>
+        <div className='flex justify-between items-center'>
+          <h1 className='text-white text-2xl font-semibold'>My Playlists</h1>
+          
+        </div>
+        {errorMessage ? (
+          <div className='text-red-500'>{errorMessage}</div>
+        ) : (
+          //TODO: Add playlist content
+          // <SongContent songs={songs} />
+          <p className='text-neutral-400 font-semibold mt-2'>Is going to be added later!</p>
+        )}
+      </div>
+
+      <div className='mt-2 mb-[10vh] px-6'>
+        <div className='flex justify-between items-center'>
+          <h1 className='text-white text-2xl font-semibold'>All Playlists</h1>
+          
+        </div>
+        {errorMessage ? (
+          <div className='text-red-500'>{errorMessage}</div>
+        ) : (
+          //TODO: Add playlist content
+          // <SongContent songs={songs} />
+          
+          <p className='text-neutral-400 font-semibold mt-2'>Is going to be added later!</p>
         )}
       </div>
     </div>
