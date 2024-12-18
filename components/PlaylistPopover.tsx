@@ -15,39 +15,43 @@ interface PlaylistPopoverProps {
     playlistId: string;
 }
 
-const handleDeletePlaylist = async ({playlistId}:PlaylistPopoverProps) => {
 
+const PlaylistPopover = () => {
     const supabaseClient = useSupabaseClient();
     const { user } = useUser();
     const router = useRouter();
 
-    const { error: PlaylistSongDeleteError } = await supabaseClient
-        .from('playlist_songs')
-        .delete()
-        .eq('playlist_id', playlistId)
-        .eq('user_id', user?.id)
 
-    if (PlaylistSongDeleteError) {
-        console.error("Error deleting playlist songs: ", PlaylistSongDeleteError);
-        toast.error("Failed to delete playlist songs");
-        return;
+    const handleDeletePlaylist = async ({playlistId}:PlaylistPopoverProps) => {
+        const { error: PlaylistSongDeleteError } = await supabaseClient
+            .from('playlist_songs')
+            .delete()
+            .eq('playlist_id', playlistId)
+            .eq('user_id', user?.id)
+    
+        if (PlaylistSongDeleteError) {
+            console.error("Error deleting playlist songs: ", PlaylistSongDeleteError);
+            toast.error("Failed to delete playlist songs");
+            return;
+        }
+    
+        const { error: PlaylistDeleteError } = await supabaseClient
+            .from('playlists')
+            .delete()
+            .eq('id', playlistId)
+            .eq('user_id', user?.id)
+    
+        if (PlaylistDeleteError) {
+            console.error("Error deleting playlist: ", PlaylistDeleteError);
+            toast.error("Failed to delete playlist");
+            return;
+        }
+        toast.success("Playlist deleted successfully");
+        return router.push('/');
     }
 
-    const { error: PlaylistDeleteError } = await supabaseClient
-        .from('playlists')
-        .delete()
-        .eq('id', playlistId)
-        .eq('user_id', user?.id)
 
-    if (PlaylistDeleteError) {
-        console.error("Error deleting playlist: ", PlaylistDeleteError);
-        toast.error("Failed to delete playlist");
-        return;
-    }
-    toast.success("Playlist deleted successfully");
-    return router.push('/');
-}
-const PlaylistPopover = () => {
+
     return (
         <div>
             <DropdownMenu.Root>
