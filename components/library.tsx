@@ -1,36 +1,20 @@
-import { useAuthModal } from "@/hooks/useAuthModal"
-import { useUploadModal } from "@/hooks/useUploadModal"
-import { useUser } from "@/hooks/useUser"
 import { Song } from "@/types"
-import { AiOutlinePlus } from "react-icons/ai"
 import { TbPlaylist } from "react-icons/tb"
 import MediaItem from "./media-item"
 import useOnPlay from "@/hooks/useOnPlay"
 import usePlayer from "@/hooks/usePlayer"
-import { useSubscribeModal } from "@/hooks/useSubscribeModal"
+import LibraryDropdown from "./LibraryDropdown"
+
 
 type Props  = {
     songs: Song[]
 }
 export const Library = ({songs}:Props) => {
-    const subscribeModal = useSubscribeModal()
-    const authModal = useAuthModal()
-    const uploadModal = useUploadModal()
-    const { user, subscription} = useUser();
+
     const onPlay = useOnPlay(songs)
     const {activeId} = usePlayer()
 
-    const onClick = () => {
-        if (!user) {
-            return authModal.onOpen();
-    }
-
-    if(!subscription) {
-        return subscribeModal.onOpen();
-    }
-
-    return uploadModal.onOpen();
-    }
+   
     return(
         <div className="flex flex-col">
             <div className="flex items-center justify-between px-5 pt-4">
@@ -40,7 +24,7 @@ export const Library = ({songs}:Props) => {
                         Your Library
                     </p>
                 </div>
-                <AiOutlinePlus size={20} onClick={onClick} className="text-neutral-400 cursor-pointer hover:text-white transition"/>
+              <LibraryDropdown/>
             </div>
             <div className='flex flex-col gap-y-2 mt-4 px-3'>
         {songs.map((item) => (

@@ -1,17 +1,30 @@
 import getSongsByTitle from "@/actions/getSongsByTitle";
 import { Header } from "@/components/header";
 import { SearchInput } from "@/components/search-input";
-import { SearchContent } from "./components/SearchContent";
+import {SongSearchContent } from "./components/SongSearchContent";
+import getPlaylistsByTitle from "@/actions/getPlaylistsByTitle";
+import SearchControls from "./components/SearchControls";
+import PlaylistSearchContent from "./components/PlaylistSearchContent";
 
 type Props =  {
     searchParams: {
         title: string;
+        type?: string;
     }
 }
 export const revalidate = 0 
 
 const SearchPage  = async ({searchParams}:Props) => {
-    const songs = await getSongsByTitle(searchParams.title);
+    const {title, type} = searchParams;
+    let songs = await getSongsByTitle(title);
+    let playlists =  await getPlaylistsByTitle(title);
+
+
+    if(!type) {
+        console.log("No params");
+        songs = songs.slice(0,7)
+        playlists = playlists.slice(0,7)
+    }
     return(
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
             <Header className="from-bg-neutral-900">
@@ -19,10 +32,42 @@ const SearchPage  = async ({searchParams}:Props) => {
                     <h1 className="text-white text-3xl font-semibold">
                         Search
                     </h1>
+                    <SearchControls/>
                     <SearchInput/>
                 </div>
             </Header>
-            <SearchContent songs={songs}/>
+            {!type && (
+                <>
+                    <div className="mb-3">
+                        <h2 className="text-white text-xl font-semibold px-6">
+                            Songs
+                        </h2>
+                        <SongSearchContent songs={songs} />
+                    </div>
+                    <div>
+                        <h2 className="text-white text-xl font-semibold px-6">
+                            Playlists
+                        </h2>
+                        <PlaylistSearchContent playlists={playlists} />
+                    </div>
+                </>
+            )}
+            {type === 'songs' && (
+                <div className="mb-3">
+                    <h2 className="text-white text-xl font-semibold px-6">
+                        Songs
+                    </h2>
+                    <SongSearchContent songs={songs} />
+                </div>
+            )}
+            {type === 'playlists' && (
+                <div>
+                    <h2 className="text-white text-xl font-semibold px-6">
+                        Playlists
+                    </h2>
+                    <PlaylistSearchContent playlists={playlists} />
+                </div>
+            )}
         </div>
     )
 }
