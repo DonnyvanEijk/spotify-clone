@@ -62,7 +62,7 @@ export default async function Home() {
 
       <div className='mt-2 mb-[10vh] px-6'>
         <div className='flex justify-between items-center'>
-          <h1 className='text-white text-2xl font-semibold mb-2'>All Playlists</h1>
+          <h1 className='text-white text-2xl font-semibold mb-2'>Public Playlists</h1>
           
         </div>
          <PlaylistContent playlists={publicPlaylists} />  
