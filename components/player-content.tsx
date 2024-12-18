@@ -47,6 +47,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             return;
         }
 
+        if (player.shuffle)
+        {
+            const randomIndex = Math.floor(Math.random() * player.ids.length);
+            const randomSong = player.ids[randomIndex];
+            return player.setId(randomSong);
+        }
+
         const currentIndex = player.ids.findIndex((id) => id === player.activeId);
 
         const nextSong = player.ids[currentIndex + 1];
