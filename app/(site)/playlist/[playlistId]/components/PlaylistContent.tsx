@@ -11,6 +11,7 @@ import {LikeButton} from "@/components/like-button";
 import useOnPlay from "@/hooks/useOnPlay";
 import Link from "next/link";
 import PlaylistItemDropdown from "@/components/PlaylistitemDropdown";
+import usePlayer from "@/hooks/usePlayer";
 
 
 interface PlaylistContentProps {
@@ -24,6 +25,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
     PlaylistId,
     isOwner
 }) => {
+    const { activeId } = usePlayer();
     const router = useRouter();
     const { isLoading, user } = useUser();
 
@@ -64,6 +66,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
                 >
                     <div className="flex-1">
                         <MediaItem
+                            reactive={activeId === song.id}
                             onClick={(id: string) => { onPlay(id) }}
                             data={song}
                         />
