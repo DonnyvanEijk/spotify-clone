@@ -2,21 +2,25 @@
 
 import React from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { FaEllipsisH } from "react-icons/fa";import { HiOutlineTrash } from "react-icons/hi";import toast from "react-hot-toast";
+import { FaEllipsisH } from "react-icons/fa";
+import { HiOutlineTrash } from "react-icons/hi";
+import toast from "react-hot-toast";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 
 
-const supabaseClient = useSupabaseClient();
-const { user } = useUser();
-const router = useRouter();
 
 interface PlaylistPopoverProps {
     playlistId: string;
 }
 
 const handleDeletePlaylist = async ({playlistId}:PlaylistPopoverProps) => {
+
+    const supabaseClient = useSupabaseClient();
+    const { user } = useUser();
+    const router = useRouter();
+
     const { error: PlaylistSongDeleteError } = await supabaseClient
         .from('playlist_songs')
         .delete()
