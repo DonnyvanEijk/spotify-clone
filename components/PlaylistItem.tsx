@@ -6,8 +6,9 @@ import Image from "next/image";
 // import PlayButton from "./PlayButton";
 import { twMerge } from "tailwind-merge";
 import usePlayer from "@/hooks/usePlayer";
-import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
+
 import Link from "next/link";
+import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
 
 interface PlaylistItemProps {
     data: Playlist;
@@ -19,9 +20,9 @@ const PlaylistItem: React.FC<PlaylistItemProps> = ({
     const imagePath = useLoadPlaylistImage(data);
 
     const playlistId = data.id;
-    const { activateId } = usePlayer();
+    const { activeId } = usePlayer();
 
-    const playing = playlistId === activateId;
+    const playing = playlistId === activeId;
 
     return (
         <Link href={`/playlist/${playlistId}`}>

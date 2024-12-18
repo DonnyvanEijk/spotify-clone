@@ -2,7 +2,7 @@
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
-import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
+
 import {Modal} from "./modal";
 import { useEffect, useState } from "react";
 import {Button} from "./button";
@@ -12,7 +12,9 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "./CheckBox";
 import { Playlist } from "@/types";
+import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
+
 
 const AddToPlaylistModal = () => {
     const router = useRouter();
