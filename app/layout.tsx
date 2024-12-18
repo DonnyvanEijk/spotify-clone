@@ -28,7 +28,7 @@ export default async function RootLayout({
   const products = await getActiveProductsWithPrices();
   return (
     <html lang="en">
-      <body
+      <body suppressHydrationWarning
         className={figtree.className}
       >
         <ToasterProvider/>

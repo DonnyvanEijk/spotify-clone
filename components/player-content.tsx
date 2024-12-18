@@ -13,6 +13,7 @@ import useSound from "use-sound";
 import toast from "react-hot-toast";
 import { getAudioDuration, getAudioDurationInSecconds } from "@/lib/getDuration";
 import PlayerSlider from "./player-slider";
+import PlaylistButton from "./PlaylistButton";
 
 interface PlayerContentProps {
     song: Song;
@@ -166,6 +167,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                 <div className="flex items-center gap-x-4">
                     <MediaItem data={song} reactive={false} />
                     <LikeButton songId={song.id} />
+                    <PlaylistButton songId={song.id} />
                 </div>
             </div>
             <div className="flex md:hidden coll-auto w-full justify-end items-center">
