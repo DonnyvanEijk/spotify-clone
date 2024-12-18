@@ -23,32 +23,32 @@ const LibraryDropdown = () => {
         setIsOpen(!isOpen);
     };
 
-    const ClickNewSong = () => {
+    const ClickNewSong = async () => {
         if (!user) {
             return authModal.onOpen();
         }
         if (!subscription) {
             return subscribeModal.onOpen();
         }
-
+    
         return uploadModal.onOpen();
     }
-
-    const ClickNewPlaylist = () => {
+    
+    const ClickNewPlaylist = async () => {
         if (!user) {
             return authModal.onOpen();
         }
         if (!subscription) {
             return subscribeModal.onOpen();
         }
-
+    
         return createPlaylistModal.onOpen();
     }
 
     return (
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
-                <button className="focus:outline-none" aria-label="Customise options">
+                <button type="button" className="focus:outline-none" aria-label="Customise options">
                     <AiOutlineUp
                         size={20}
                         onClick={handleToggle}

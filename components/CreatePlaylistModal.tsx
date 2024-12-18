@@ -4,10 +4,10 @@ import uniqid from "uniqid";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
-import {Modal} from "./modal";
+import { Modal } from "./modal";
 import { useState } from "react";
-import {Input} from "./input";
-import {Button} from "./button";
+import { Input } from "./input";
+import { Button } from "./button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
@@ -39,8 +39,8 @@ const CreatePlaylistModal = () => {
 
     const onChange = (open: boolean) => {
         if (!open) {
-            reset();
             createPlaylistModal.onClose();
+            reset();
         }
     }
 

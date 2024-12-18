@@ -32,7 +32,7 @@ export const LikedContent  = ({songs}:Props) => {
         )
     }
     return(
-        <div className="flex flex-col gap-y-2 w-full p-6">
+        <div className="flex flex-col gap-y-2 w-full p-6 mb-16">
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">

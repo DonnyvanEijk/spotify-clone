@@ -70,7 +70,7 @@ const AddToPlaylistModal = () => {
         };
 
         fetchPlaylists();
-    }, [user, supabaseClient, songId, use]);
+    }, [user, supabaseClient, createPlaylistModal, isOpen, songId, use]);
 
     const onChange = (open: boolean) => {
         if (!open) {
