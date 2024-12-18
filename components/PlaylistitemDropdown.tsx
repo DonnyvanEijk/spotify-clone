@@ -103,7 +103,7 @@ const PlaylistItemDropdown = ({ songId, playlistId, isOwner }: PlaylistItemDropd
     }
 
     return (
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
                 <button className="focus:outline-none" aria-label="Customise options">
                     <FaEllipsisH
