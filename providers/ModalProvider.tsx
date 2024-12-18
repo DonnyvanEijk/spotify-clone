@@ -1,7 +1,7 @@
 "use client"
 
 import AddToPlaylistModal from "@/components/AddToPlaylistModal"
-import  AuthModal  from "@/components/auth-modal"
+import AuthModal from "@/components/auth-modal"
 import CreatePlaylistModal from "@/components/CreatePlaylistModal"
 import { SubscribeModal } from "@/components/SubscribeModal"
 import { UploadModal } from "@/components/upload-modal"
@@ -12,24 +12,24 @@ type Props = {
     products: ProductWithPrice[];
 }
 
-export const ModalProvider: React.FC<Props> = ({products}) => {
+export const ModalProvider: React.FC<Props> = ({ products }) => {
     const [isMounted, setIsMounted] = useState(false)
 
     useEffect(() => {
         setIsMounted(true)
     }, [])
 
-    if(!isMounted) {
+    if (!isMounted) {
         return null
     }
 
     return (
         <>
-        <AuthModal/>
-        <UploadModal/>
-        <SubscribeModal products={products}/>
-        <CreatePlaylistModal/>
-        <AddToPlaylistModal/>
+            <AuthModal />
+            <UploadModal />
+            <SubscribeModal products={products} />
+            <CreatePlaylistModal />
+            <AddToPlaylistModal />
         </>
     )
 }

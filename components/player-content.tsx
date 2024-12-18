@@ -166,8 +166,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             <div className="flex w-full justify-start">
                 <div className="flex items-center gap-x-4">
                     <MediaItem data={song} reactive={false} />
-                    <LikeButton songId={song.id} />
-                    <PlaylistButton songId={song.id} />
+                  
                 </div>
             </div>
             <div className="flex md:hidden coll-auto w-full justify-end items-center">
@@ -232,7 +231,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                     <p className="mt-2 text-center">{duration}</p>
                 </div>
             </div>
+            
             <div className="hidden md:flex justify-end pr-2">
+                <div className="flex flex-row gap-3 mr-5">
+                     <LikeButton songId={song.id} />
+                     <PlaylistButton songId={song.id} />
+                </div>
+           
                 <div className="flex items-center gap-x-2 w-[120px]">
                     <VolumeIcon
                         onClick={toggleMute}

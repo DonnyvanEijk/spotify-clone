@@ -44,6 +44,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
             w-full
             px-6
             text-neutral-400
+            
             ">
                 <p className="flex flex-row">
                     No Songs In this Playist. You can add them<Link href={"/search"} className="hover:underline ml-[0.3rem]">
@@ -55,7 +56,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
     }
 
     return (
-        <div className="flex flex-col gap-y-2 w-full p-6">
+        <div className="flex flex-col gap-y-2 w-full p-6 mb-16">
             {songs.map((song) => (
                 <div
                     key={song.id}
