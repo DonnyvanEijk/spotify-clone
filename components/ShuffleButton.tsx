@@ -1,31 +1,26 @@
 "use client"
 
 import { LuShuffle } from "react-icons/lu";
+import usePlayer from "@/hooks/usePlayer";
 
 interface ShuffleButtonProps {
-    doShuffle: boolean;
-    onShuffle: () => void;
     size?: number;
 }
 
-const ShuffleButton: React.FC<ShuffleButtonProps> = ({
-    doShuffle,
-    onShuffle,
-    size
-}) => {
-    const Icon = LuShuffle;
+const ShuffleButton: React.FC<ShuffleButtonProps> = ({ size }) => {
+    const player = usePlayer();
+    const { shuffle, toggleShuffle } = player;
 
     return (
         <button
-            onClick={onShuffle}
+            onClick={toggleShuffle}
             className="
         hover:opacity-75
         transition
         disabled:opacity-50
         "
-            disabled
         >
-            <Icon color={doShuffle ? '#22c55e' : 'white'} size={size || 25} />
+            <LuShuffle color={shuffle ? '#22c55e' : 'white'} size={size || 25} />
         </button>
     );
 }
