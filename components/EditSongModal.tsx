@@ -11,7 +11,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
-import { Auth } from "@supabase/auth-ui-react";
+
 
 const SongEditModal = () => {
     const router = useRouter();
@@ -62,7 +62,7 @@ const SongEditModal = () => {
         }
 
         fetchSong();
-    }, [songId]);
+    }, [songId, fetchSong]);
 
     const {
         register,
@@ -123,7 +123,7 @@ const SongEditModal = () => {
             author: song?.author || '',
             title: song?.title || '',
         })
-    }, [song])
+    }, [song, reset, songId])
 
     return (
         <Modal

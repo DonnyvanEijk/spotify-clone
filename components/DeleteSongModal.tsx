@@ -51,7 +51,7 @@ const DeleteSongModal = () => {
         }
 
         fetchSongName();
-    }, [songId]);
+    }, [songId, fetchSongName]);
 
     const onChange = (open: boolean) => {
         if (!open) {

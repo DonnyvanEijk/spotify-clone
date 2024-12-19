@@ -51,7 +51,7 @@ const DeletePlaylistModal = () => {
         }
 
         fetchPlaylistName();
-    }, [playlistId]);
+    }, [playlistId, fetchPlaylistName]);
 
     const onChange = (open: boolean) => {
         if (!open) {
