@@ -3,7 +3,7 @@
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 
-import {Modal} from "./Modal";
+import {Modal} from "./modal";
 import { useEffect, useState } from "react";
 
 import toast from "react-hot-toast";
@@ -14,7 +14,7 @@ import CheckBox from "./CheckBox";
 import { Playlist } from "@/types";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
-import { Button } from "./Button";
+import { Button } from "./button";
 
 
 const AddToPlaylistModal = () => {
