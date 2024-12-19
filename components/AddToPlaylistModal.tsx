@@ -3,9 +3,9 @@
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 
-import {Modal} from "./modal";
+import {Modal} from "./Modal";
 import { useEffect, useState } from "react";
-import {Button} from "./button";
+
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
@@ -14,6 +14,7 @@ import CheckBox from "./CheckBox";
 import { Playlist } from "@/types";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
+import { Button } from "./Button";
 
 
 const AddToPlaylistModal = () => {

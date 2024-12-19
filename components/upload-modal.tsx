@@ -9,8 +9,8 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { Input } from "./input";
-import { Modal } from "./modal";
-import { Button } from "./button";
+import { Modal } from "./Modal";
+import { Button } from "./Button";
 
 export const UploadModal = () => {
     const router = useRouter();

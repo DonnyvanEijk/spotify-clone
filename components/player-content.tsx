@@ -172,7 +172,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         >
             <div className="flex w-full justify-start">
                 <div className="flex items-center gap-x-4">
-                    <MediaItem data={song} reactive={false} />
+                    <MediaItem data={song} reactive={false} isPlayer={true} isOwner={false} />
                   
                 </div>
             </div>

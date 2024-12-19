@@ -2,47 +2,19 @@
 
 import React from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { FaEllipsisH } from "react-icons/fa"; 
+import { HiOutlineTrash } from "react-icons/hi"; 
 
-import { FaEllipsisH } from "react-icons/fa"; import { HiOutlineTrash } from "react-icons/hi"; import { useUser } from "@/hooks/useUser";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+
 
 interface PlaylistPopoverProps {
     playlistId: string;
 }
 
 const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId }) => {
-    const supabaseClient = useSupabaseClient();
-    const { user } = useUser();
-    const router = useRouter();
 
     const handleDeletePlaylist = async () => {
-        const { error: PlaylistSongDeleteError } = await supabaseClient
-            .from('playlist_songs')
-            .delete()
-            .eq('playlist_id', playlistId)
-            .eq('user_id', user?.id)
-
-        if (PlaylistSongDeleteError) {
-            console.error("Error deleting playlist songs: ", PlaylistSongDeleteError);
-            toast.error("Failed to delete playlist songs");
-            return;
-        }
-
-        const { error: PlaylistDeleteError } = await supabaseClient
-            .from('playlists')
-            .delete()
-            .eq('id', playlistId)
-            .eq('user_id', user?.id)
-
-        if (PlaylistDeleteError) {
-            console.error("Error deleting playlist: ", PlaylistDeleteError);
-            toast.error("Failed to delete playlist");
-            return;
-        }
-        toast.success("Playlist deleted successfully");
-        return router.push('/');
+      deletePlaylistModal.onOpen(playlistId)
     }
 
     return (

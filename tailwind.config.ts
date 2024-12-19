@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+const { mauve, violet } = require("@radix-ui/colors");
 
 export default {
   content: [
@@ -8,7 +9,10 @@ export default {
   ],
   theme: {
     extend: {
-     
+      colors: {
+        ...mauve,
+        ...violet
+      }
     },
   },
   plugins: [],
