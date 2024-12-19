@@ -35,6 +35,10 @@ export const UploadModal = () => {
         }
     })
 
+    const sanitizeFileName = (name: string) => {
+        return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    }    
+
     const onChange = (open: boolean) => {
         if (!open) {
             reset();
@@ -53,6 +57,8 @@ export const UploadModal = () => {
                 toast.error("Missing fields");
                 return;
             }
+
+            const sanitizedFileName = sanitizeFileName(values.title);
             
             const uniqueID = uniqid();
 
@@ -63,7 +69,7 @@ export const UploadModal = () => {
             } = await supabaseClient
             .storage
             .from('songs')
-            .upload(`song-${values.title}-${uniqueID}`, songFile, {
+            .upload(`song-${sanitizedFileName}-${uniqueID}`, songFile, {
                 cacheControl: '3600',
                 upsert: false,
             });
@@ -80,7 +86,7 @@ export const UploadModal = () => {
             } = await supabaseClient
             .storage
             .from('images')
-            .upload(`image-${values.title}-${uniqueID}`, imageFile, {
+            .upload(`image-${sanitizedFileName}-${uniqueID}`, imageFile, {
                 cacheControl: '3600',
                 upsert: false,
             });
@@ -118,6 +124,8 @@ export const UploadModal = () => {
             setIsLoading(false);
         }
     }
+
+   
 
     return (
         <Modal

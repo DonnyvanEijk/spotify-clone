@@ -61,6 +61,19 @@ const DeleteSongModal = () => {
 
     const DeleteSong = async () => {
         try {
+            const { data, error: GetSongError } = await supabaseClient
+                .from('songs')
+                .select('*')
+                .eq('id', songId)
+                .eq('user_id', user?.id)
+                .single();
+
+            if (GetSongError || !data) {
+                console.error("Error fetching song: ", GetSongError);
+                toast.error("Failed to fetch song");
+                return;
+            }
+
             const { error: SongDeleteError } = await supabaseClient
                 .from('songs')
                 .delete()
@@ -72,6 +85,29 @@ const DeleteSongModal = () => {
                 toast.error("Failed to delete song");
                 return;
             }
+
+            const { error: StorageDeleteError } = await supabaseClient
+                .storage
+                .from('songs')
+                .remove([data.song_path]);
+
+            if (StorageDeleteError) {
+                console.error("Error deleting song from storage: ", StorageDeleteError);
+                toast.error("Failed to delete song from storage");
+                return;
+            }
+
+            const { error: ImageStorageDeleteError } = await supabaseClient
+                .storage
+                .from('images')
+                .remove([data.image_path]);
+
+            if (ImageStorageDeleteError) {
+                console.error("Error deleting image from storage: ", ImageStorageDeleteError);
+                toast.error("Failed to delete image from storage");
+                return;
+            }
+
             toast.success("Song deleted successfully");
             router.push('/');
             deleteSongModal.onClose();

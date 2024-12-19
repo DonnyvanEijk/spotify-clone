@@ -11,6 +11,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
+import { Auth } from "@supabase/auth-ui-react";
 
 const SongEditModal = () => {
     const router = useRouter();
@@ -115,10 +116,19 @@ const SongEditModal = () => {
         }
     }
 
+    useEffect(() => {
+        reset({
+            id: song?.id || songId,
+            user_id: song?.user_id || '',
+            author: song?.author || '',
+            title: song?.title || '',
+        })
+    }, [song])
+
     return (
         <Modal
-            title="Upload Content"
-            description="Upload your content to the platform"
+            title="Edit song"
+            description="Edit uploaded song"
             isOpen={editSongModal.isOpen}
             onChange={onChange}
         >
