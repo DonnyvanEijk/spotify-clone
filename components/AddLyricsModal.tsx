@@ -51,17 +51,40 @@ const AddLyricsModal = () => {
                 return;
             }
 
-            const { error: supabaseError } = await supabaseClient
-                .from(`song_lyrics`)
-                .insert({
-                    user_id: user.id,
-                    song_id: songId,
-                    lyrics: values.lyrics,
-                });
+            const { data: existingLyrics, error: fetchError } = await supabaseClient
+                .from('song_lyrics')
+                .select('id')
+                .eq('song_id', songId)
+                .single();
 
-            if (supabaseError) {
+            if (fetchError && fetchError.code !== 'PGRST116') {
                 setIsLoading(false);
-                return toast.error(supabaseError.message);
+                return toast.error(fetchError.message);
+            }
+
+            if (existingLyrics) {
+                const { error: updateError } = await supabaseClient
+                    .from('song_lyrics')
+                    .update({ lyrics: values.lyrics })
+                    .eq('id', existingLyrics.id);
+
+                if (updateError) {
+                    setIsLoading(false);
+                    return toast.error(updateError.message);
+                }
+            } else {
+                const { error: insertError } = await supabaseClient
+                    .from('song_lyrics')
+                    .insert({
+                        user_id: user.id,
+                        song_id: songId,
+                        lyrics: values.lyrics,
+                    });
+
+                if (insertError) {
+                    setIsLoading(false);
+                    return toast.error(insertError.message);
+                }
             }
 
             router.refresh();
