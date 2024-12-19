@@ -9,8 +9,9 @@ import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
-import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
+
 import TextArea from "./TextArea";
+import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
 
 const AddLyricsModal = () => {
     const router = useRouter();

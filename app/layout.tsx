@@ -9,6 +9,7 @@ import { ToasterProvider } from "@/providers/ToasterProvider";
 import getSongsByUserId from "@/actions/getSongsByUser";
 import Player from "@/components/player";
 import getActiveProductsWithPrices from "@/actions/getActiveProductsWithPrices";
+import getUser from "@/actions/getUser";
 
 const figtree = Figtree({subsets: ["latin"]});
 
@@ -26,6 +27,7 @@ export default async function RootLayout({
 }>) {
   const userSongs = await getSongsByUserId();
   const products = await getActiveProductsWithPrices();
+  const user = await getUser();
   return (
     <html lang="en">
       <body suppressHydrationWarning
@@ -35,7 +37,7 @@ export default async function RootLayout({
         <SupabaseProvider>
           <UserProvider> 
             <ModalProvider products={products}/>
-              <Sidebar songs={userSongs}>
+              <Sidebar songs={userSongs} userId={user?.id}>
                 {children}
               </Sidebar>
               <Player/>

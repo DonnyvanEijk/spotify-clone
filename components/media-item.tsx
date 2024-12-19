@@ -7,6 +7,7 @@ import { Song } from '@/types';
 import { twMerge } from 'tailwind-merge';
 import usePlayer from '@/hooks/usePlayer';
 import * as ContextMenu from "@radix-ui/react-context-menu"
+import SongRightClickContent from './SongRightClickContent';
 
 
 interface MediaItemProps {
@@ -110,7 +111,7 @@ min-w-[48px]
       </div>
     </div>
     </ContextMenu.Trigger>
-    <SongRightClickContent isOwner={isOwner} songId={data.id} />
+    <SongRightClickContent isOwner={isOwner} song={data} />
     </ContextMenu.Root>
   );
 };

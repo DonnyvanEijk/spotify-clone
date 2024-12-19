@@ -2,12 +2,14 @@ import getSongs from '@/actions/getSongs';
 import { Header } from '@/components/header';
 import {ListItem } from '@/components/list-item';
 import PageContent from './components/page-content';
+import getUser from '@/actions/getUser';
 export const revalidate = 0;
 
 export default async function Home() {
   //@ts-expect-error Songs is allowed to be null
   let songs = [];
   let errorMessage = '';
+  const user = await getUser();
 
 
   try {
@@ -39,7 +41,7 @@ export default async function Home() {
           <div className='text-red-500'>{errorMessage}</div>
         ) : (
           // @ts-expect-error allowed to be null
-          <PageContent songs={songs} />
+          <PageContent songs={songs} userId={user?.id} />
         )}
       </div>
     </div>

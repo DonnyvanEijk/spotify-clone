@@ -7,11 +7,12 @@ import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
-import { useDeleteSongModal } from "@/hooks/useDeleteSongModal";
+import { useDeleteSong } from "@/hooks/useDeleteSongModal";
+
 
 const DeleteSongModal = () => {
     const router = useRouter();
-    const deleteSongModal = useDeleteSongModal();
+    const deleteSongModal = useDeleteSong();
 
     const [isLoading, setIsLoading] = useState(false);
 

@@ -5,6 +5,7 @@ import {SongSearchContent } from "./components/SongSearchContent";
 import getPlaylistsByTitle from "@/actions/getPlaylistsByTitle";
 import SearchControls from "./components/SearchControls";
 import PlaylistSearchContent from "./components/PlaylistSearchContent";
+import getUser from "@/actions/getUser";
 
 type Props =  {
     searchParams: {
@@ -18,6 +19,7 @@ const SearchPage  = async ({searchParams}:Props) => {
     const {title, type} = searchParams;
     let songs = await getSongsByTitle(title);
     let playlists =  await getPlaylistsByTitle(title);
+    const user = await getUser();
 
 
     if(!type) {
@@ -42,7 +44,7 @@ const SearchPage  = async ({searchParams}:Props) => {
                         <h2 className="text-white text-xl font-semibold px-6">
                             Songs
                         </h2>
-                        <SongSearchContent songs={songs} />
+                        <SongSearchContent userId={user?.id} songs={songs} />
                     </div>
                     <div>
                         <h2 className="text-white text-xl font-semibold px-6">
@@ -57,7 +59,7 @@ const SearchPage  = async ({searchParams}:Props) => {
                     <h2 className="text-white text-xl font-semibold px-6">
                         Songs
                     </h2>
-                    <SongSearchContent songs={songs} />
+                    <SongSearchContent userId={user?.id} songs={songs} />
                 </div>
             )}
             {type === 'playlists' && (

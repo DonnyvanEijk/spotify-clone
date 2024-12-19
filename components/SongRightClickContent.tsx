@@ -13,7 +13,7 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { useSubscribeModal } from "@/hooks/useSubscribeModal";
 import toast from "react-hot-toast";
 import { CiTextAlignCenter } from "react-icons/ci";
-import { useDeleteSongModal } from "@/hooks/useDeleteSongModal";
+import { useDeleteSong } from "@/hooks/useDeleteSongModal";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
 
@@ -29,7 +29,7 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 	const createPlaylistModal = useCreatePlaylistModal();
 	const addToPlaylistModal = useAddToPlaylistModal();
 	const editSongModal = useEditSongModal();
-	const deleteSongModal = useDeleteSongModal();
+	const deleteSongModal = useDeleteSong();
 	const addLyricsModal = useAddLyricsModal();
 	const { user, subscription } = useUser();
 

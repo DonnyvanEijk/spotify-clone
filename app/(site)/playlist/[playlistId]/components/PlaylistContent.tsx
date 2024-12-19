@@ -66,6 +66,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
                 >
                     <div className="flex-1">
                         <MediaItem
+                            isOwner={isOwner}
                             reactive={activeId === song.id}
                             onClick={(id: string) => { onPlay(id) }}
                             data={song}

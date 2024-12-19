@@ -6,6 +6,7 @@ import { Song } from '@/types';
 import PlayButton from './playbutton';
 import { twMerge } from 'tailwind-merge';
 import * as ContextMenu from "@radix-ui/react-context-menu"
+import SongRightClickContent from './SongRightClickContent';
 interface SongItemProps {
   data: Song;
   onClick: (id: string) => void;

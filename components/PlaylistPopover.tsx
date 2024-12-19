@@ -4,6 +4,9 @@ import React from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { FaEllipsisH } from "react-icons/fa"; 
 import { HiOutlineTrash } from "react-icons/hi"; 
+import { useDeletePlaylist } from "@/hooks/useDeletePlaylistModal";
+
+
 
 
 
@@ -12,9 +15,9 @@ interface PlaylistPopoverProps {
 }
 
 const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId }) => {
-
+    const deletePlaylist = useDeletePlaylist();
     const handleDeletePlaylist = async () => {
-      deletePlaylistModal.onOpen(playlistId)
+        deletePlaylist.onOpen(playlistId)
     }
 
     return (
