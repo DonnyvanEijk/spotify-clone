@@ -89,7 +89,7 @@ const AddLyricsModal = () => {
             }
 
             setLyrics(lyricsData);
-        } catch (lyricsError) {
+        } catch {
             toast.error("Something went wrong fetching lyrics");
         }
     }
