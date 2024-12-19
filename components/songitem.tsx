@@ -18,7 +18,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner}) 
   const imagePath = useLoadImage(data);
 
   return (
-    <ContextMenu.Root>
+    <ContextMenu.Root modal={false}>
     <ContextMenu.Trigger>
     <div
       onClick={() => onClick(data.id)}
