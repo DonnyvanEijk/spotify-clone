@@ -9,9 +9,10 @@ import { Song } from "@/types"
 
 type Props = {
     songs: Song[];
+    userId: string | undefined
 }
 
-export const SongSearchContent = ({songs}:Props) => {
+export const SongSearchContent = ({songs, userId}:Props) => {
     const onPlay = useOnPlay(songs)
     const {activeId} = usePlayer()
     if (songs.length === 0) {
@@ -26,7 +27,7 @@ export const SongSearchContent = ({songs}:Props) => {
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">
-                        <MediaItem onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
+                        <MediaItem isOwner={song.id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
                     <PlaylistButton songId={song.id}/>
                     <LikeButton songId={song.id}/>

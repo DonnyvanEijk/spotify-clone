@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/button"
+import { Button } from "@/components/Button"
 import { useSubscribeModal } from "@/hooks/useSubscribeModal"
 import { useUser } from "@/hooks/useUser"
 import { postData } from "@/lib/helper"

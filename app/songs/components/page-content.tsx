@@ -7,9 +7,10 @@ import usePlayer from '@/hooks/usePlayer';
 
 interface PageContentProps {
   songs: Song[];
+  userId: string | undefined
 }
 
-const PageContent: React.FC<PageContentProps> = ({ songs }) => {
+const PageContent: React.FC<PageContentProps> = ({ songs, userId }) => {
   const onPlay = useOnPlay(songs);
   const { activeId } = usePlayer();
 
@@ -35,6 +36,7 @@ const PageContent: React.FC<PageContentProps> = ({ songs }) => {
       >
         {songs.map((item) => (
           <SongItem
+          isOwner={ item.user_id === userId}
             onClick={(id: string) => { onPlay(id) }}
             key={item.id}
             data={item}

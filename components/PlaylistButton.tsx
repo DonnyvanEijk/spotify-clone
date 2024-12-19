@@ -82,7 +82,7 @@ const PlaylistButton: React.FC<PlaylistButtonProps> = ({
 
     const Icon = isInPlaylist ? MdPlaylistAddCheck : MdPlaylistAdd;
 
-    const handleLike = async () => {
+    const handleAddToPlaylist = async () => {
         if (!user) {
             return authModal.onOpen();
         }
@@ -102,7 +102,7 @@ const PlaylistButton: React.FC<PlaylistButtonProps> = ({
 
     return (
         <button
-            onClick={handleLike}
+            onClick={handleAddToPlaylist}
             className="
         hover:opacity-75
         transition

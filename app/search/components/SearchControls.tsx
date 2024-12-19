@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {Button} from '@/components/button';
+import {Button} from '@/components/Button';
 import { twMerge } from 'tailwind-merge';
 
 const SearchControls: React.FC = () => {

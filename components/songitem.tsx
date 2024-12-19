@@ -1,23 +1,25 @@
 'use client';
 
 import Image from 'next/image';
-
 import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
-
 import PlayButton from './playbutton';
 import { twMerge } from 'tailwind-merge';
-
+import * as ContextMenu from "@radix-ui/react-context-menu"
+import SongRightClickContent from './SongRightClickContent';
 interface SongItemProps {
   data: Song;
   onClick: (id: string) => void;
   reactive?: boolean;
+  isOwner: boolean;
 }
 
-const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive }) => {
+const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner}) => {
   const imagePath = useLoadImage(data);
 
   return (
+    <ContextMenu.Root modal={false}>
+    <ContextMenu.Trigger>
     <div
       onClick={() => onClick(data.id)}
       className='
@@ -78,6 +80,9 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive }) => {
         <PlayButton />
       </div>
     </div>
+    </ContextMenu.Trigger>
+    <SongRightClickContent isOwner={isOwner} song={data} />
+    </ContextMenu.Root>
   );
 };
 

@@ -10,9 +10,10 @@ import { useEffect } from "react"
 
 type Props = {
     songs: Song[]
+    userId: string | undefined
 }
 
-export const LikedContent  = ({songs}:Props) => {
+export const LikedContent  = ({songs, userId}:Props) => {
     const onPlay = useOnPlay(songs)
     const router = useRouter();
     const {isLoading, user} = useUser();
@@ -36,7 +37,7 @@ export const LikedContent  = ({songs}:Props) => {
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">
-                        <MediaItem onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
+                        <MediaItem isOwner={song.user_id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
                     <LikeButton songId={song.id}/>
                 </div>

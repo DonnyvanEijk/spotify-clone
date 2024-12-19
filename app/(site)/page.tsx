@@ -6,18 +6,15 @@ import SongContent from './components/song-content';
 import getPlaylists from '@/actions/getPlaylists';
 import getPublicPlaylists from '@/actions/getPublicPlaylists';
 import PlaylistContent from './components/PlaylistContent';
+import getUser from '@/actions/getUser';
 
 export const revalidate = 0;
 
 export default async function Home() {
-
-
-
-
-
     const songs = await getSongs();
     const playlists = await getPlaylists();
     const publicPlaylists  = await getPublicPlaylists()
+    const user = await getUser();
 
 
   return (
@@ -46,7 +43,7 @@ export default async function Home() {
         </div>
       
          
-          <SongContent songs={songs} />
+          <SongContent songs={songs} userId={user?.id} />
         
       </div>
 

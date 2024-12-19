@@ -8,8 +8,9 @@ import LibraryDropdown from "./LibraryDropdown"
 
 type Props  = {
     songs: Song[]
+    userId: string | undefined
 }
-export const Library = ({songs}:Props) => {
+export const Library = ({songs, userId}:Props) => {
 
     const onPlay = useOnPlay(songs)
     const {activeId} = usePlayer()
@@ -33,6 +34,7 @@ export const Library = ({songs}:Props) => {
             onClick={(id: string) => {onPlay(id)}}
             key={item.id}
             data={item}
+            isOwner={item.user_id === userId}
           />
         ))}
       </div>
