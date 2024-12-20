@@ -8,9 +8,9 @@ import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
-import { Input } from "./input";
-import { Modal } from "./modal";
-import { Button } from "./button";
+import { Input } from "../input";
+import { Modal } from "../modal";
+import { Button } from "../button";
 
 export const UploadModal = () => {
     const router = useRouter();

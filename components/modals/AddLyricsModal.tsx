@@ -1,13 +1,13 @@
 "use client";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { Modal } from "./modal";
+import { Modal } from "../modal";
 import { useEffect, useState } from "react";
-import { Button } from "./button";
+import { Button } from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
-import TextArea from "./TextArea";
+import TextArea from "../TextArea";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import getSongsLyricsById from "@/actions/getSongLyricsById";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useBatchAddToPlaylistModal } from "@/hooks/useBatchAddToPlaylistModal";
-import { Modal } from "./modal";
+import { Modal } from "../modal";
 import { useEffect, useState } from "react";
-import {Button} from "./button";
+import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
