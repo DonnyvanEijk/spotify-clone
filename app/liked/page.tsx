@@ -3,6 +3,7 @@ import { Header } from "@/components/header";
 import Image from "next/image";
 import { LikedContent } from "./components/liked_content";
 import getUser from "@/actions/getUser";
+import ShuffleControl from "./components/Controls";
 
 export const revalidate = 0 
 
@@ -28,6 +29,8 @@ return (
 
             </div>
         </Header>
+        <ShuffleControl songs={songs}/>
+        <div className="h-4"/>
         <LikedContent userId={user?.id} songs={songs}/>
     </div>
 )
