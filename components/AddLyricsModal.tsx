@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import TextArea from "./TextArea";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import getSongsLyricsById from "@/actions/getSongLyricsById";
 
 const AddLyricsModal = () => {
     const router = useRouter();
@@ -102,32 +103,35 @@ const AddLyricsModal = () => {
 
     const fetchLyrics = async () => {
         try {
-            const { data: lyricsData, error: lyricsError } = await supabaseClient
-                .from("song_lyrics")
-                .select("lyrics")
-                .eq("song_id", songId);
+            if (!songId) return null;
+            const lyricsData = await getSongsLyricsById(supabaseClient, songId);
 
-            if (lyricsError) {
-                return toast.error("Something went wrong fetching lyrics");
+            if (lyricsData instanceof Error) {
+                return toast.error(lyricsData.message);
             }
 
             setLyrics(lyricsData);
-        } catch {
+        } catch (error) {
             toast.error("Something went wrong fetching lyrics");
+            console.error(error);
         }
     }
 
     useEffect(() => {
-        if (addLyricsModal.isOpen) {
+        if (addLyricsModal.isOpen && songId) {
             fetchLyrics();
         }
-    }, [addLyricsModal.isOpen]);
+    }, [addLyricsModal.isOpen, songId]);
 
     useEffect(() => {
         if (lyrics.length > 0) {
             setValue('lyrics', lyrics[0].lyrics || '');
         }
     }, [lyrics, setValue]);
+
+    if (!songId) {
+        return null;
+    }
 
     return (
         <Modal
