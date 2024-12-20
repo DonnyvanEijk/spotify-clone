@@ -11,7 +11,7 @@ import DeleteSongModal from "@/components/modals/DeleteSongModal"
 import PlaylistEditModal from "@/components/modals/EditPlaylistModal"
 import SongEditModal from "@/components/modals/EditSongModal"
 import { SubscribeModal } from "@/components/modals/SubscribeModal"
-import { UploadModal } from "@/components/modals/upload-modal"
+import  UploadModal from "@/components/modals/upload-modal"
 import { ProductWithPrice } from "@/types"
 import { useEffect, useState } from "react"
 

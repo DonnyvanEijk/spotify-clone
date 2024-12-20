@@ -11,11 +11,11 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
-
+import CheckBox from "../CheckBox";
 
 const SongEditModal = () => {
     const router = useRouter();
-    const editSongModal = useEditSongModal(); 
+    const editSongModal = useEditSongModal();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -30,6 +30,7 @@ const SongEditModal = () => {
         user_id: string;
         title: string;
         author: string;
+        is_private: boolean;
     }
 
     const [song, setSong] = useState<Song | null>(null);
@@ -62,7 +63,7 @@ const SongEditModal = () => {
         }
 
         fetchSong();
-    }, [songId, fetchSong]);
+    }, [songId]);
 
     const {
         register,
@@ -74,6 +75,7 @@ const SongEditModal = () => {
             user_id: song?.user_id || '',
             author: song?.author || '',
             title: song?.title || '',
+            is_private: song?.is_private || false,
         }
     })
 
@@ -91,14 +93,15 @@ const SongEditModal = () => {
             const {
                 error: supabaseError
             } = await supabaseClient
-            .from(`songs`)
-            .update({
-                title: values.title,
-                author: values.author,
-            })
-            .eq('id', songId)
+                .from(`songs`)
+                .update({
+                    title: values.title,
+                    author: values.author,
+                    is_private: values.is_private
+                })
+                .eq('id', songId)
 
-            if (supabaseError){
+            if (supabaseError) {
                 setIsLoading(false);
                 return toast.error(supabaseError.message);
             }
@@ -122,13 +125,14 @@ const SongEditModal = () => {
             user_id: song?.user_id || '',
             author: song?.author || '',
             title: song?.title || '',
-        })
-    }, [song, reset, songId])
+            is_private: song?.is_private || false,
+        });
+    }, [song])
 
     return (
         <Modal
-            title="Edit song"
-            description="Edit uploaded song"
+            title="Edit Song"
+            description="Edit a song you uploaded to the platform"
             isOpen={editSongModal.isOpen}
             onChange={onChange}
         >
@@ -144,6 +148,12 @@ const SongEditModal = () => {
                     disabled={isLoading}
                     {...register('author', { required: true })}
                     placeholder="Song Author"
+                />
+                <CheckBox
+                    id="is_private"
+                    label="private Song"
+                    disabled={isLoading}
+                    {...register('is_private')}
                 />
                 <Button disabled={isLoading} type="submit">
                     Edit Song
