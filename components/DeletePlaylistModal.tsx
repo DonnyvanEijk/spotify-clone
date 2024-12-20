@@ -61,6 +61,19 @@ const DeletePlaylistModal = () => {
 
     const DeletePlaylist = async () => {
         try {
+            const { data, error: GetSongError } = await supabaseClient
+            .from('playlists')
+            .select('*')
+            .eq('id', playlistId)
+            .eq('user_id', user?.id)
+            .single();
+
+        if (GetSongError || !data) {
+            console.error("Error fetching song: ", GetSongError);
+            toast.error("Failed to fetch song");
+            return;
+        }
+
             const { error: PlaylistSongDeleteError } = await supabaseClient
                 .from('playlist_songs')
                 .delete()
@@ -84,6 +97,18 @@ const DeletePlaylistModal = () => {
                 toast.error("Failed to delete playlist");
                 return;
             }
+
+            const { error: ImageStorageDeleteError } = await supabaseClient
+            .storage
+            .from('images')
+            .remove([data.image_path]);
+
+        if (ImageStorageDeleteError) {
+            console.error("Error deleting image from storage: ", ImageStorageDeleteError);
+            toast.error("Failed to delete image from storage");
+            return;
+        }
+        
             toast.success("Playlist deleted successfully");
             router.push('/');
             deletePlaylistModal.onClose();
