@@ -2,17 +2,19 @@
 
 import uniqid from "uniqid";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+
 import { useUploadModal } from "@/hooks/useUploadModal";
+import {Modal} from "../modal";
 import { useState } from "react";
+import {Input} from "../input";
+import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
-import { Input } from "../input";
-import { Modal } from "../modal";
-import { Button } from "../button";
+import CheckBox from "../CheckBox";
 
-export const UploadModal = () => {
+const UploadModal = () => {
     const router = useRouter();
     const uploadModal = useUploadModal();
 
@@ -30,20 +32,21 @@ export const UploadModal = () => {
         defaultValues: {
             author: '',
             title: '',
+            is_private: false,
             song: null,
             image: null,
         }
     })
-
-    const sanitizeFileName = (name: string) => {
-        return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    }    
 
     const onChange = (open: boolean) => {
         if (!open) {
             reset();
             uploadModal.onClose();
         }
+    }
+
+    const sanitizeFileName = (name: string) => {
+        return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     }
 
     const onSubmit: SubmitHandler<FieldValues> = async (values) => {
@@ -59,7 +62,7 @@ export const UploadModal = () => {
             }
 
             const sanitizedFileName = sanitizeFileName(values.title);
-            
+
             const uniqueID = uniqid();
 
             // upload song
@@ -67,15 +70,16 @@ export const UploadModal = () => {
                 data: songData,
                 error: songError
             } = await supabaseClient
-            .storage
-            .from('songs')
-            .upload(`song-${sanitizedFileName}-${uniqueID}`, songFile, {
-                cacheControl: '3600',
-                upsert: false,
-            });
+                .storage
+                .from('songs')
+                .upload(`song-${sanitizedFileName}-${uniqueID}`, songFile, {
+                    cacheControl: '3600',
+                    upsert: false,
+                });
 
-            if (songError){
+            if (songError) {
                 setIsLoading(false);
+                console.error(songError);
                 return toast.error("Failed to upload song");
             }
 
@@ -84,31 +88,33 @@ export const UploadModal = () => {
                 data: imageData,
                 error: imageError
             } = await supabaseClient
-            .storage
-            .from('images')
-            .upload(`image-${sanitizedFileName}-${uniqueID}`, imageFile, {
-                cacheControl: '3600',
-                upsert: false,
-            });
+                .storage
+                .from('images')
+                .upload(`image-${sanitizedFileName}-${uniqueID}`, imageFile, {
+                    cacheControl: '3600',
+                    upsert: false,
+                });
 
-            if (imageError){
+            if (imageError) {
                 setIsLoading(false);
+                console.error(imageError);
                 return toast.error("Failed to upload image");
             }
 
             const {
                 error: supabaseError
             } = await supabaseClient
-            .from(`songs`)
-            .insert({
-                user_id: user.id,
-                title: values.title,
-                author: values.author,
-                image_path: imageData.path,
-                song_path: songData.path,                
-            });
+                .from(`songs`)
+                .insert({
+                    user_id: user.id,
+                    title: values.title,
+                    author: values.author,
+                    is_private: values.is_private,
+                    image_path: imageData.path,
+                    song_path: songData.path,
+                });
 
-            if (supabaseError){
+            if (supabaseError) {
                 setIsLoading(false);
                 return toast.error(supabaseError.message);
             }
@@ -118,14 +124,13 @@ export const UploadModal = () => {
             toast.success("Song uploaded successfully");
             reset();
             uploadModal.onClose();
-        } catch  {
+        } catch (error) {
+            console.error(error);
             toast.error("Something went wrong");
         } finally {
             setIsLoading(false);
         }
     }
-
-   
 
     return (
         <Modal
@@ -147,18 +152,12 @@ export const UploadModal = () => {
                     {...register('author', { required: true })}
                     placeholder="Song Author"
                 />
-                <div>
-                    <div className="pb-1">
-                        Select a song file
-                    </div>
-                    <Input
-                        id="song"
-                        type="file"
-                        disabled={isLoading}
-                        accept=".mp3" // change to audio/* if want to
-                        {...register('song', { required: true })}
-                    />
-                </div>
+                <CheckBox
+                    id="is_private"
+                    label="Private Song"
+                    disabled={isLoading}
+                    {...register('is_private')}
+                />
                 <div>
                     <div className="pb-1">
                         Select an image
@@ -179,3 +178,4 @@ export const UploadModal = () => {
     );
 }
 
+export default UploadModal;
