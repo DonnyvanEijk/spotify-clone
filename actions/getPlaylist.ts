@@ -25,8 +25,11 @@ const getPlaylist = async (id: string): Promise<Playlist> => {
     if (error) {
         console.error(error);
     }
+    if(!data) {
+       throw new Error('Playlist not found');
+    }
 
-    if (!data || (data.user_id !== session?.user.id && !data.is_public)) {
+    if (data.user_id !== session?.user.id && !data.is_public) {
         return redirect('/');
     }
 
