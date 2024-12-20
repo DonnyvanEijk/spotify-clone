@@ -1,6 +1,7 @@
 "use client"
 import { LikeButton } from "@/components/like-button"
 import MediaItem from "@/components/media-item"
+import PlaylistButton from "@/components/PlaylistButton"
 import useOnPlay from "@/hooks/useOnPlay"
 import usePlayer from "@/hooks/usePlayer"
 import { useUser } from "@/hooks/useUser"
@@ -39,6 +40,7 @@ export const LikedContent  = ({songs, userId}:Props) => {
                     <div className="flex-1">
                         <MediaItem isOwner={song.user_id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
+                    <PlaylistButton songId={song.id}/>
                     <LikeButton songId={song.id}/>
                 </div>
             ))}
