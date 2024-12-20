@@ -6,7 +6,7 @@ import { MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAddCheck } from "rea
 import { Song } from "@/types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "@/hooks/useUser";
-import { TbDownload, TbDownloadOff } from "react-icons/tb";
+import { TbDownload, TbDownloadOff, TbMicrophone } from "react-icons/tb";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
@@ -16,6 +16,8 @@ import { CiTextAlignCenter } from "react-icons/ci";
 import { useDeleteSong } from "@/hooks/useDeleteSongModal";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
+import { useRouter } from "next/navigation";
+
 
 interface SongRightClickContentProps {
 	isOwner: boolean;
@@ -32,6 +34,7 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 	const deleteSongModal = useDeleteSong();
 	const addLyricsModal = useAddLyricsModal();
 	const { user, subscription } = useUser();
+	const router = useRouter();
 
 	const [isInPlaylist, setIsInPlaylist] = useState(false);
 	const [userHasPlaylist, setUserHasPlaylist] = useState(false);
@@ -172,6 +175,21 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 							Add To Playlist
 						</p>
 					)}
+
+				</ContextMenu.Item>
+
+				<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
+				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+					onClick={() => router.push(`/lyrics/${song.id}`)}
+					disabled={!user}
+				>
+					<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
+						<TbMicrophone/>
+					</div>
+				
+						<p>
+							View lyrics
+						</p>
 
 				</ContextMenu.Item>
 
