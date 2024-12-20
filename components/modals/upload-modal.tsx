@@ -158,6 +158,18 @@ const UploadModal = () => {
                     disabled={isLoading}
                     {...register('is_private')}
                 />
+                                <div>
+                    <div className="pb-1">
+                        Select a song file
+                    </div>
+                    <Input
+                        id="song"
+                        type="file"
+                        disabled={isLoading}
+                        accept=".mp3" // change to audio/* if want to
+                        {...register('song', { required: true })}
+                    />
+                </div>
                 <div>
                     <div className="pb-1">
                         Select an image
