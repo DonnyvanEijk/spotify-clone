@@ -4,9 +4,10 @@ import { Playlist } from "@/types";
 
 interface PlaylistContentProps {
     playlists: Playlist[];
+    userId: string | undefined;
 }
 
-const PlaylistContent: React.FC<PlaylistContentProps> = ({ playlists }) => {
+const PlaylistContent: React.FC<PlaylistContentProps> = ({ playlists, userId }) => {
     return (
         <div className="grid 
           grid-cols-2 
@@ -19,6 +20,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({ playlists }) => {
           mt-4">
             {playlists.slice(0, 16).map((item) => (
                 <PlaylistItem
+                    isOwner={item.user_id === userId}
                     key={item.id}
                     data={item}
                 />

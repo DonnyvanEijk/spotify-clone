@@ -53,7 +53,7 @@ export default async function Home() {
           
         </div>
       
-         <PlaylistContent playlists={playlists} />
+         <PlaylistContent playlists={playlists} userId={user?.id} />
     
       </div>
 
@@ -62,7 +62,7 @@ export default async function Home() {
           <h1 className='text-white text-2xl font-semibold mb-2'>Public Playlists</h1>
           
         </div>
-         <PlaylistContent playlists={publicPlaylists} />  
+         <PlaylistContent playlists={publicPlaylists} userId={user?.id} />  
       </div>
     </div>
   );
