@@ -39,7 +39,7 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
     }
 
     return (
-        <div className="flex flex-col w-full bg-green-500 p-6 rounded-lg gap-3">
+        <div className="flex flex-col w-full bg-green-500 p-6 rounded-lg gap-3 mb-[5rem]">
              <Header className='bg-gradient-to-b from-green-500 p-6 no-drop-shadow'>  
                 <h2 className='font-semibold text-2xl'>Lyrics</h2>
             </Header>
