@@ -3,19 +3,21 @@
 
 import { Playlist } from "@/types";
 import Image from "next/image";
-// import PlayButton from "./PlayButton";
 import { twMerge } from "tailwind-merge";
 import usePlayer from "@/hooks/usePlayer";
-
 import Link from "next/link";
 import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
+import * as ContextMenu from "@radix-ui/react-context-menu"
+import PlaylistRightClickContent from "./PlaylistRightClickContent";
 
 interface PlaylistItemProps {
     data: Playlist;
+    isOwner:boolean;
 }
 
 const PlaylistItem: React.FC<PlaylistItemProps> = ({
     data,
+    isOwner
 }) => {
     const imagePath = useLoadPlaylistImage(data);
 
@@ -25,6 +27,9 @@ const PlaylistItem: React.FC<PlaylistItemProps> = ({
     const playing = playlistId === activeId;
 
     return (
+        <ContextMenu.Root modal={false}>
+            <ContextMenu.Trigger>
+                
         <Link href={`/playlist/${playlistId}`}>
             <div
                 className="relative
@@ -70,6 +75,9 @@ const PlaylistItem: React.FC<PlaylistItemProps> = ({
             </div> */}
             </div>
         </Link>
+        </ContextMenu.Trigger>
+        <PlaylistRightClickContent isOwner={isOwner} playlist={data}/>
+        </ContextMenu.Root>
     );
 }
 

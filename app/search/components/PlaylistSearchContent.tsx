@@ -5,10 +5,12 @@ import { Playlist } from "@/types";
 
 interface PlaylistSearchContentProps {
     playlists: Playlist[];
+    userId: string | undefined;
 }
 
 const PlaylistSearchContent: React.FC<PlaylistSearchContentProps> = ({
-    playlists
+    playlists,
+    userId
 }) => {
     // const onPlay = useOnPlay(playlists);
 
@@ -38,6 +40,7 @@ const PlaylistSearchContent: React.FC<PlaylistSearchContentProps> = ({
                 >
                     <div className="flex-1">
                         <PlaylistMediaItem
+                        isOwner={playlist.user_id === userId}
                         data={playlist}
                         />
                     </div>

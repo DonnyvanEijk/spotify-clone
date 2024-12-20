@@ -50,7 +50,7 @@ const SearchPage  = async ({searchParams}:Props) => {
                         <h2 className="text-white text-xl font-semibold px-6">
                             Playlists
                         </h2>
-                        <PlaylistSearchContent playlists={playlists} />
+                        <PlaylistSearchContent userId={user?.id} playlists={playlists} />
                     </div>
                 </>
             )}
@@ -67,7 +67,7 @@ const SearchPage  = async ({searchParams}:Props) => {
                     <h2 className="text-white text-xl font-semibold px-6">
                         Playlists
                     </h2>
-                    <PlaylistSearchContent playlists={playlists} />
+                    <PlaylistSearchContent userId={user?.id} playlists={playlists} />
                 </div>
             )}
         </div>
