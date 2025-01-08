@@ -14,7 +14,8 @@ const LibraryDropdown = () => {
     const authModal = useAuthModal();
     const uploadModal = useUploadModal();
     const createPlaylistModal = useCreatePlaylistModal();
-
+    const uploadAlbumModal = useUploadAlbumModal();
+    const createAlbumModal = useCreateAlbumModal();
     const { user, subscription } = useUser();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +34,17 @@ const LibraryDropdown = () => {
     
         return uploadModal.onOpen();
     }
+
+    const ClickUploadAlbum = async () => {
+        if (!user) {
+            return uploadAlbumModal.onOpen();
+        }
+        if (!subscription) {
+            return uploadAlbumModal.onOpen();
+        }
+    
+        return uploadAlbumModal.onOpen();
+    }
     
     const ClickNewPlaylist = async () => {
         if (!user) {
@@ -44,6 +56,19 @@ const LibraryDropdown = () => {
     
         return createPlaylistModal.onOpen();
     }
+
+    const ClickNewAlbum = async () => {
+        if (!user) {
+            return createAlbumModal.onOpen();
+        }
+        if (!subscription) {
+            return createAlbumModal.onOpen();
+        }
+    
+        return createAlbumModal.onOpen();
+    }
+
+    
 
     return (
         <DropdownMenu.Root modal={false}>

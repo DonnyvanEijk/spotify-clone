@@ -34,6 +34,12 @@ const SearchControls: React.FC = () => {
             )}>
                 Playlists
             </Button>
+            <Button onClick={() => handleButtonClick('albums')} className={twMerge(
+                'w-[120px] bg-white',
+                type === 'albums' && 'bg-green-500'
+            )}>
+                Albums
+            </Button>
             {type && <Button onClick={() => handleButtonClick()} className='w-[120px] bg-transparent text-white'>Show All</Button>}
         </div>
     );

@@ -3,7 +3,7 @@
 import React from "react";
 import ShuffleButton from "@/components/ShuffleButton";
 import UsablePlayButton from "@/components/UsablePlayButton";
-import AlbumPopover from "@/components/AlbumPopover";
+import AlbumPopover from "@/components/AlbumPopOver";
 import { Song } from "@/types";
 
 interface ShuffleControlProps {

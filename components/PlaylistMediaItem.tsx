@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { twMerge } from "tailwind-merge";
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import PlaylistRightClickContent from "./PlaylistRightClickContent";
+import PlaylistRightClickContent from "./right_click/PlaylistRightClickContent";
 
 interface MediaItemProps {
     data: Playlist;
