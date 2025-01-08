@@ -7,6 +7,8 @@ import getPlaylists from '@/actions/getPlaylists';
 import getPublicPlaylists from '@/actions/getPublicPlaylists';
 import PlaylistContent from './components/PlaylistContent';
 import getUser from '@/actions/getUser';
+import AlbumContent from './components/AlbumContent';
+import getAlbums from '@/actions/getAlbums';
 
 export const revalidate = 0;
 
@@ -15,6 +17,7 @@ export default async function Home() {
     const playlists = await getPlaylists();
     const publicPlaylists  = await getPublicPlaylists()
     const user = await getUser();
+    const albums = await getAlbums();
 
 
   return (
@@ -63,6 +66,26 @@ export default async function Home() {
           
         </div>
          <PlaylistContent playlists={publicPlaylists} userId={user?.id} />  
+      </div>
+
+      <div className='mt-2 mb-[3vh] px-6'>
+        <div className='flex justify-between items-center'>
+          <h1 className='text-white text-2xl font-semibold mb-2'>Newest Albums</h1>
+          <div className='mt-4'>
+            <Link href="/album/list">
+                <button
+              className='px-4 py-2 bg-green-600 text-white rounded'
+            >
+              All Albums
+            </button>
+            </Link>
+       
+      </div>
+        </div>
+      
+         
+          <AlbumContent albums={albums} userId={user?.id} />
+        
       </div>
     </div>
   );
