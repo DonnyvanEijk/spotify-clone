@@ -78,3 +78,11 @@ export interface Subscription {
   trial_end?: string;
   prices?: Price;
 }
+export interface Album {
+  id: string;
+  user_id: string;
+  name: string;
+  author: string;
+  is_public: boolean;
+  image_path: string;
+}
