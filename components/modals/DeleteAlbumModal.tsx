@@ -27,7 +27,7 @@ const DeleteAlbumModal = () => {
         try {
             const { data: album, error } = await supabaseClient
                 .from('albums')
-                .select('title')
+                .select('name')
                 .eq('id', albumId)
                 .single();
 
@@ -37,7 +37,7 @@ const DeleteAlbumModal = () => {
                 return;
             }
 
-            setAlbumtName(album?.title);
+            setAlbumtName(album?.name);
         } catch (error) {
             console.error(error);
             toast.error("Something went wrong");
@@ -98,8 +98,8 @@ const DeleteAlbumModal = () => {
 
             const { data: playlists, error: PlaylistError } = await supabaseClient
                 .from('albums')
-                .select('image_patch')
-                .eq('image_patch', data.image_patch);
+                .select('image_path')
+                .eq('image_path', data.image_path);
 
             if (PlaylistError) {
                 console.error("Error checking albums: ", PlaylistError);

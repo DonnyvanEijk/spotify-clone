@@ -8,6 +8,7 @@ import { twMerge } from 'tailwind-merge';
 import usePlayer from '@/hooks/usePlayer';
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import SongRightClickContent from './right_click/SongRightClickContent';
+import useGetAlbumName from '@/hooks/useGetAlbumName';
 
 
 interface MediaItemProps {
@@ -25,8 +26,9 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactiv
  }) => {
   const player = usePlayer();
   const imageUrl = useLoadImage(data);
-   
-  const { albumName } = useGetOwnName(data.album_id)  
+  const { albumName } = useGetAlbumName(data.album_id)  
+
+
 
   const handleClick = () => {
     if (onClick) {
@@ -121,6 +123,4 @@ min-w-[48px]
 
 export default MediaItem;
 
-function useGetOwnName(album_id: any): { albumName: any; } {
-  throw new Error('Function not implemented.');
-}
+

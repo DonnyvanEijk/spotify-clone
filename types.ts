@@ -84,6 +84,6 @@ export interface Album {
   user_id: string;
   name: string;
   author: string;
-  is_public: boolean;
+  ispublic: boolean;
   image_path: string;
 }

@@ -30,8 +30,8 @@ const getAlbumsByTitle = async (title: string): Promise<Album[]> => {
 
     const remappedData = data.map((album: any) => ({
         ...album,
-        image_path: album.image_patch,
-        image_patch: undefined, // Remove the original image_patch property
+        image_path: album.image_path,
+      
     }));
 
     return remappedData;

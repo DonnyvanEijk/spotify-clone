@@ -22,7 +22,15 @@ const AlbumContent: React.FC<PageContentProps> = ({
     }
     return (
         <div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 lx:grid-cols-5 2xl:grid-cols-8 gap-4 ml-4"
+            className="grid 
+          grid-cols-2 
+          sm:grid-cols-3 
+          md:grid-cols-3 
+          lg:grid-cols-4 
+          xl:grid-cols-5 
+          2xl:grid-cols-8 
+          gap-4 
+          mt-4"
         >
             {albums.slice(0, 8).map((item) => (
                 <AlbumItem

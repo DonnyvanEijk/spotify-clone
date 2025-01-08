@@ -52,7 +52,7 @@ const AlbumItemDropdown = ({  }: AlbumItemDropdownProps) => {
     console.log("isOpen: ", userHasPLaylist);
 
     return (
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
                 <button className="focus:outline-none" aria-label="Customise options">
                     <FaEllipsisH

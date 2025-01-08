@@ -64,7 +64,8 @@ const SongEditModal = () => {
         }
 
         fetchSong();
-    }, [songId]);
+    }, [songId
+    ]);
 
     const {
         register,
@@ -155,7 +156,7 @@ const SongEditModal = () => {
             is_private: song?.is_private || false,
             album_id: selectedAlbum || ''
         });
-    }, [song, selectedAlbum, reset])
+    }, [song, selectedAlbum, reset, songId])
 
     return (
         <Modal

@@ -29,7 +29,7 @@ const AlbumEditModal = () => {
         id: string;
         user_id: string;
         name: string;
-        is_public: boolean;
+        ispublic: boolean;
         author: string;
     }
 
@@ -63,7 +63,7 @@ const AlbumEditModal = () => {
         }
 
         fetchAlbum();
-    }, [albumId]);
+    }, [albumId, ]);
 
     const {
         register,
@@ -74,7 +74,7 @@ const AlbumEditModal = () => {
             id: album?.id || albumId,
             user_id: album?.user_id || '',
             author: album?.author || '',
-            is_public: album?.is_public || true,
+            ispublic: album?.ispublic || true,
             name: album?.name || '',
         }
     })
@@ -97,7 +97,7 @@ const AlbumEditModal = () => {
                 .update({
                     name: values.name,
                     author: values.author,
-                    is_public: values.is_public
+                    ispublic: values.ispublic
                 })
                 .eq('id', albumId)
 
@@ -124,10 +124,10 @@ const AlbumEditModal = () => {
             id: album?.id || albumId,
             user_id: album?.user_id || '',
             author: album?.author || '',
-            is_public: album?.is_public || true,
+            ispublic: album?.ispublic || true,
             name: album?.name || '',
         });
-    }, [album])
+    }, [album, albumId]);
 
     return (
         <Modal
@@ -150,10 +150,10 @@ const AlbumEditModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="is_public"
+                    id="ispublic"
                     label="Public Album"
                     disabled={isLoading}
-                    {...register('is_public')}
+                    {...register('ispublic')}
                 />
                 <Button disabled={isLoading} type="submit">
                     Edit Album

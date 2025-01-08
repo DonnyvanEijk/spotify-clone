@@ -31,15 +31,15 @@ const getAlbum = async (id: string): Promise<Album> => {
         // toast.error("You do not have access to this playlist.");
     }
 
-    if (data.user_id !== session?.user.id && !data.is_public) {
+    if (data.user_id !== session?.user.id && !data.ispublic) {
         redirect('/');
     }
 
     const remappedData = {
         ...data,
-        image_path: data.image_patch,
+        image_path: data.image_path,
     };
-    delete remappedData.image_patch;
+    delete remappedData.image_path;
 
     return remappedData;
 }

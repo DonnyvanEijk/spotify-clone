@@ -2,7 +2,6 @@
 
 
 import AlbumItem from "@/components/AlbumItem";
-import useOnPlay from "@/hooks/useOnPlay";
 import { Album } from "@/types";
 
 interface AlbumContentProps {

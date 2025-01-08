@@ -32,7 +32,7 @@ const CreateAlbumModal = () => {
         defaultValues: {
             author: '',
             name: '',
-            is_public: true,
+            ispublic: true,
             image: null,
         }
     })
@@ -87,8 +87,8 @@ const CreateAlbumModal = () => {
                     user_id: user.id,
                     name: values.name,
                     author: values.author,
-                    is_public: values.is_public,
-                    image_patch: imageData.path,
+                    ispublic: values.ispublic,
+                    image_path: imageData.path,
                 });
 
             if (supabaseError) {
@@ -130,10 +130,10 @@ const CreateAlbumModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="is_public"
+                    id="ispublic"
                     label="Public Album"
                     disabled={isLoading}
-                    {...register('is_public')}
+                    {...register('ispublic')}
                 />
                 <div>
                     <div className="pb-1">

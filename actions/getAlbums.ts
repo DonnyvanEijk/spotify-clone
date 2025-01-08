@@ -1,3 +1,4 @@
+"use server"
 import { Album } from "@/types";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -22,8 +23,8 @@ const getAlbums = async (): Promise<Album[]> => {
 
     const remappedData = data.map((album: any) => ({
         ...album,
-        image_path: album.image_patch,
-        image_patch: undefined, // Remove the original image_patch property
+        image_path: album.image_path,
+      
     }));
 
     return remappedData;

@@ -125,7 +125,7 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
 
     return (
         <div>
-            <DropdownMenu.Root>
+            <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
                     <button className="flex flex-col justify-center">
                         <FaEllipsisH className="text-neutral-400 hover:text-neutral-300 transition hover:outline-none" size={25} />

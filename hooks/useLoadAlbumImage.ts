@@ -13,7 +13,7 @@ const useLoadAlbumImage = (album: Album | null) => {
     .storage
     .from('images')
     .getPublicUrl(album.image_path);
-
+    console.log(album.image_path)
     return imageData.publicUrl;
 }
 
