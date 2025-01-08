@@ -3,7 +3,6 @@
 import uniqid from "uniqid";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
-import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
 import {Modal} from "../modal";
 import { useState } from "react";
 import {Input} from "../input";
@@ -13,6 +12,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
+import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
 
 const CreateAlbumModal = () => {
     const router = useRouter();

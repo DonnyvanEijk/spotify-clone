@@ -22,9 +22,9 @@ const AlbumItem: React.FC<AlbumItemProps> = ({
     const imagePath = useLoadAlbumImage(data);
 
     const albumId = data.id;
-    const { activateId } = usePlayer();
+    const { activeId } = usePlayer();
 
-    const playing = albumId === activateId;
+    const playing = albumId === activeId;
 
     return (
         <ContextMenu.Root modal={false}>

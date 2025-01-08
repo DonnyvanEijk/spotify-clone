@@ -120,3 +120,7 @@ min-w-[48px]
 };
 
 export default MediaItem;
+
+function useGetOwnName(album_id: any): { albumName: any; } {
+  throw new Error('Function not implemented.');
+}

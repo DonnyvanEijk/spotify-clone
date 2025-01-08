@@ -8,6 +8,8 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUploadModal } from "@/hooks/useUploadModal";
 import { useUser } from "@/hooks/useUser";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
+import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
+import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
 
 const LibraryDropdown = () => {
     const subscribeModal = useSubscribeModal();
