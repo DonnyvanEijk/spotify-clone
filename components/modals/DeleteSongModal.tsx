@@ -106,7 +106,29 @@ const DeleteSongModal = () => {
         return;
       }
 
-      if (playlists.length === 0) {
+      const { data: songImageDatas, error: SongImageError } = await supabaseClient
+      .from('songs')
+      .select('*')
+      .eq('image_path', data.image_path);
+
+  if (SongImageError) {
+      console.error("Error fetching song images: ", SongImageError);
+      toast.error("Failed to fetch song images");
+      return;
+  }
+
+  const { data: albumImageDatas, error: AlbumImageError } = await supabaseClient
+      .from('albums')
+      .select('*')
+      .eq('image_path', data.image_path);
+
+  if (AlbumImageError) {
+      console.error("Error fetching song images: ", SongImageError);
+      toast.error("Failed to fetch song images");
+      return;
+  }
+
+  if (playlists.length === 0 && songImageDatas.length === 0 && albumImageDatas.length === 0) {
         const { error: ImageStorageDeleteError } = await supabaseClient.storage
           .from("images")
           .remove([data.image_path]);

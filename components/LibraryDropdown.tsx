@@ -9,6 +9,7 @@ import { useUploadModal } from "@/hooks/useUploadModal";
 import { useUser } from "@/hooks/useUser";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
+import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
 // import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
 // import { BiUpload } from "react-icons/bi";
 
@@ -17,7 +18,7 @@ const LibraryDropdown = () => {
     const authModal = useAuthModal();
     const uploadModal = useUploadModal();
     const createPlaylistModal = useCreatePlaylistModal();
-    // const uploadAlbumModal = useUploadAlbumModal();
+    const uploadAlbumModal = useUploadAlbumModal();
     const createAlbumModal = useCreateAlbumModal();
     const { user, subscription } = useUser();
 
@@ -38,16 +39,16 @@ const LibraryDropdown = () => {
         return uploadModal.onOpen();
     }
 
-    // const ClickUploadAlbum = async () => {
-    //     if (!user) {
-    //         return uploadAlbumModal.onOpen();
-    //     }
-    //     if (!subscription) {
-    //         return uploadAlbumModal.onOpen();
-    //     }
+    const ClickUploadAlbum = async () => {
+        if (!user) {
+            return uploadAlbumModal.onOpen();
+        }
+        if (!subscription) {
+            return uploadAlbumModal.onOpen();
+        }
     
-    //     return uploadAlbumModal.onOpen();
-    // }
+        return uploadAlbumModal.onOpen();
+    }
     
     const ClickNewPlaylist = async () => {
         if (!user) {
@@ -98,6 +99,9 @@ const LibraryDropdown = () => {
                     </DropdownMenu.Item>
                     <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mt-1.5 transition" onClick={ClickNewAlbum}>
                         Create New Album <AiOutlinePlus size={20} className="text-neutral-400" />
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mt-1.5 transition" onClick={ClickUploadAlbum}>
+                        Upload Album<AiOutlineUpload size={20} className="text-neutral-400" />
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Portal>

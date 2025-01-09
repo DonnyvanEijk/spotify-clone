@@ -39,7 +39,7 @@ const getAlbum = async (id: string): Promise<Album> => {
         ...data,
         image_path: data.image_path,
     };
-    delete remappedData.image_path;
+   
 
     return remappedData;
 }

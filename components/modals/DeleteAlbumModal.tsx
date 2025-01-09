@@ -85,40 +85,30 @@ const DeleteAlbumModal = () => {
                 return;
             }
 
-            const { error: StorageDeleteError } = await supabaseClient
-                .storage
-                .from('albums')
-                .remove([data.album_path]);
-
-            if (StorageDeleteError) {
-                console.error("Error deleting album from storage: ", StorageDeleteError);
-                toast.error("Failed to delete album from storage");
-                return;
-            }
-
-            const { data: playlists, error: PlaylistError } = await supabaseClient
-                .from('albums')
-                .select('image_path')
+            const { data: songImageDatas, error: SongImageError } = await supabaseClient
+                .from('songs')
+                .select('*')
                 .eq('image_path', data.image_path);
 
-            if (PlaylistError) {
-                console.error("Error checking albums: ", PlaylistError);
-                toast.error("Failed to check albums");
+            if (SongImageError) {
+                console.error("Error fetching song images: ", SongImageError);
+                toast.error("Failed to fetch song images");
                 return;
             }
 
-            if (playlists.length === 0) {
-                const { error: ImageStorageDeleteError } = await supabaseClient
+            if (songImageDatas.length === 0) {
+                const { error: ImageDeleteError } = await supabaseClient
                     .storage
                     .from('images')
                     .remove([data.image_path]);
 
-                if (ImageStorageDeleteError) {
-                    console.error("Error deleting image from storage: ", ImageStorageDeleteError);
-                    toast.error("Failed to delete image from storage");
+                if (ImageDeleteError) {
+                    console.error("Error deleting image: ", ImageDeleteError);
+                    toast.error("Failed to delete image");
                     return;
                 }
             }
+        
 
             toast.success("Album deleted successfully");
             router.push('/');

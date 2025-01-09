@@ -88,6 +88,7 @@ const SearchPage  = async ({searchParams}:Props) => {
                     <AlbumSearchContent userId={user?.id} albums={albums} />
                 </div>
             )}
+            <div className="mb-[10vh]"/>
         </div>
     )
 }

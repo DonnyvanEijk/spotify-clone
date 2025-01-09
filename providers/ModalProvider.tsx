@@ -15,6 +15,7 @@ import PlaylistEditModal from "@/components/modals/EditPlaylistModal"
 import SongEditModal from "@/components/modals/EditSongModal"
 import { SubscribeModal } from "@/components/modals/SubscribeModal"
 import  UploadModal from "@/components/modals/upload-modal"
+import UploadAlbumModal from "@/components/modals/UploadAlbumModal"
 import { ProductWithPrice } from "@/types"
 import { useEffect, useState } from "react"
 
@@ -38,7 +39,7 @@ export const ModalProvider: React.FC<Props> = ({ products }) => {
             <AuthModal />
             <UploadModal />
             <SubscribeModal products={products} />
-            
+            <UploadAlbumModal/>
             <CreatePlaylistModal />
             <AddToPlaylistModal />
             <DeletePlaylistModal />

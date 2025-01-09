@@ -21,7 +21,9 @@ const AlbumPage = async ({ params }: Props) => {
     const user = await getUser();
     const albumId = params.albumId;
     const album = await getAlbum(albumId);
+    console.log("Album: " +JSON.stringify(album))
     const imagePath = await getImage(album.image_path);
+    console.log("path: " + imagePath)
     const songs = await getAlbumSongs(albumId);
     const isOwner = user ? album.user_id === user.id : false;
 
@@ -86,6 +88,7 @@ const AlbumPage = async ({ params }: Props) => {
             <ShuffleControl songs={songs} isOwner={isOwner} albumId={albumId} />
             <div className="h-4"/>
             <AlbumContent songs={songs} AlbumId={albumId} isOwner={isOwner} userId={user?.id} />
+            <div className="mb-[10vh]"/>
         </div>
     );
 }
