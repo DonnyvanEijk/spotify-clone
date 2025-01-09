@@ -7,6 +7,7 @@ export interface Song {
   title: string;
   song_path: string;
   image_path: string;
+  album_id: string;
 }
 
 export interface Product {
@@ -77,4 +78,12 @@ export interface Subscription {
   trial_start?: string;
   trial_end?: string;
   prices?: Price;
+}
+export interface Album {
+  id: string;
+  user_id: string;
+  name: string;
+  author: string;
+  ispublic: boolean;
+  image_path: string;
 }

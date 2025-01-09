@@ -5,7 +5,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
 import { useUploadModal } from "@/hooks/useUploadModal";
 import {Modal} from "../modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {Input} from "../input";
 import {Button} from "../button";
 import toast from "react-hot-toast";
@@ -13,6 +13,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
+import SearchSelect from "../SearchSelect";
 
 const UploadModal = () => {
     const router = useRouter();
@@ -23,6 +24,12 @@ const UploadModal = () => {
     const { user } = useUser();
 
     const supabaseClient = useSupabaseClient();
+
+    const [albumData, setAlbumData] = useState<{ id: string; name: string }[]>([]);
+
+    const [selectedAlbum, setSelectedAlbum] = useState<string | undefined>(undefined);
+
+    const [selectOpen, setSelectOpen] = useState(false);
 
     const {
         register,
@@ -42,12 +49,34 @@ const UploadModal = () => {
         if (!open) {
             reset();
             uploadModal.onClose();
+            setSelectOpen(false);
         }
     }
 
     const sanitizeFileName = (name: string) => {
         return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     }
+
+    useEffect(() => {
+        const fetchAlbums = async () => {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('albums')
+                    .select('id, name');
+
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+
+                setAlbumData(data);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        fetchAlbums();
+    }, [supabaseClient]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (values) => {
         try {
@@ -112,6 +141,7 @@ const UploadModal = () => {
                     is_private: values.is_private,
                     image_path: imageData.path,
                     song_path: songData.path,
+                    album_id: selectedAlbum ? parseInt(selectedAlbum) : null
                 });
 
             if (supabaseError) {
@@ -139,6 +169,16 @@ const UploadModal = () => {
             isOpen={uploadModal.isOpen}
             onChange={onChange}
         >
+            <SearchSelect
+                disabled={isLoading}
+                isOpen={selectOpen}
+                onOpenChange={() => setSelectOpen(!selectOpen)}
+                data={albumData.map(album => ({ id: album.id, name: album.name }))}
+                onSelect={(selected) => setSelectedAlbum(selected)}
+                selected={selectedAlbum}
+                placeholder="Select an album"
+                className="mb-4"
+            />
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
                 <Input
                     id="title"
@@ -158,7 +198,7 @@ const UploadModal = () => {
                     disabled={isLoading}
                     {...register('is_private')}
                 />
-                                <div>
+                <div>
                     <div className="pb-1">
                         Select a song file
                     </div>

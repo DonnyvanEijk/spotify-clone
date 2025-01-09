@@ -7,7 +7,8 @@ import { Song } from '@/types';
 import { twMerge } from 'tailwind-merge';
 import usePlayer from '@/hooks/usePlayer';
 import * as ContextMenu from "@radix-ui/react-context-menu"
-import SongRightClickContent from './SongRightClickContent';
+import SongRightClickContent from './right_click/SongRightClickContent';
+import useGetAlbumName from '@/hooks/useGetAlbumName';
 
 
 interface MediaItemProps {
@@ -17,15 +18,18 @@ interface MediaItemProps {
   isOwner: boolean;
   reactive?: boolean;   
   isPlayer?: boolean
+  hasAlbumName?: boolean
 }
 
-const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactive, isPlayer, isOwner
+const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactive, isPlayer, isOwner, hasAlbumName = false
 
  }) => {
   const player = usePlayer();
   const imageUrl = useLoadImage(data);
-   
-    
+  const { albumName } = useGetAlbumName(data.album_id)  
+
+
+
   const handleClick = () => {
     if (onClick) {
       return onClick(data.id);
@@ -108,6 +112,7 @@ min-w-[48px]
       <div className='flex flex-col gap-y-1 overflow-hidden'>
         <p className={twMerge(` truncate`, reactive && "font-semibold text-green-500")}>{data.title}</p>
         <p className='text-neutral-400 text-sm truncate'>By {data.author}</p>
+        {hasAlbumName && albumName && <p className='text-neutral-400 text-sm truncate'>{albumName}</p>}
       </div>
     </div>
     </ContextMenu.Trigger>
@@ -117,3 +122,5 @@ min-w-[48px]
 };
 
 export default MediaItem;
+
+

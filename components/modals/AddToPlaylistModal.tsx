@@ -2,20 +2,17 @@
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
-
+import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import {Modal} from "../modal";
 import { useEffect, useState } from "react";
-
+import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import { Playlist } from "@/types";
-import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
-import { Button } from "../button";
-
 
 const AddToPlaylistModal = () => {
     const router = useRouter();
@@ -71,7 +68,7 @@ const AddToPlaylistModal = () => {
         };
 
         fetchPlaylists();
-    }, [user, supabaseClient, createPlaylistModal, isOpen, songId, use]);
+    }, [user, supabaseClient, songId, use]);
 
     const onChange = (open: boolean) => {
         if (!open) {
@@ -145,7 +142,6 @@ const AddToPlaylistModal = () => {
                 console.error(results);
             } else {
                 toast.success("Song added to playlists successfully");
-                router.refresh();
                 addToPlaylistModal.onClose();
             }
         } catch (error) {
@@ -155,6 +151,7 @@ const AddToPlaylistModal = () => {
             setIsLoading(false);
             setSelectedPlaylists([]);
             use = use + 1
+            router.refresh();
         }
     };
 

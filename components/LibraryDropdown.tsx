@@ -2,19 +2,24 @@
 
 import React, { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { AiOutlinePlus, AiOutlineUp } from "react-icons/ai";
+import { AiOutlinePlus, AiOutlineUp, AiOutlineUpload } from "react-icons/ai";
 import { useSubscribeModal } from "@/hooks/useSubscribeModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUploadModal } from "@/hooks/useUploadModal";
 import { useUser } from "@/hooks/useUser";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
+import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
+import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
+// import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
+// import { BiUpload } from "react-icons/bi";
 
 const LibraryDropdown = () => {
     const subscribeModal = useSubscribeModal();
     const authModal = useAuthModal();
     const uploadModal = useUploadModal();
     const createPlaylistModal = useCreatePlaylistModal();
-
+    const uploadAlbumModal = useUploadAlbumModal();
+    const createAlbumModal = useCreateAlbumModal();
     const { user, subscription } = useUser();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +38,17 @@ const LibraryDropdown = () => {
     
         return uploadModal.onOpen();
     }
+
+    const ClickUploadAlbum = async () => {
+        if (!user) {
+            return uploadAlbumModal.onOpen();
+        }
+        if (!subscription) {
+            return uploadAlbumModal.onOpen();
+        }
+    
+        return uploadAlbumModal.onOpen();
+    }
     
     const ClickNewPlaylist = async () => {
         if (!user) {
@@ -44,6 +60,19 @@ const LibraryDropdown = () => {
     
         return createPlaylistModal.onOpen();
     }
+
+    const ClickNewAlbum = async () => {
+        if (!user) {
+            return createAlbumModal.onOpen();
+        }
+        if (!subscription) {
+            return createAlbumModal.onOpen();
+        }
+    
+        return createAlbumModal.onOpen();
+    }
+
+    
 
     return (
         <DropdownMenu.Root modal={false}>
@@ -63,10 +92,16 @@ const LibraryDropdown = () => {
                     sideOffset={5}
                 >
                     <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mb-1.5 transition" onClick={ClickNewSong}>
-                        Upload New Song <AiOutlinePlus size={20} className="text-neutral-400" />
+                        Upload New Song <AiOutlineUpload size={20} className="text-neutral-400" />
                     </DropdownMenu.Item>
                     <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mt-1.5 transition" onClick={ClickNewPlaylist}>
                         Create New Playlist <AiOutlinePlus size={20} className="text-neutral-400" />
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mt-1.5 transition" onClick={ClickNewAlbum}>
+                        Create New Album <AiOutlinePlus size={20} className="text-neutral-400" />
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 mt-1.5 transition" onClick={ClickUploadAlbum}>
+                        Upload Album<AiOutlineUpload size={20} className="text-neutral-400" />
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Portal>

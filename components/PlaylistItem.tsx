@@ -8,7 +8,7 @@ import usePlayer from "@/hooks/usePlayer";
 import Link from "next/link";
 import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
 import * as ContextMenu from "@radix-ui/react-context-menu"
-import PlaylistRightClickContent from "./PlaylistRightClickContent";
+import PlaylistRightClickContent from "./right_click/PlaylistRightClickContent";
 
 interface PlaylistItemProps {
     data: Playlist;

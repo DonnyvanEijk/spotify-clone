@@ -46,7 +46,7 @@ const BatchAddToPlaylistModal = () => {
         };
 
         fetchPlaylists();
-    }, [user, supabaseClient, songId, use]);
+    }, [user, supabaseClient, songId, use, createPlaylistModal, isOpen]);
 
     const onChange = (open: boolean) => {
         if (!open) {

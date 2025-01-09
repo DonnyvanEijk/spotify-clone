@@ -127,7 +127,8 @@ const PlaylistEditModal = () => {
             name: playlist?.name || '',
             is_public: playlist?.is_public || false,
         });
-    }, [playlist])
+    }, [playlist, playlistId
+    ])
 
     return (
         <Modal

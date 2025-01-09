@@ -64,7 +64,7 @@ const ClonePlaylistModal = () => {
         }
 
         fetchPlaylist();
-    }, [originalPlaylistId]);
+    }, [originalPlaylistId, originalIsLiked]);
 
     const {
         register,
@@ -213,7 +213,7 @@ const ClonePlaylistModal = () => {
             image: null,
             isPublic: playlist?.is_public || false,
         })
-    }, [playlist]);
+    }, [playlist, reset]);
 
     return (
         <Modal

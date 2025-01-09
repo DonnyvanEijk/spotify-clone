@@ -1,7 +1,6 @@
 "use client";
 
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-
 import {Modal} from "../modal";
 import { useEffect, useState } from "react";
 import {Input} from "../input";
@@ -12,17 +11,15 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
 import CheckBox from "../CheckBox";
+import SearchSelect from "../SearchSelect";
 
 const SongEditModal = () => {
     const router = useRouter();
     const editSongModal = useEditSongModal();
 
     const [isLoading, setIsLoading] = useState(false);
-
     const { user } = useUser();
-
     const supabaseClient = useSupabaseClient();
-
     const songId = editSongModal.songId;
 
     interface Song {
@@ -34,6 +31,9 @@ const SongEditModal = () => {
     }
 
     const [song, setSong] = useState<Song | null>(null);
+    const [albumData, setAlbumData] = useState<{ id: string; name: string }[]>([]);
+    const [selectedAlbum, setSelectedAlbum] = useState<string | undefined>(undefined);
+    const [selectOpen, setSelectOpen] = useState(false);
 
     const fetchSong = async () => {
         try {
@@ -51,6 +51,7 @@ const SongEditModal = () => {
             }
 
             setSong(song);
+            setSelectedAlbum(song.album_id || undefined);
         } catch (error) {
             console.error(error);
             toast.error("Something went wrong");
@@ -63,7 +64,8 @@ const SongEditModal = () => {
         }
 
         fetchSong();
-    }, [songId]);
+    }, [songId
+    ]);
 
     const {
         register,
@@ -76,15 +78,40 @@ const SongEditModal = () => {
             author: song?.author || '',
             title: song?.title || '',
             is_private: song?.is_private || false,
+            album_id: selectedAlbum || ''
         }
     })
 
     const onChange = (open: boolean) => {
         if (!open) {
+            setSelectOpen(false);
             reset();
             editSongModal.onClose();
         }
     }
+
+    useEffect(() => {
+        const fetchAlbums = async () => {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('albums')
+                    .select('id, name');
+
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+
+                console.log(data);
+
+                setAlbumData(data);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        fetchAlbums();
+    }, [supabaseClient]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (values) => {
         try {
@@ -97,7 +124,8 @@ const SongEditModal = () => {
                 .update({
                     title: values.title,
                     author: values.author,
-                    is_private: values.is_private
+                    is_private: values.is_private,
+                    album_id: selectedAlbum ? parseInt(selectedAlbum) : null
                 })
                 .eq('id', songId)
 
@@ -108,7 +136,7 @@ const SongEditModal = () => {
 
             router.refresh();
             setIsLoading(false);
-            toast.success("Song uploaded successfully");
+            toast.success("Song edited successfully");
             reset();
             editSongModal.onClose();
         } catch (error) {
@@ -126,8 +154,9 @@ const SongEditModal = () => {
             author: song?.author || '',
             title: song?.title || '',
             is_private: song?.is_private || false,
+            album_id: selectedAlbum || ''
         });
-    }, [song])
+    }, [song, selectedAlbum, reset, songId])
 
     return (
         <Modal
@@ -136,6 +165,16 @@ const SongEditModal = () => {
             isOpen={editSongModal.isOpen}
             onChange={onChange}
         >
+            <SearchSelect
+                disabled={isLoading}
+                isOpen={selectOpen}
+                onOpenChange={() => setSelectOpen(!selectOpen)}
+                data={albumData.map(album => ({ id: album.id, name: album.name }))}
+                onSelect={(selected) => setSelectedAlbum(selected)}
+                selected={selectedAlbum}
+                placeholder="Select an Album"
+                className="mb-4"
+            />
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
                 <Input
                     id="title"
@@ -151,10 +190,11 @@ const SongEditModal = () => {
                 />
                 <CheckBox
                     id="is_private"
-                    label="private Song"
+                    label="Private Song"
                     disabled={isLoading}
                     {...register('is_private')}
                 />
+
                 <Button disabled={isLoading} type="submit">
                     Edit Song
                 </Button>

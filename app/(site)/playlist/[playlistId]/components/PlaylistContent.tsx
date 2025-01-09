@@ -72,6 +72,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
                             reactive={activeId === song.id}
                             onClick={(id: string) => { onPlay(id) }}
                             data={song}
+                            hasAlbumName={true}
                         />
                     </div>
                     <PlaylistItemDropdown songId={song.id} playlistId={PlaylistId} isOwner={isOwner} />
