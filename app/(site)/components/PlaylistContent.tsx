@@ -8,6 +8,13 @@ interface PlaylistContentProps {
 }
 
 const PlaylistContent: React.FC<PlaylistContentProps> = ({ playlists, userId }) => {
+    if (playlists.length === 0) {
+        return (
+            <div className="mt-4 text-neutral-400">
+                No Playlists Available
+            </div>
+        )
+    }
     return (
         <div className="grid 
           grid-cols-2 
@@ -25,6 +32,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({ playlists, userId }) 
                     data={item}
                 />
             ))}
+            
         </div>
     );
 }
