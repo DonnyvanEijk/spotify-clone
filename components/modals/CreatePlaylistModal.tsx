@@ -87,7 +87,7 @@ const CreatePlaylistModal = () => {
                     user_id: user.id,
                     name: values.name,
                     description: values.description,
-                    ispublic: values.isPublic,
+                    is_public: values.isPublic,
                     image_path: imageData.path,
                 });
 
