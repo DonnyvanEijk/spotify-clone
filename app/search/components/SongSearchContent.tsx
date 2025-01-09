@@ -27,7 +27,7 @@ export const SongSearchContent = ({songs, userId}:Props) => {
             {songs.map((song) => (
                 <div key={song.id} className="flex items-center gap-x-4 w-full">
                     <div className="flex-1">
-                        <MediaItem isOwner={song.id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
+                        <MediaItem isOwner={song.id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id} hasAlbumName/>
                     </div>
                     <PlaylistButton songId={song.id}/>
                     <LikeButton songId={song.id}/>

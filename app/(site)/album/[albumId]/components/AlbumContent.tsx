@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import useOnPlay from "@/hooks/useOnPlay";
 import MediaItem from "@/components/media-item";
 import { LikeButton } from "@/components/like-button";
+import usePlayer from "@/hooks/usePlayer";
+import PlaylistButton from "@/components/PlaylistButton";
 
 interface AlbumContentProps {
     songs: Song[];
@@ -21,6 +23,7 @@ const AlbumContent: React.FC<AlbumContentProps> = ({
     songs,
     userId
 }) => {
+    const { activeId } = usePlayer();
     const router = useRouter();
     const { isLoading, user } = useUser();
 
@@ -61,10 +64,12 @@ const AlbumContent: React.FC<AlbumContentProps> = ({
                             onClick={(id: string) => { onPlay(id) }}
                             data={song}
                             isOwner={song.user_id === userId}
+                            reactive={song?.id === activeId}
                         />
                     </div>
                     {/* <AlbumItemDropdown songId={song.id} albumId={AlbumId} isOwner={isOwner} /> */}
                     {/* <AlbumButton songId={song.id} /> */}
+                    <PlaylistButton songId={song.id} />
                     <LikeButton songId={song.id} />
                 </div>
             ))}
