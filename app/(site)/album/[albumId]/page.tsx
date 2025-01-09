@@ -50,7 +50,7 @@ const AlbumPage = async ({ params }: Props) => {
                     gap-x-5
                     "
                     >
-                        <div className="relative h-32 w-32 lg:h-44 lg:w-44">
+                        <div className="relative h-32 w-32 lg:h-44 lg:w-44 flex-shrink-0 min-w-[8rem] lg:min-w-[11rem]">
                             <Image
                                 fill
                                 alt="Album"
