@@ -52,9 +52,12 @@ const AlbumContent: React.FC<AlbumContentProps> = ({
         )
     }
 
+    // Sort songs by id
+    const sortedSongs = [...songs].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
     return (
         <div className="flex flex-col gap-y-2 w-full p-6">
-            {songs.map((song) => (
+            {sortedSongs.map((song) => (
                 <div
                     key={song.id}
                     className="flex items-center gap-x-4 wq-full"
