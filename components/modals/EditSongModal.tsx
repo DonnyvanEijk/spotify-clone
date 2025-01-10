@@ -299,15 +299,20 @@ const SongEditModal = () => {
                     />
                     {song?.image_path && (
                         <div className="mb-2">
-                            <img src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl} alt="Current Song Image" className="mb-2 w-[100px]" />
+                            <div className="flex flex-row gap-3">
+                                <img src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl} alt="Current Song Image" className="mb-2 w-[100px]" />
+                            <Button disabled={isLoading} type="submit" className="h-[50px]">
+                                Edit Song
+                            </Button>
+                            </div>
+                            
                             <div className="text-sm text-gray-500">Current Image: {song.image_path.split('/').pop()}</div>
+                           
                         </div>
                     )}
                   
                 </div>
-                <Button disabled={isLoading} type="submit">
-                    Edit Song
-                </Button>
+                
             </form>
         </Modal>
     );
