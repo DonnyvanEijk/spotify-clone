@@ -15,6 +15,7 @@ import CheckBox from "../CheckBox";
 import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
 import JSZip from "jszip";
 import { getMimeType } from "@/lib/getMimeType";
+import ProgressBar from "../ProgressBar";
 
 const UploadAlbumModal = () => {
     const router = useRouter();
@@ -26,6 +27,12 @@ const UploadAlbumModal = () => {
 
     const supabaseClient = useSupabaseClient();
 
+    const [progress, setProgress] = useState(0);
+
+    const [totalSongs, setTotalSongs] = useState(0);
+
+    const [isuploading, setIsUploading] = useState(false);
+
     const {
         register,
         handleSubmit,
@@ -34,7 +41,7 @@ const UploadAlbumModal = () => {
         defaultValues: {
             author: '',
             name: '',
-            ispublic: true,
+            is_public: true,
             albumZip: null,
             image: null,
         }
@@ -117,8 +124,8 @@ const UploadAlbumModal = () => {
                     user_id: user.id,
                     name: values.name,
                     author: values.author,
-                    ispublic: values.ispublic,
-                    image_path: imageData.path,
+                    is_public: values.is_public,
+                    image_patch: imageData.path,
                 });
 
             if (supabaseError) {
@@ -132,7 +139,7 @@ const UploadAlbumModal = () => {
             } = await supabaseClient
                 .from(`albums`)
                 .select('*')
-                .eq('image_path', imageData.path)
+                .eq('image_patch', imageData.path)
                 .single();
 
             if (albumError) {
@@ -141,6 +148,10 @@ const UploadAlbumModal = () => {
             }
 
             const albumId = albumData.id;
+
+            setTotalSongs(songFiles.length);
+
+            setIsUploading(true);
 
             // Upload each song
             for (const songFile of songFiles) {
@@ -169,13 +180,17 @@ const UploadAlbumModal = () => {
                     return toast.error("Failed to upload song: " + songName);
                 }
 
+                setProgress((prevProgress) => prevProgress + 1);
+
+                console.log(songData);
+
                 const { error: supabaseSongError } = await supabaseClient
                     .from(`songs`)
                     .insert({
                         user_id: user.id,
                         title: songName,
                         author: values.author,
-                        is_private: !values.ispublic,
+                        is_private: !values.is_public,
                         image_path: imageData.path,
                         song_path: songData.path,
                         album_id: albumId
@@ -185,12 +200,18 @@ const UploadAlbumModal = () => {
                     setIsLoading(false);
                     return toast.error(supabaseSongError.message);
                 }
+
             }
+
+            setIsUploading(false);
 
             router.refresh();
             setIsLoading(false);
             toast.success("Song uploaded successfully");
             reset();
+            setProgress(0);
+            setTotalSongs(0);
+            setIsUploading(false);
             uploadAlbumModal.onClose();
         } catch (error) {
             console.error(error);
@@ -221,10 +242,10 @@ const UploadAlbumModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="ispublic"
+                    id="is_public"
                     label="Public Album"
                     disabled={isLoading}
-                    {...register('ispublic')}
+                    {...register('is_public')}
                 />
                 <div>
                     <div className="pb-1">
@@ -253,6 +274,12 @@ const UploadAlbumModal = () => {
                 <Button disabled={isLoading} type="submit">
                     Create Album
                 </Button>
+                {isuploading && (
+                    <div className="flex flex-row items-center gap-x-4">
+                        Uploading {progress} of {totalSongs} songs
+                        <ProgressBar progress={(progress / totalSongs) * 100} />
+                    </div>
+                )}
             </form>
         </Modal>
     );

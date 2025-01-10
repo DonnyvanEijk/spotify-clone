@@ -1,5 +1,6 @@
 import { Header } from "@/components/header";
-import { AccountContent } from "./components/account-content";
+import { BillingContent } from "./components/billing-content";
+import { InfoContent } from "./components/info-content";
 
 const AccountPage = () => {
     return ( 
@@ -11,7 +12,8 @@ const AccountPage = () => {
                     </h1>
                 </div>
             </Header>
-            <AccountContent/>
+            <BillingContent/>
+            <InfoContent/>
         </div>
      );
 }

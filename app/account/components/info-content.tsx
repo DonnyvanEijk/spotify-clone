@@ -1,6 +1,8 @@
 "use client"
 
 import { Button } from "@/components/button"
+import { Input } from "@/components/input"
+import { ListItem } from "@/components/list-item"
 import { useSubscribeModal } from "@/hooks/useSubscribeModal"
 import { useUser } from "@/hooks/useUser"
 import { postData } from "@/lib/helper"
@@ -8,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
-export const AccountContent = () => {
+export const InfoContent = () => {
 
     const router = useRouter()
     const subscribeModal = useSubscribeModal()
@@ -37,26 +39,22 @@ export const AccountContent = () => {
     }
     return(
         <div className="mb-7 px-6">
-            {
-                !subscription && (
+            <h1 className="text-2xl font-bold text-white mb-5">Account information</h1>
+            
+            <div className="flex flex-col gap-y-4">
                     <div className="flex flex-col gap-y-4">
-                        <p>No active plan.</p>
-                        <Button onClick={subscribeModal.onOpen} className="w-[300px]">
-                            Subscribe
-                        </Button>
+                    <p className="font-semibold text-lg">Email adress</p>
+                    <Input className="w-[300px] text-white" placeholder={user?.email} value={user?.email}/>
                     </div>
-                )
-            }
-            {
-                subscription && (
+
                     <div className="flex flex-col gap-y-4">
-                    <p>You are currently on the <b>{subscription?.prices?.products?.name}</b> plan.</p>
-                    <Button disabled={loading || isLoading} className="w-[300px]" onClick={redirectToCustomerPortal}>
-                     Open customer menu
-                    </Button>
+                    <p className="font-semibold text-lg">Liked songs</p>
+                    <ListItem name='Liked Songs' image='/images/liked.png' href='/liked' classname="w-[300px]" />
                     </div>
-                )
-            }
+            </div>
+                    
+                
+            
            
         </div>
     )
