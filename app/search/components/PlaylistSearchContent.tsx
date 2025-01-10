@@ -38,7 +38,7 @@ const PlaylistSearchContent: React.FC<PlaylistSearchContentProps> = ({
                 key={playlist.id}
                 className="flex items center gap-x-4 w-full"
                 >
-                    <div className="flex-1">
+                    <div className="flex-1, truncate">
                         <PlaylistMediaItem
                         isOwner={playlist.user_id === userId}
                         data={playlist}

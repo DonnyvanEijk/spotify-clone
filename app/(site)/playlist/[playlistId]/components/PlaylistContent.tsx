@@ -64,9 +64,9 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
             {songs.map((song) => (
                 <div
                     key={song.id}
-                    className="flex items-center gap-x-4 wq-full"
+                    className="flex items-center gap-x-4 w-full "
                 >
-                    <div className="flex-1">
+                    <div className="flex-1 truncate">
                         <MediaItem
                             isOwner={song.user_id === userId}
                             reactive={activeId === song.id}

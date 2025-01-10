@@ -62,7 +62,7 @@ const AlbumContent: React.FC<AlbumContentProps> = ({
                     key={song.id}
                     className="flex items-center gap-x-4 wq-full"
                 >
-                    <div className="flex-1">
+                    <div className="flex-1 truncate">
                         <MediaItem
                             onClick={(id: string) => { onPlay(id) }}
                             data={song}

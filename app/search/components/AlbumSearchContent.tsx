@@ -32,13 +32,13 @@ const AlbumSearchContent: React.FC<AlbumSearchContentProps> = ({
     }
 
     return (
-        <div className="felx felx-col gap-y-2 w-ful px-6">
+        <div className="flex flex-col gap-y-2 w-full px-6">
             {albums.map((album) => (
                 <div
                     key={album.id}
                     className="flex items center gap-x-4 w-full"
                 >
-                    <div className="flex-1">
+                    <div className="flex-1 truncate">
                         <AlbumMediaItem
                             isOwner={album.user_id === userId}
                             data={album}
