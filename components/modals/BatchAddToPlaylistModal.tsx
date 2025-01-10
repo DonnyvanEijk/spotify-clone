@@ -36,9 +36,10 @@ const BatchAddToPlaylistModal = () => {
                 if (playlistsError) {
                     toast.error("Failed to fetch playlists");
                 } else {
-                    if (playlistsData.length === 0) {
+                    if (playlistsData.length === 0 && !createPlaylistModal.isOpen) {
                         toast("You need to create a playlist first!");
                         createPlaylistModal.onOpen();
+                        batchAddToPlaylistModal.onClose();
                     }
                     setPlaylists(playlistsData);
                 }

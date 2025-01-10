@@ -44,7 +44,7 @@ const LibraryDropdown = () => {
             return uploadAlbumModal.onOpen();
         }
         if (!subscription) {
-            return uploadAlbumModal.onOpen();
+            return subscribeModal.onOpen();
         }
     
         return uploadAlbumModal.onOpen();
@@ -54,9 +54,9 @@ const LibraryDropdown = () => {
         if (!user) {
             return authModal.onOpen();
         }
-        if (!subscription) {
-            return subscribeModal.onOpen();
-        }
+        // if (!subscription) {
+        //     return subscribeModal.onOpen();
+        // }
     
         return createPlaylistModal.onOpen();
     }
@@ -66,7 +66,7 @@ const LibraryDropdown = () => {
             return createAlbumModal.onOpen();
         }
         if (!subscription) {
-            return createAlbumModal.onOpen();
+            return subscribeModal.onOpen();
         }
     
         return createAlbumModal.onOpen();

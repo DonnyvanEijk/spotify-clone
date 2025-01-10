@@ -23,13 +23,12 @@ interface PlaylistItemDropdownProps {
 
 const PlaylistItemDropdown = ({ songId, playlistId, isOwner }: PlaylistItemDropdownProps) => {
     const authModal = useAuthModal();
-    const subscribeModal = useSubscribeModal();
     const supabaseClient = useSupabaseClient();
     const createPlaylistModal = useCreatePlaylistModal();
     const addToPlaylistModal = useAddToPlaylistModal();
     const router = useRouter();
 
-    const { user, subscription } = useUser();
+    const { user } = useUser();
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -89,9 +88,9 @@ const PlaylistItemDropdown = ({ songId, playlistId, isOwner }: PlaylistItemDropd
             return authModal.onOpen();
         }
 
-        if (!subscription) {
-            return subscribeModal.onOpen();
-        }
+        // if (!subscription) {
+        //     return subscribeModal.onOpen();
+        // }
         // console.log("userHasPLaylist: ", userHasPLaylist);
 
         if (!userHasPLaylist) {

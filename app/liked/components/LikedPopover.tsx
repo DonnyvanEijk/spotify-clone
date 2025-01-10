@@ -104,12 +104,22 @@ const LikedPopover = () => {
             return;
         }
 
+        if (data.length === 0) {
+            toast.error('No songs found in your liked songs');
+            return;
+        }
+
         const songIds = data.map((song) => song.song_id);
 
         clonePlaylistModal.onOpen(songIds, 'liked');
     }
 
     const handleBatchAddToPlaylist = async () => {
+        if (!user) {
+            authModal.onOpen();
+            return;
+        }
+
         const { data, error } = await supabaseClient
             .from('liked_songs')
             .select('song_id')

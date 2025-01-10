@@ -27,7 +27,6 @@ interface SongRightClickContentProps {
 const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, song }) => {
 	const supabaseClient = useSupabaseClient();
 	const authModal = useAuthModal();
-	const subscribeModal = useSubscribeModal();
 	const createPlaylistModal = useCreatePlaylistModal();
 	const addToPlaylistModal = useAddToPlaylistModal();
 	const editSongModal = useEditSongModal();
@@ -110,9 +109,9 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 			return authModal.onOpen();
 		}
 
-		if (!subscription) {
-			return subscribeModal.onOpen();
-		}
+		// if (!subscription) {
+		// 	return subscribeModal.onOpen();
+		// }
 		// console.log("userHasPLaylist: ", userHasPLaylist);
 
 		if (!userHasPlaylist) {

@@ -22,10 +22,9 @@ const PlaylistButton: React.FC<PlaylistButtonProps> = ({
     const { supabaseClient } = useSessionContext();
 
     const authModal = useAuthModal();
-    const subscribeModal = useSubscribeModal();
     const createPlaylistModal = useCreatePlaylistModal();
     const addToPlaylistModal = useAddToPlaylistModal();
-    const { user, subscription } = useUser();
+    const { user } = useUser();
 
     const [isInPlaylist, setIsInPlaylist] = useState(false);
     const [userHasPLaylist, setUserHasPlaylist] = useState(false);
@@ -87,9 +86,9 @@ const PlaylistButton: React.FC<PlaylistButtonProps> = ({
             return authModal.onOpen();
         }
 
-        if (!subscription) {
-            return subscribeModal.onOpen();
-        }
+        // if (!subscription) {
+        //     return subscribeModal.onOpen();
+        // }
         // console.log("userHasPLaylist: ", userHasPLaylist);
 
         if (!userHasPLaylist) {
