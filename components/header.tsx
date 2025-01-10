@@ -30,6 +30,7 @@ export const Header  = ({children, className}:Props) => {
 
         if(error) {
             toast.error(error.message)
+            console.log(error)
         } else {
             toast.success("Logged out successfully")
         }
