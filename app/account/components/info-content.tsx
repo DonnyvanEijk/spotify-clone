@@ -1,6 +1,4 @@
 "use client"
-
-import { Button } from "@/components/button"
 import { Input } from "@/components/input"
 import { ListItem } from "@/components/list-item"
 import { useSubscribeModal } from "@/hooks/useSubscribeModal"
@@ -13,10 +11,8 @@ import toast from "react-hot-toast"
 export const InfoContent = () => {
 
     const router = useRouter()
-    const subscribeModal = useSubscribeModal()
-    const {isLoading, subscription, user} = useUser()
+    const {isLoading, user} = useUser()
 
-    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         if(!isLoading && !user) {
@@ -24,19 +20,7 @@ export const InfoContent = () => {
         }
     }, [isLoading, user, router])
 
-    const redirectToCustomerPortal = async () => {
-        setLoading(true)
-        try {
-            const {url
-            } = await postData({
-                url: '/api/create-portal-link',
-            });
-            window.location.assign(url)
-        } catch (error) {
-           toast.error((error as Error).message)
-        }
-        setLoading(false)
-    }
+  
     return(
         <div className="mb-7 px-6">
             <h1 className="text-2xl font-bold text-white mb-5">Account information</h1>
