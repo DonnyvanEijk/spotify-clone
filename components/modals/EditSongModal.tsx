@@ -300,7 +300,7 @@ const SongEditModal = () => {
                     {song?.image_path && (
                         <div className="mb-2">
                             <div className="flex flex-row gap-3">
-                                <img src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl} alt="Current Song Image" className="mb-2 w-[100px]" />
+                                <img src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl} alt="Current Song Image" className="mb-2 w-[100px] flex-shrink-0" />
                             <Button disabled={isLoading} type="submit" className="h-[50px]">
                                 Edit Song
                             </Button>
