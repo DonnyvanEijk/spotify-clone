@@ -29,7 +29,7 @@ const AlbumEditModal = () => {
         id: string;
         user_id: string;
         name: string;
-        ispublic: boolean;
+        is_public: boolean;
         author: string;
     }
 
@@ -63,21 +63,34 @@ const AlbumEditModal = () => {
         }
 
         fetchAlbum();
-    }, [albumId, ]);
+    }, [albumId]);
 
     const {
         register,
         handleSubmit,
-        reset
+        reset,
+        watch,
     } = useForm<FieldValues>({
         defaultValues: {
             id: album?.id || albumId,
             user_id: album?.user_id || '',
             author: album?.author || '',
-            ispublic: album?.ispublic || true,
+            is_public: album?.is_public || true,
             name: album?.name || '',
         }
-    })
+    });
+
+    useEffect(() => {
+        if (album) {
+            reset({
+                id: album.id,
+                user_id: album.user_id,
+                author: album.author,
+                is_public: album.is_public,
+                name: album.name,
+            });
+        }
+    }, [album, reset]);
 
     const onChange = (open: boolean) => {
         if (!open) {
@@ -97,13 +110,29 @@ const AlbumEditModal = () => {
                 .update({
                     name: values.name,
                     author: values.author,
-                    ispublic: values.ispublic
+                    is_public: values.is_public
                 })
                 .eq('id', albumId)
 
             if (supabaseError) {
                 setIsLoading(false);
                 return toast.error(supabaseError.message);
+            }
+
+            if (values.is_public != album?.is_public) {
+                const {
+                    error: supabaseError
+                } = await supabaseClient
+                    .from(`songs`)
+                    .update({
+                        is_private: !values.is_public
+                    })
+                    .eq('album_id', albumId)
+
+                if (supabaseError) {
+                    setIsLoading(false);
+                    return toast.error(supabaseError.message);
+                }
             }
 
             router.refresh();
@@ -119,15 +148,7 @@ const AlbumEditModal = () => {
         }
     }
 
-    useEffect(() => {
-        reset({
-            id: album?.id || albumId,
-            user_id: album?.user_id || '',
-            author: album?.author || '',
-            ispublic: album?.ispublic || true,
-            name: album?.name || '',
-        });
-    }, [album, albumId]);
+    const isPublic = watch('is_public', album?.is_public);
 
     return (
         <Modal
@@ -150,10 +171,11 @@ const AlbumEditModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="ispublic"
+                    id="is_public"
                     label="Public Album"
                     disabled={isLoading}
-                    {...register('ispublic')}
+                    checked={isPublic}
+                    {...register('is_public')}
                 />
                 <Button disabled={isLoading} type="submit">
                     Edit Album

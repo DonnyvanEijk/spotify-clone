@@ -81,6 +81,9 @@ const PlaylistPage = async ({ params }: Props) => {
                         </div>
                     </div>
                 </div>
+                <p className="mt-2 text-neutral-400 font-semibold">
+                        {songs.length} songs
+                </p>
             </Header>
             <ShuffleControl songs={songs} id={playlistId} isOwner={isOwner} />     
             <div className="h-4"/>

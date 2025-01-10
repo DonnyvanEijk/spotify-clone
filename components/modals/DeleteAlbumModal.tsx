@@ -175,14 +175,14 @@ const DeleteAlbumModal = () => {
                 checked={deleteSongs}
                 onChange={() => setDeleteSongs(!deleteSongs)}
                 disabled={isLoading}
-            />
+              />
             <form className="w-full flex flex-row justify-evenly items-center">
-                <Button disabled={isLoading} onClick={DeleteAlbum} className="w-[170px]">
+                <Button disabled={isLoading} onClick={DeleteAlbum} className="w-[170px] mt-10">
                     Delete Album
                 </Button>
                 <Button disabled={isLoading} onClick={() => {
                     deleteAlbumModal.onClose()
-                }} className="bg-neutral-500 w-[170px]">
+                }} className="bg-neutral-500 w-[170px] mt-10">
                     Cancel
                 </Button>
             </form>
