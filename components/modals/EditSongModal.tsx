@@ -35,7 +35,7 @@ const SongEditModal = () => {
 
     const [song, setSong] = useState<Song | null>(null);
     const [albumData, setAlbumData] = useState<{ id: string; name: string }[]>([]);
-    const [selectedAlbum, setSelectedAlbum] = useState<string | undefined>(undefined);
+    const [selectedAlbum, setSelectedAlbum] = useState<string>('no-album');
     const [selectOpen, setSelectOpen] = useState(false);
 
     const fetchSong = async () => {
@@ -54,7 +54,7 @@ const SongEditModal = () => {
             }
 
             setSong(song);
-            setSelectedAlbum(song.album_id || undefined);
+            setSelectedAlbum(song.album_id || 'no-album');
         } catch (error) {
             console.error(error);
             toast.error("Something went wrong");
@@ -261,9 +261,9 @@ const SongEditModal = () => {
                 isOpen={selectOpen}
                 onOpenChange={() => setSelectOpen(!selectOpen)}
                 data={albumData.map(album => ({ id: album.id, name: album.name }))}
-                onSelect={(selected) => setSelectedAlbum(selected === 'no-album' ? undefined : selected)}
+                onSelect={(selected) => setSelectedAlbum(selected === 'no-album' ? 'no-album' : selected)}
                 selected={selectedAlbum}
-                placeholder={selectedAlbum ? albumData.find(album => album.id === selectedAlbum)?.name || "Select an Album" : "Select an Album"}
+                placeholder=""
                 className="mb-4"
             />
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
