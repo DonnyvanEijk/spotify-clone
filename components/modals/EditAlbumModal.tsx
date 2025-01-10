@@ -29,7 +29,7 @@ const AlbumEditModal = () => {
         id: string;
         user_id: string;
         name: string;
-        is_public: boolean;
+        ispublic: boolean;
         author: string;
     }
 
@@ -75,7 +75,7 @@ const AlbumEditModal = () => {
             id: album?.id || albumId,
             user_id: album?.user_id || '',
             author: album?.author || '',
-            is_public: album?.is_public || true,
+            ispublic: album?.ispublic || true,
             name: album?.name || '',
         }
     });
@@ -86,7 +86,7 @@ const AlbumEditModal = () => {
                 id: album.id,
                 user_id: album.user_id,
                 author: album.author,
-                is_public: album.is_public,
+                ispublic: album.ispublic,
                 name: album.name,
             });
         }
@@ -110,7 +110,7 @@ const AlbumEditModal = () => {
                 .update({
                     name: values.name,
                     author: values.author,
-                    is_public: values.is_public
+                    ispublic: values.ispublic
                 })
                 .eq('id', albumId)
 
@@ -119,13 +119,13 @@ const AlbumEditModal = () => {
                 return toast.error(supabaseError.message);
             }
 
-            if (values.is_public != album?.is_public) {
+            if (values.ispublic != album?.ispublic) {
                 const {
                     error: supabaseError
                 } = await supabaseClient
                     .from(`songs`)
                     .update({
-                        is_private: !values.is_public
+                        is_private: !values.ispublic
                     })
                     .eq('album_id', albumId)
 
@@ -148,7 +148,7 @@ const AlbumEditModal = () => {
         }
     }
 
-    const isPublic = watch('is_public', album?.is_public);
+    const isPublic = watch('ispublic', album?.ispublic);
 
     return (
         <Modal
@@ -171,11 +171,11 @@ const AlbumEditModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="is_public"
+                    id="ispublic"
                     label="Public Album"
                     disabled={isLoading}
                     checked={isPublic}
-                    {...register('is_public')}
+                    {...register('ispublic')}
                 />
                 <Button disabled={isLoading} type="submit">
                     Edit Album

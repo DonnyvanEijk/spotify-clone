@@ -130,7 +130,7 @@ const DeleteAlbumModal = () => {
             const { data: songImageDatas, error: SongImageError } = await supabaseClient
                 .from('songs')
                 .select('*')
-                .eq('image_path', data.image_patch);
+                .eq('image_path', data.image_path);
 
             if (SongImageError) {
                 console.error("Error fetching song images: ", SongImageError);
@@ -142,7 +142,7 @@ const DeleteAlbumModal = () => {
                 const { error: ImageDeleteError } = await supabaseClient
                     .storage
                     .from('images')
-                    .remove([data.image_patch]);
+                    .remove([data.image_path]);
 
                 if (ImageDeleteError) {
                     console.error("Error deleting image: ", ImageDeleteError);

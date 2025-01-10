@@ -41,7 +41,7 @@ const UploadAlbumModal = () => {
         defaultValues: {
             author: '',
             name: '',
-            is_public: true,
+            ispublic: true,
             albumZip: null,
             image: null,
         }
@@ -124,8 +124,8 @@ const UploadAlbumModal = () => {
                     user_id: user.id,
                     name: values.name,
                     author: values.author,
-                    is_public: values.is_public,
-                    image_patch: imageData.path,
+                    ispublic: values.ispublic,
+                    image_path: imageData.path,
                 });
 
             if (supabaseError) {
@@ -139,7 +139,7 @@ const UploadAlbumModal = () => {
             } = await supabaseClient
                 .from(`albums`)
                 .select('*')
-                .eq('image_patch', imageData.path)
+                .eq('image_path', imageData.path)
                 .single();
 
             if (albumError) {
@@ -190,7 +190,7 @@ const UploadAlbumModal = () => {
                         user_id: user.id,
                         title: songName,
                         author: values.author,
-                        is_private: !values.is_public,
+                        is_private: !values.ispublic,
                         image_path: imageData.path,
                         song_path: songData.path,
                         album_id: albumId
@@ -242,10 +242,10 @@ const UploadAlbumModal = () => {
                     placeholder="Album Author"
                 />
                 <CheckBox
-                    id="is_public"
+                    id="ispublic"
                     label="Public Album"
                     disabled={isLoading}
-                    {...register('is_public')}
+                    {...register('ispublic')}
                 />
                 <div>
                     <div className="pb-1">
