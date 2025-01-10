@@ -85,7 +85,7 @@ export default async function Home() {
       
          
           <AlbumContent albums={albums} userId={user?.id} />
-        
+          <div className='mb-[10vh]'/>
       </div>
     </div>
   );
