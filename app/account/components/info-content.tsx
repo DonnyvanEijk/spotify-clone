@@ -1,13 +1,9 @@
 "use client"
 import { Input } from "@/components/input"
 import { ListItem } from "@/components/list-item"
-import { useSubscribeModal } from "@/hooks/useSubscribeModal"
 import { useUser } from "@/hooks/useUser"
-import { postData } from "@/lib/helper"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import toast from "react-hot-toast"
-
+import { useEffect } from "react"
 export const InfoContent = () => {
 
     const router = useRouter()
