@@ -2,7 +2,6 @@
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
-import { useSubscribeModal } from "@/hooks/useSubscribeModal";
 import { useUser } from "@/hooks/useUser";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useEffect, useState } from "react";

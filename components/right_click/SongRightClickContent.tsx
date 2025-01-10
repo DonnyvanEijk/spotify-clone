@@ -10,7 +10,6 @@ import { TbDownload, TbDownloadOff, TbMicrophone } from "react-icons/tb";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
-import { useSubscribeModal } from "@/hooks/useSubscribeModal";
 import toast from "react-hot-toast";
 import { CiTextAlignCenter } from "react-icons/ci";
 import { useDeleteSong } from "@/hooks/useDeleteSongModal";
