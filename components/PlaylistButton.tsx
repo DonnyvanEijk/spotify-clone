@@ -106,7 +106,7 @@ const PlaylistButton: React.FC<PlaylistButtonProps> = ({
         transition
         "
         >
-            <Icon color={isInPlaylist ? '#22c55e' : color} size={25} />
+            <Icon color={isInPlaylist ? '#8F00FF' : color} size={25} />
         </button>
     );
 }
