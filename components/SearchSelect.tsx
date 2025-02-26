@@ -74,7 +74,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         return (
             <Select.Item
                 className={twMerge(
-                    "relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none text-green-500 data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1 data-[highlighted]:outline-none",
+                    "relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[35px] text-[13px] leading-none text-purple-500 data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1 data-[highlighted]:outline-none",
                     className,
                 )}
                 {...props}

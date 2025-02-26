@@ -17,7 +17,7 @@ const UsablePlayButton: React.FC<UsablePlayButtonProps> = ({songs}) => {
         rounded-full
         flex
         items-center
-        bg-green-500
+        bg-purple-500
         p-4
         drop-shadow-md
         "

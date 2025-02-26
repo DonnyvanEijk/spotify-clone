@@ -36,7 +36,7 @@ export default async function Home() {
           <div className='mt-4'>
             <Link href="/songs">
                 <button
-              className='px-4 py-2 bg-green-600 text-white rounded'
+              className='px-4 py-2 bg-purple-600 text-white rounded'
             >
               All songs
             </button>
@@ -74,7 +74,7 @@ export default async function Home() {
           <div className='mt-4'>
             <Link href="/album/list">
                 <button
-              className='px-4 py-2 bg-green-600 text-white rounded'
+              className='px-4 py-2 bg-purple-600 text-white rounded'
             >
               All Albums
             </button>

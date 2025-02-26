@@ -24,7 +24,7 @@ export const ListItem  = ({image, name, href, classname}:Props) => {
         <p className="font-medium truncate py-5">
             {name}
         </p>
-        <div className="absolute transition opacity-0 rounded-full flex items-center justify-center bg-green-500 p-4 drop-shadow-md right-5 group-hover:opacity-100 hover:scale-110">
+        <div className="absolute transition opacity-0 rounded-full flex items-center justify-center bg-purple-500 p-4 drop-shadow-md right-5 group-hover:opacity-100 hover:scale-110">
             <FaPlay  className="text-black"/>
         </div>
       </button>

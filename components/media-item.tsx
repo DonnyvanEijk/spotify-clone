@@ -69,7 +69,7 @@ min-w-[48px]
                 />
             </div>
             <div className="flex flex-col gap-y-1 overflow-hidden">
-                <p className={twMerge("text-white truncate", reactive && "text-green-500")}>{data.title}</p>
+                <p className={twMerge("text-white truncate", reactive && "text-purple-500")}>{data.title}</p>
                 <p className="text-neutral-400 text-sm truncate">{data.author}</p>
             </div>
         </div>
@@ -110,7 +110,7 @@ min-w-[48px]
         />
       </div>
       <div className='flex flex-col gap-y-1 overflow-hidden'>
-        <p className={twMerge(` truncate`, reactive && "font-semibold text-green-500")}>{data.title}</p>
+        <p className={twMerge(` truncate`, reactive && "font-semibold text-purple-500")}>{data.title}</p>
         <p className='text-neutral-400 text-sm truncate'>By {data.author}</p>
         {hasAlbumName && albumName && <p className='text-neutral-400 text-sm truncate'>{albumName}</p>}
       </div>

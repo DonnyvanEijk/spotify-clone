@@ -24,19 +24,19 @@ const SearchControls: React.FC = () => {
         <div className='flex gap-x-2'>
             <Button onClick={() => handleButtonClick('songs')} className={twMerge(
                 'w-[120px] bg-white',
-                type === 'songs' && 'bg-green-500'
+                type === 'songs' && 'bg-purple-500'
             )}>
                 Songs
             </Button>
             <Button onClick={() => handleButtonClick('playlists')} className={twMerge(
                 'w-[120px] bg-white',
-                type === 'playlists' && 'bg-green-500'
+                type === 'playlists' && 'bg-purple-500'
             )}>
                 Playlists
             </Button>
             <Button onClick={() => handleButtonClick('albums')} className={twMerge(
                 'w-[120px] bg-white',
-                type === 'albums' && 'bg-green-500'
+                type === 'albums' && 'bg-purple-500'
             )}>
                 Albums
             </Button>

@@ -138,8 +138,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 			<ContextMenu.Content
 				className="min-w-[220px] overflow-hidden rounded-md p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] bg-neutral-950"
 			>
-				<ContextMenu.Item  className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+				<ContextMenu.Item  className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 					onClick={handleDownload}
 					disabled={!subscription}
 				>
@@ -158,8 +158,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 						</p>
 					)}
 				</ContextMenu.Item>
-				<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+				<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 					onClick={handleAddToPlaylist}
 					disabled={!user}
 				>
@@ -176,8 +176,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 
 				</ContextMenu.Item>
 
-				<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+				<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+				outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 					onClick={() => router.push(`/lyrics/${song.id}`)}
 					disabled={!user}
 				>
@@ -198,9 +198,9 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 						<ContextMenu.Separator className="m-[5px] h-px bg-neutral-700" />
 
 						<ContextMenu.Sub>
-							<ContextMenu.SubTrigger className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-							utline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[highlighted]:data-[state=open]:bg-green-500 data-[state=open]:bg-green-300 data-[disabled]:text-mauve8 
-							data-[highlighted]:data-[state=open]:text-violet1 data-[highlighted]:text-violet1 data-[state=open]:text-green-600"
+							<ContextMenu.SubTrigger className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+							utline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[highlighted]:data-[state=open]:bg-purple-500 data-[state=open]:bg-purple-300 data-[disabled]:text-mauve8 
+							data-[highlighted]:data-[state=open]:text-violet1 data-[highlighted]:text-violet1 data-[state=open]:text-purple-600"
 							>
 								<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
 									<MdOutlineModeEditOutline />
@@ -216,8 +216,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 									sideOffset={2}
 									alignOffset={-5}
 								>
-									<ContextMenu.Item className="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-									outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+									<ContextMenu.Item className="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+									outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 										onClick={handleEditSong}
 									>
 										<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
@@ -226,8 +226,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 										Edit Song
 									</ContextMenu.Item>
 									<ContextMenu.Separator className="m-[5px] h-px bg-neutral-700" />
-									<ContextMenu.Item className="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 o
-									utline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+									<ContextMenu.Item className="relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 o
+									utline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 										onClick={handleAddLyrics}
 									>
 										<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
@@ -240,8 +240,8 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 						</ContextMenu.Sub>
 
 						<ContextMenu.Item
-							className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-green-600 
-						outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+							className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+						outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
 							onClick={handleDeleteSong}
 						>
 							<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">

@@ -57,7 +57,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner}) 
         />
       </div>
       <div className='flex flex-col items-start w-full pt-4 gap-y-1'>
-        <p className={twMerge(`font-semibold truncate w-full`, reactive && "text-green-500 font-semibold")}>{data.title}</p>
+        <p className={twMerge(`font-semibold truncate w-full`, reactive && "text-purple-500 font-semibold")}>{data.title}</p>
         <p
           className='
             text-neutral-400 
