@@ -20,7 +20,7 @@ const ShuffleButton: React.FC<ShuffleButtonProps> = ({ size }) => {
         disabled:opacity-50
         "
         >
-            <LuShuffle color={shuffle ? '#22c55e' : 'white'} size={size || 25} />
+            <LuShuffle color={shuffle ? '#8F00FF' : 'white'} size={size || 25} />
         </button>
     );
 }

@@ -35,7 +35,7 @@ const AuthModal = () => {
         supabaseClient={supabaseClient}
         appearance={{
           theme: ThemeSupa,
-          variables: { default: { colors: { brand: "#404040", brandAccent: "#22c55e" } } },
+          variables: { default: { colors: { brand: "#404040", brandAccent: "#8F00FF" } } },
         }}
       />
     </Modal>
