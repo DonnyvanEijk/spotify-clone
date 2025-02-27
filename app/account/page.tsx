@@ -9,6 +9,7 @@ import  getSongsWithLikeCounts  from "@/actions/getMostLiked";
 const AccountPage = async () => {
     const songLikes = await getSongsWithLikeCounts();
     const user = await getUser()
+
     return ( 
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
             <Header className="from-bg-neutral-900">
@@ -20,7 +21,7 @@ const AccountPage = async () => {
             </Header>
             <BillingContent/>
             <InfoContent/>
-            <LikeOverview user={user} songs={songLikes}/>
+            {user?.id && <LikeOverview userId={user.id} songs={songLikes}/>}
         </div>
      );
 }

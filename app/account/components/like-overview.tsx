@@ -1,12 +1,15 @@
 "use client"
 import MediaItem from "@/components/media-item";
+import { SongWithLikes } from "@/types";
+
 import { AiFillHeart } from "react-icons/ai";
 type Props = {
-    songs: any[];
-    user: any;
+    songs: SongWithLikes[]
+
+    userId: string
 
 }
-const LikeOverview =  ({ songs, user}: Props) => {;
+const LikeOverview =  ({ songs, userId}: Props) => {;
     return (
         <div>
             <h1 className="text-2xl font-bold text-white mb-2 ml-5">Song likes</h1>
@@ -17,7 +20,7 @@ const LikeOverview =  ({ songs, user}: Props) => {;
                             key={index}
                             className="flex items-center w-fit cursor-pointer"
                         >
-                            <MediaItem data={song.song} isOwner={song.song.user_id === user?.id} disablePlay />
+                            <MediaItem data={song.song} isOwner={song.song.user_id === userId} disablePlay />
                             <span className="ml-3 flex flex-row gap-1 items-center font-bold text-xl">
                                 <AiFillHeart color="#8F00FF" />
                                 {song.like_count}

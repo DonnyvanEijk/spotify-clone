@@ -11,6 +11,20 @@ export interface Song {
   created_at: string;
 }
 
+export interface SongWithLikes {
+  song: {
+    id: string;
+    user_id: string;
+    author: string;
+    title: string;
+    song_path: string;
+    image_path: string;
+    album_id: string;
+    created_at: string;
+  }
+ like_count: number;
+}
+
 export interface Product {
   id: string;
   active?: boolean;
