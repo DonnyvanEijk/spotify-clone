@@ -1,8 +1,14 @@
 import { Header } from "@/components/header";
 import { BillingContent } from "./components/billing-content";
 import { InfoContent } from "./components/info-content";
+import LikeOverview from "./components/like-overview";
 
-const AccountPage = () => {
+import getUser from "@/actions/getUser";
+import  getSongsWithLikeCounts  from "@/actions/getMostLiked";
+
+const AccountPage = async () => {
+    const songLikes = await getSongsWithLikeCounts();
+    const user = await getUser()
     return ( 
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
             <Header className="from-bg-neutral-900">
@@ -14,6 +20,7 @@ const AccountPage = () => {
             </Header>
             <BillingContent/>
             <InfoContent/>
+            <LikeOverview user={user} songs={songLikes}/>
         </div>
      );
 }
