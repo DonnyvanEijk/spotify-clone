@@ -11,8 +11,21 @@ export default {
     extend: {
       colors: {
         ...mauve,
-        ...violet
-      }
+        ...violet,
+      },
+      keyframes: {
+        wave: {
+          "0%": { borderWidth: "0px" },
+          "50%": { borderWidth: "5px" },
+          "100%": { borderWidth: "0px" },
+        },
+      },
+      animation: {
+        wave: "wave 2s infinite ease",
+      },
+      boxShadow: {
+        glow: "0 0 10px 2px rgba(255, 255, 255, 0.6)", // Example glow effect
+      },
     },
   },
   plugins: [],
