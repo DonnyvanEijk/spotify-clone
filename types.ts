@@ -58,10 +58,13 @@ export interface UserDetails {
   id: string;
   first_name: string;
   last_name: string;
-  full_name?: string;
+  username?: string;
+  bio?: string;
   avatar_url?: string;
   billing_address?: Stripe.Address;
   payment_method?: Stripe.PaymentMethod[Stripe.PaymentMethod.Type];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Playlist {

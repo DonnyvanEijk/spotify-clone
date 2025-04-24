@@ -2,6 +2,7 @@
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUser } from "@/hooks/useUser";
 import { useSessionContext } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
@@ -13,7 +14,7 @@ type Props  ={
 
 export const LikeButton = ({ songId }:Props) => {
     const { supabaseClient} = useSessionContext();
-
+    const  router = useRouter()
     const authModal = useAuthModal();
     const {user} = useUser();
 
@@ -57,6 +58,8 @@ export const LikeButton = ({ songId }:Props) => {
                 toast.error(error.message)
             } else {
                 setIsLiked(false)
+                toast.success("Unliked!")
+                router.refresh();
             }
         } else {
             const {error} = await supabaseClient
@@ -71,6 +74,7 @@ export const LikeButton = ({ songId }:Props) => {
             } else {
                 setIsLiked(true)
                 toast.success("Liked!")
+                router.refresh();
             }
         }
     }

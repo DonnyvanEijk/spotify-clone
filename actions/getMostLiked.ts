@@ -2,18 +2,18 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Song } from '@/types';
 import { cookies } from 'next/headers';
 
-const getSongsWithLikeCounts = async (): Promise<{ song: Song; like_count: number }[]> => {
+const getSongsWithLikeCounts = async (id:string): Promise<{ song: Song; like_count: number }[]> => {
   const supabase = createServerComponentClient({
     cookies: cookies,
   });
 
-  const { data: { session } } = await supabase.auth.getSession();
+
 
   // Step 1: Fetch all songs created by the user
   const { data: userSongs, error: userSongsError } = await supabase
     .from('songs')
     .select('*')
-    .eq('user_id', session?.user?.id);
+    .eq('user_id', id);
     
   if (userSongsError) {
     console.error(userSongsError.message);

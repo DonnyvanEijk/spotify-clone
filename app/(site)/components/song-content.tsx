@@ -1,22 +1,23 @@
 'use client';
 
-import { Song } from '@/types';
+import { Song, UserDetails } from '@/types';
 import SongItem from '@/components/songitem';
 import useOnPlay from '@/hooks/useOnPlay';
 import usePlayer from '@/hooks/usePlayer';
 
 interface PageContentProps {
-  songs: Song[];
-  userId: string | undefined
+  songs: {
+    songs: Song[];
+    users: UserDetails[];
+  };
+  userId: string | undefined;
 }
 
 const SongContent: React.FC<PageContentProps> = ({ songs, userId }) => {
-  const onPlay = useOnPlay(songs);
+  const onPlay = useOnPlay(songs.songs);
   const { activeId } = usePlayer();
 
-
-
-  if (songs.length === 0) {
+  if (songs.songs.length === 0) {
     return <div className='mt-4 text-neutral-400'>No songs available.</div>;
   }
 
@@ -35,17 +36,25 @@ const SongContent: React.FC<PageContentProps> = ({ songs, userId }) => {
           mt-4
         '
       >
-        {songs.slice(0, 16).map((item) => (
-          <SongItem
-            isOwner={item.user_id === userId}
-            onClick={(id: string) => { onPlay(id) }}
-            key={item.id}
-            data={item}
-            reactive={activeId === item.id}
-          />
-        ))}
+        {songs.songs.slice(0, 16).map((item) => {
+          const uploader = songs.users.find((user) => user.id === item.user_id)?.username 
+
+          return (
+            <SongItem
+              isOwner={item.user_id === userId}
+              onClick={(id: string) => {
+                onPlay(id);
+              }}
+              key={item.id}
+              data={item}
+              reactive={activeId === item.id}
+              uploader={uploader}
+              user_id={item.user_id}
+            />
+          );
+        })}
       </div>
- </div>
+    </div>
   );
 };
 
