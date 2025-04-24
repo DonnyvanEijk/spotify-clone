@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "../button";
+import Image from "next/image";
 
 type Props = {
     id: string;
@@ -16,18 +17,20 @@ export const UserCard = ({ id, username, bio, avatar_url, currentUser }: Props) 
         <div
             key={id}
             className={`p-4 rounded-lg shadow-md transition duration-300 cursor-pointer ${
-                isHighlighted ? "bg-purple-700" : "bg-gray-900 "
+            isHighlighted ? "bg-purple-700" : "bg-gray-900 "
             }`}
         >
+            {avatar_url && (
+            <img src={avatar_url} alt="User Avatar" className="rounded-full w-16 h-16 mb-4" />
+            )}
             <h2 className="text-xl font-semibold flex">
-                {username || "Unfinished user "} {isHighlighted && ("- This is you!")}
-            
+            {username || "Unfinished user "} {isHighlighted && ("- This is you!")}
             </h2>
             <p className="text-gray-400">{bio || "No bio has been set"}</p>
             <Link href={`/users/${id}`}>
-                <Button className="mt-4 text-white">
-                    See more!
-                </Button>
+            <Button className="mt-4 text-white">
+                See more!
+            </Button>
             </Link>
         </div>
     );
