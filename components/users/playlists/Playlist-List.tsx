@@ -1,5 +1,5 @@
 import { getImage } from "@/lib/getImage";
-import { Playlist, Song } from "@/types";
+import { Playlist } from "@/types";
 
 type Props = {
     playlists: Playlist[];

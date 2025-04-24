@@ -22,7 +22,7 @@ export const UsersContent = async  ({ users }: Props) => {
                             username={user.username}
                             bio={user.bio}
                             avatar_url={user.avatar_url}
-                            currentUser={currentUser!.id}/>
+                            currentUser={currentUser?.id || null}/>
                     ))
                         }
                 </div>

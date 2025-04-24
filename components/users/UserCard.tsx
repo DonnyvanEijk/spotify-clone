@@ -7,7 +7,7 @@ type Props = {
     username?: string;
     bio?: string;
     avatar_url?: string;
-    currentUser?: string;
+    currentUser?: string | null;
 }
 
 export const UserCard = ({ id, username, bio, avatar_url, currentUser }: Props) => {
