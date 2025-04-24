@@ -2,7 +2,7 @@ import { LikeButton } from "@/components/like-button";
 import PlaylistButton from "@/components/PlaylistButton";
 import { getImage } from "@/lib/getImage";
 import { Song } from "@/types"
-import { BiHeart } from "react-icons/bi";
+
 
 type Props = {
     songs: {

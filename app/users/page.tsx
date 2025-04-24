@@ -5,7 +5,7 @@ import { Header } from "@/components/header";
 import { UsersContent } from "@/components/users/UsersContent";
 
 const UsersPage = async () => {
-    const users = await getUsersIndex();
+    const users = (await getUsersIndex()) || [];
     return ( 
     <div className="text-white">
         <Header>
