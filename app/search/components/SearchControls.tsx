@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {Button} from '@/components/button';
 import { twMerge } from 'tailwind-merge';
+import Link from 'next/link';
 
 const SearchControls: React.FC = () => {
     const router = useRouter();
@@ -40,6 +41,15 @@ const SearchControls: React.FC = () => {
             )}>
                 Albums
             </Button>
+            <Link href="/users">
+                <Button className=
+                    'w-[220px] bg-purple-500'
+                
+                >
+                    See all users
+                </Button>
+            </Link>
+            
             {type && <Button onClick={() => handleButtonClick()} className='w-[120px] bg-transparent text-white'>Show All</Button>}
         </div>
     );

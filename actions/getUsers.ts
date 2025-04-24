@@ -15,7 +15,13 @@ export const getUsersIndex = async (): Promise<UserDetails[]> => {
         console.error("Error fetching users:", error);
         return [];
     }
-    return data;
+
+    // Sort users by whether they have a username
+    return data.sort((a, b) => {
+        if (a.username && !b.username) return -1;
+        if (!a.username && b.username) return 1;
+        return 0;
+    });
 }
 
 export const getUserById = async (id: string): Promise<UserDetails | null> => {
