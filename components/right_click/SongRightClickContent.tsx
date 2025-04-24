@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import { HiChevronRight } from "react-icons/hi";
 import { FaTrashAlt } from "react-icons/fa";
-import { MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAddCheck } from "react-icons/md";
+import { MdAccountCircle, MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAddCheck } from "react-icons/md";
 import { Song } from "@/types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "@/hooks/useUser";
@@ -21,9 +21,10 @@ import { useRouter } from "next/navigation";
 interface SongRightClickContentProps {
 	isOwner: boolean;
 	song: Song
+	user_id?: string;
 }
 
-const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, song }) => {
+const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, song, user_id}) => {
 	const supabaseClient = useSupabaseClient();
 	const authModal = useAuthModal();
 	const createPlaylistModal = useCreatePlaylistModal();
@@ -190,6 +191,23 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 						</p>
 
 				</ContextMenu.Item>
+
+				{user_id && (
+					<ContextMenu.Item className="group relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-purple-600 
+					outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-purple-500 data-[disabled]:text-mauve8 data-[highlighted]:text-violet1"
+						onClick={() => router.push(`/users/${user_id}`)}
+						disabled={!user}
+					>
+						<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
+							<MdAccountCircle/>
+						</div>
+					
+							<p>
+								Go to uploader
+							</p>
+	
+					</ContextMenu.Item>
+				)}
 
 
 				{isOwner && (

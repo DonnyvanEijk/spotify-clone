@@ -49,7 +49,7 @@ const UserPage = async ({ params }: Props) => {
                         width={200} 
                         height={200} 
                         className="rounded-full" 
-                        onError={(e) => (e.currentTarget.style.display = 'none')} 
+                       
                     />
                 )}
                 <div className="flex flex-col gap-2 items-center">

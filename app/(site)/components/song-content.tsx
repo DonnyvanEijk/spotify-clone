@@ -49,6 +49,7 @@ const SongContent: React.FC<PageContentProps> = ({ songs, userId }) => {
               data={item}
               reactive={activeId === item.id}
               uploader={uploader}
+              user_id={item.user_id}
             />
           );
         })}

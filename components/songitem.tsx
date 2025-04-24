@@ -15,9 +15,10 @@ interface SongItemProps {
   reactive?: boolean;
   isOwner: boolean;
   uploader?: string;
+  user_id?: string;
 }
 
-const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, uploader}) => {
+const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, uploader, user_id}) => {
   const imagePath = useLoadImage(data);
   const isNew = differenceInHours(new Date(), new Date(data.created_at)) <= 24;
 
@@ -110,7 +111,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
       </div>
     </div>
     </ContextMenu.Trigger>
-    <SongRightClickContent isOwner={isOwner} song={data} />
+    <SongRightClickContent isOwner={isOwner} song={data} user_id={user_id} />
     </ContextMenu.Root>
   );
 };
