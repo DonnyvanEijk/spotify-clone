@@ -10,6 +10,9 @@ import { getUserById } from "@/actions/getUsers";
 
 const AccountPage = async () => {
     const user = await getUser();
+    if (!user) {
+        return new Error("User not found");
+    }
     const songLikes = await getSongsWithLikeCounts(user?.id as string);
     const currentUser = await getUserById(user?.id as string);
 
@@ -25,10 +28,10 @@ const AccountPage = async () => {
                 </div>
             </Header>
             <UserContent
-                id={user!.id}
-                bio={currentUser?.bio!}
-                avatar_url={currentUser?.avatar_url!}
-                username={currentUser?.username!}
+                id={user.id}
+                bio={currentUser?.bio ?? null}
+                avatar_url={currentUser?.avatar_url ?? null}
+                username={currentUser?.username ?? null}
             />
             <BillingContent />
             <InfoContent />
