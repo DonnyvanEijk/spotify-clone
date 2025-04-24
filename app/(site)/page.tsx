@@ -9,6 +9,7 @@ import PlaylistContent from './components/PlaylistContent';
 import getUser from '@/actions/getUser';
 import AlbumContent from './components/AlbumContent';
 import getAlbums from '@/actions/getAlbums';
+import { getUsersIndex } from '@/actions/getUsers';
 
 export const revalidate = 0;
 
@@ -17,6 +18,7 @@ export default async function Home() {
     const playlists = await getPlaylists();
     const publicPlaylists  = await getPublicPlaylists()
     const user = await getUser();
+    const users = await getUsersIndex();
     const albums = await getAlbums();
 
 
@@ -46,7 +48,7 @@ export default async function Home() {
         </div>
       
          
-          <SongContent songs={songs} userId={user?.id} />
+          <SongContent songs={{songs: songs, users: users}} userId={user?.id} />
         
       </div>
 

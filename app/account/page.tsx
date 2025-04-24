@@ -9,8 +9,8 @@ import { UserContent } from "./components/user-content";
 import { getUserById } from "@/actions/getUsers";
 
 const AccountPage = async () => {
-    const songLikes = await getSongsWithLikeCounts();
     const user = await getUser();
+    const songLikes = await getSongsWithLikeCounts(user?.id as string);
     const currentUser = await getUserById(user?.id as string);
 
     if (!currentUser) {
