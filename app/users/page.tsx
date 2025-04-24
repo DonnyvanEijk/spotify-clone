@@ -1,5 +1,6 @@
 
-import getUsersIndex from "@/actions/getUsers";
+
+import { getUsersIndex } from "@/actions/getUsers";
 import { Header } from "@/components/header";
 import { UsersContent } from "@/components/users/UsersContent";
 
