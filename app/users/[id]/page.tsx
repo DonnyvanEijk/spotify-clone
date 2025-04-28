@@ -50,7 +50,7 @@ const UserPage = async ({ params }: Props) => {
                         src={avatarPath} 
                         width={200} 
                         height={200} 
-                        className="rounded-full" 
+                        className="rounded-full object-cover aspect-square" 
                         alt="User Avatar"
                     />
                 )}
