@@ -1,5 +1,6 @@
 import getSongsWithLikeCounts from "@/actions/getMostLiked";
 import getPlaylistsByUser from "@/actions/getPlaylistsByUser";
+import getUser from "@/actions/getUser";
 import { getUserById } from "@/actions/getUsers";
 import { Header } from "@/components/header";
 import { PlayListList } from "@/components/users/playlists/Playlist-List";
@@ -14,7 +15,9 @@ type Props = {
 
 const UserPage = async ({ params }: Props) => {
     const user = await getUserById(params.id);
-    const avatarImage  = await getImage(user?.avatar_url || "")
+    const userNOW = await getUser();
+    const currentUser = await getUserById(userNOW?.id as string);
+    const avatarImage  = await getImage(currentUser?.avatar_url || "")
     if (!user) {
         return new Error("User not found");
     }
