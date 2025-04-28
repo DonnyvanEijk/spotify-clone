@@ -4,6 +4,7 @@ import { getUserById } from "@/actions/getUsers";
 import { Header } from "@/components/header";
 import { PlayListList } from "@/components/users/playlists/Playlist-List";
 import { SongList } from "@/components/users/songs/SongList";
+import { getImage } from "@/lib/getImage";
 
 type Props = {
     params: {
@@ -33,6 +34,7 @@ const UserPage = async ({ params }: Props) => {
         );
     }
 
+    const avatarPath = await getImage(user.avatar_url || "");
     const songsWithLikes = await getSongsWithLikeCounts(user.id as string);
     const playlists = await getPlaylistsByUser(user.id as string);
 
@@ -43,13 +45,13 @@ const UserPage = async ({ params }: Props) => {
                 <p className="text-gray-400">See more of the creator!</p>
             </Header>
             <div className="flex flex-col gap-5 items-center">
-                {user.avatar_url && (
+                {avatarPath && (
                     <img 
-                        src={user.avatar_url} 
+                        src={avatarPath} 
                         width={200} 
                         height={200} 
                         className="rounded-full" 
-                       
+                        alt="User Avatar"
                     />
                 )}
                 <div className="flex flex-col gap-2 items-center">

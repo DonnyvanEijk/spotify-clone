@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Button } from "../button";
 
+import { getImage } from "@/lib/getImage";
+
 type Props = {
     id: string;
     username?: string;
@@ -9,12 +11,14 @@ type Props = {
     currentUser?: string | null;
 };
 
-export const UserCard = ({ id, username, bio, avatar_url, currentUser }: Props) => {
+export const UserCard = async ({ id, username, bio, avatar_url, currentUser }: Props) => {
     if (!username) {
         return null; 
     }
 
     const isHighlighted = currentUser === id;
+    const avatarPath = await getImage(avatar_url || ""); 
+    
 
     return (
         <div
@@ -23,8 +27,8 @@ export const UserCard = ({ id, username, bio, avatar_url, currentUser }: Props) 
                 isHighlighted ? "bg-purple-700" : "bg-gray-900"
             }`}
         >
-            {avatar_url && (
-                <img src={avatar_url} alt="User Avatar" className="rounded-full w-16 h-16 mb-4" />
+            {avatarPath && (
+                <img src={avatarPath} alt="User Avatar" className="rounded-full w-16 h-16 mb-4" />
             )}
             <h2 className="text-xl font-semibold flex">
                 {username} {isHighlighted && "- This is you!"}
