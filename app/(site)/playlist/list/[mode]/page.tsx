@@ -3,6 +3,8 @@ import getPublicPlaylists from "@/actions/getPublicPlaylists";
 import getUser from "@/actions/getUser";
 import {Header} from "@/components/header";
 import PlaylistContent from "./components/AlbumContent";
+import { getUserById } from "@/actions/getUsers";
+import { getImage } from "@/lib/getImage";
 
 type Props = {
     params: {
@@ -15,6 +17,8 @@ const PlaylistListPage = async ({ params }: Props) => {
     const myPlaylists = await getPlaylists();
     const publicPlaylists = await getPublicPlaylists();
     const user = await getUser();
+    const currentUserData = await getUserById(user?.id as string);
+    const avatarImage  = await getImage(currentUserData?.avatar_url || "")
 
     let playlists = publicPlaylists;
 
@@ -24,7 +28,7 @@ const PlaylistListPage = async ({ params }: Props) => {
 
     return (
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
-            <Header>
+            <Header image={avatarImage || ""}>
                 <div className="mb-2">
                     <h1 className="
           text-white

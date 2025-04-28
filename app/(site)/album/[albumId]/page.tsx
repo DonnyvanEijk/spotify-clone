@@ -8,6 +8,7 @@ import AlbumContent from "./components/AlbumContent";
 import ShuffleControl from "./components/Controls";
 import getUser from "@/actions/getUser";
 import { Header } from "@/components/header";
+import { getUserById } from "@/actions/getUsers";
 
 export const revalidate = 0;
 
@@ -26,6 +27,8 @@ const AlbumPage = async ({ params }: Props) => {
     console.log("path: " + imagePath)
     const songs = await getAlbumSongs(albumId);
     const isOwner = user ? album.user_id === user.id : false;
+    const currentUserData = await getUserById(user?.id as string);
+    const avatarImage  = await getImage(currentUserData?.avatar_url || "")
 
     return (
         <div
@@ -38,7 +41,7 @@ const AlbumPage = async ({ params }: Props) => {
         overflow-y-auto
         "
         >
-            <Header>
+            <Header image={avatarImage || ""}>
                 <div
                     className="mt-20"
                 >

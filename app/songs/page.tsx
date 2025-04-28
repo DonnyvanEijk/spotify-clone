@@ -3,17 +3,22 @@ import { Header } from '@/components/header';
 import {ListItem } from '@/components/list-item';
 import PageContent from './components/page-content';
 import getUser from '@/actions/getUser';
+import { getUserById } from '@/actions/getUsers';
+import { getImage } from '@/lib/getImage';
 export const revalidate = 0;
 
 export default async function Home() {
   //@ts-expect-error Songs is allowed to be null
   let songs = [];
+  let avatarImage;
   let errorMessage = '';
   const user = await getUser();
 
 
   try {
     songs = await getSongs();
+    const currentUser = await getUserById(user?.id as string);
+    avatarImage = await getImage(currentUser?.avatar_url || "")
   } catch (error) {
     console.error(error);
     errorMessage = 'Failed to load songs. Please try again later.';
@@ -21,7 +26,7 @@ export default async function Home() {
 
   return (
     <div className='bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto'>
-      <Header>
+      <Header image={avatarImage || ""}>
         <div className='mb-2'>
           <h1 className='text-white text-3xl font-semibold'>Welcome back</h1>
           <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 mt-4'>

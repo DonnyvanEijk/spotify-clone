@@ -5,17 +5,24 @@ import PageContent from "./components/AlbumContent";
 import getAlbums from "@/actions/getAlbums";
 import getUser from "@/actions/getUser";
 import { Header } from "@/components/header";
+import { getUserById } from "@/actions/getUsers";
+import { getImage } from "@/lib/getImage";
+import { set } from "date-fns";
 const AlbumListPage = () => {
   
     
     const [user, setUser] = useState<{ id: string } | null>(null);
     const [albums, setAlbums] = useState([]);
+    const [avatarImage, setAvatarImage] = useState<string | null>(null);
 
     const fetchData = async () => {
         const userData = await getUser();
         const albumsData = await getAlbums();
+        const currentUserData = await getUserById(user?.id as string);
+        const avatarImage  = await getImage(currentUserData?.avatar_url || "")
         setUser(userData);
-          //@ts-expect-error this is correct type
+        setAvatarImage(avatarImage);
+         //@ts-expect-error this is correct type
         setAlbums(albumsData);
     };
 
@@ -27,7 +34,7 @@ const AlbumListPage = () => {
 
     return (
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
-            <Header>
+            <Header image={avatarImage || ""}>
                 <div className="mb-2">
                     <h1 className="text-white text-3xl font-semibold">
                         Welcome back

@@ -11,13 +11,15 @@ import { useUser } from "@/hooks/useUser";
 import { FaUserAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
 import usePlayer from "@/hooks/usePlayer";
+import { getImage } from "@/lib/getImage";
 
 type Props = {
     children: React.ReactNode;
     className?: string;
+    image?: string;
 }
 
-export const Header  = ({children, className}:Props) => {
+export const Header  = ({children, className, image}:Props) => {
     const player = usePlayer()
     const router = useRouter();
     const supabaseClient = useSupabaseClient()
@@ -60,9 +62,18 @@ export const Header  = ({children, className}:Props) => {
                         <Button onClick={handleLogout} className="bg-white px-6 PY-2">
                             Logout
                         </Button>
-                        <Button className="bg-white" onClick={() => router.push('/account')}>
-                            <FaUserAlt/>
-                        </Button>
+                        {image ? (
+                            <img 
+                                src={image} 
+                                alt="Profile" 
+                                className="w-10 h-10 rounded-full cursor-pointer" 
+                                onClick={() => router.push('/account')} 
+                            />
+                        ) : (
+                            <Button className="bg-white" onClick={() => router.push('/account')}>
+                                <FaUserAlt/>
+                            </Button>
+                        )}
                     </div>
                 ): (
                 <>

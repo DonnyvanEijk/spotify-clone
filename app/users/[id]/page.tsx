@@ -14,6 +14,7 @@ type Props = {
 
 const UserPage = async ({ params }: Props) => {
     const user = await getUserById(params.id);
+    const avatarImage  = await getImage(user?.avatar_url || "")
     if (!user) {
         return new Error("User not found");
     }
@@ -23,7 +24,7 @@ const UserPage = async ({ params }: Props) => {
     if (isProfileIncomplete) {
         return (
             <div className="text-white">
-                <Header>
+                <Header image={avatarImage || ""}>
                     <h1 className="text-3xl font-bold">Incomplete Profile</h1>
                     <p className="text-gray-400">This user still needs to complete their profile to proceed.</p>
                 </Header>
@@ -40,7 +41,7 @@ const UserPage = async ({ params }: Props) => {
 
     return (
         <div className="text-white">
-            <Header>
+            <Header image={avatarImage || ""}>
                 <h1 className="text-3xl font-bold">User overview</h1>
                 <p className="text-gray-400">See more of the creator!</p>
             </Header>

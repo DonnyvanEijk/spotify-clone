@@ -7,6 +7,7 @@ import getPlaylistSongs from "@/actions/getPlaylistSongs";
 import PlaylistContent from "./components/PlaylistContent";
 import ShuffleControl from "./components/Controls";
 import getUser from "@/actions/getUser";
+import { getUserById } from "@/actions/getUsers";
 
 export const revalidate = 0;
 
@@ -23,6 +24,8 @@ const PlaylistPage = async ({ params }: Props) => {
     const imagePath = await getImage(playlist.image_path);
     const songs = await getPlaylistSongs(playlistId);
     const isOwner = user ? playlist.user_id === user.id : false;
+    const currentUserData = await getUserById(user?.id as string);
+    const avatarImage  = await getImage(currentUserData?.avatar_url || "")
 
     return (
         <div
@@ -35,7 +38,7 @@ const PlaylistPage = async ({ params }: Props) => {
         overflow-y-auto
         "
         >
-            <Header>
+            <Header image={avatarImage || ""}>
                 <div
                     className="mt-20"
                 >
