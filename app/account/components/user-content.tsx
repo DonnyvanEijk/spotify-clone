@@ -98,8 +98,8 @@ export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, 
             toast.success('User updated successfully!');
             setIsEditing(false); // Exit editing mode
             router.refresh();
-        } catch (error: any) {
-            toast.error(error.message || 'Something went wrong');
+        } catch (error) {
+            toast.error('Something went wrong');
         }
     };
     
