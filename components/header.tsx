@@ -11,7 +11,6 @@ import { useUser } from "@/hooks/useUser";
 import { FaUserAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
 import usePlayer from "@/hooks/usePlayer";
-import { getImage } from "@/lib/getImage";
 
 type Props = {
     children: React.ReactNode;

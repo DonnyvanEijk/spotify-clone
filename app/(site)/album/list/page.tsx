@@ -1,6 +1,4 @@
 
-
-import { useEffect, useState } from "react";
 import PageContent from "./components/AlbumContent";
 import getAlbums from "@/actions/getAlbums";
 import getUser from "@/actions/getUser";
