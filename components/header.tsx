@@ -65,7 +65,7 @@ export const Header  = ({children, className, image}:Props) => {
                             <img 
                                 src={image} 
                                 alt="Profile" 
-                                className="w-10 h-10 rounded-full cursor-pointer" 
+                                className="w-10 h-10 rounded-full object-cover cursor-pointer" 
                                 onClick={() => router.push('/account')} 
                             />
                         ) : (
@@ -73,6 +73,7 @@ export const Header  = ({children, className, image}:Props) => {
                                 <FaUserAlt/>
                             </Button>
                         )}
+
                     </div>
                 ): (
                 <>
