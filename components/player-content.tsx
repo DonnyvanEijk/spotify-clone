@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react";
 import { Song } from "@/types";
 import MediaItem from "./media-item";
 import { LikeButton } from "./like-button";
@@ -8,7 +9,6 @@ import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import Slider from "./slider";
 import usePlayer from "@/hooks/usePlayer";
-import { useEffect, useState } from "react";
 import useSound from "use-sound";
 import toast from "react-hot-toast";
 import { getAudioDuration, getAudioDurationInSecconds } from "@/lib/getDuration";
@@ -31,8 +31,12 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
     const [currentTime, setCurrentTime] = useState<string | null>(null);
     const [currentTimeInSeconds, setCurrentTimeInSeconds] = useState<number | null>(null);
 
-    const volume = player.volume;
-    const setVolume = player.setVolume;
+    // Load volume from localStorage or default to 1
+    const [volume, setVolume] = useState<number>(() => {
+        const cachedVolume = localStorage.getItem("player-volume");
+        return cachedVolume ? parseFloat(cachedVolume) : 1;
+    });
+
     const Icon = isPlaying ? BsPauseFill : BsPlayFill;
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
@@ -47,8 +51,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             return;
         }
 
-        if (player.shuffle)
-        {
+        if (player.shuffle) {
             const randomIndex = Math.floor(Math.random() * player.ids.length);
             const randomSong = player.ids[randomIndex];
             return player.setId(randomSong);
@@ -63,7 +66,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         }
 
         player.setId(nextSong);
-    }
+    };
 
     const onPlayPrevious = () => {
         if (player.ids.length === 0) {
@@ -79,20 +82,16 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         }
 
         player.setId(previousSong);
-    }
+    };
 
     const [play, { pause, sound }] = useSound(
         songUrl,
         {
             volume,
-       
             onplay: () => setIsPlaying(true),
             onend: () => {
                 setIsPlaying(false);
-           
-            
-                    onPlayNext();
-                
+                onPlayNext();
             },
             onpause: () => setIsPlaying(false),
             format: ["mp3"]
@@ -104,8 +103,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
 
         return () => {
             sound?.unload();
-        }
-    }, [sound])
+        };
+    }, [sound]);
 
     useEffect(() => {
         if (sound) {
@@ -119,15 +118,15 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         } else {
             pause();
         }
-    }
+    };
 
     const toggleMute = () => {
         if (volume === 0) {
-            setVolume(volume);
+            setVolume(1); // Restore to default volume
         } else {
             setVolume(0);
         }
-    }
+    };
 
     useEffect(() => {
         if (sound) {
@@ -160,6 +159,15 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             }
         });
     }, [songUrl]);
+
+    // Cache volume in localStorage every 5 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            localStorage.setItem("player-volume", volume.toString());
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [volume]);
 
     return (
         <div
