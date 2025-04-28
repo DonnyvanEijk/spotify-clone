@@ -17,7 +17,7 @@ const UserPage = async ({ params }: Props) => {
         return new Error("User not found");
     }
 
-    const isProfileIncomplete = !user.username || !user.bio;
+    const isProfileIncomplete = !user.username;
 
     if (isProfileIncomplete) {
         return (
