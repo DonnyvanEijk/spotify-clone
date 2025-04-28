@@ -16,6 +16,7 @@ import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";
 import JSZip from "jszip";
 import { getMimeType } from "@/lib/getMimeType";
 import ProgressBar from "../ProgressBar";
+import { sendDiscordMessage } from "@/actions/discord";
 
 const UploadAlbumModal = () => {
     const router = useRouter();
@@ -208,6 +209,10 @@ const UploadAlbumModal = () => {
             router.refresh();
             setIsLoading(false);
             toast.success("Song uploaded successfully");
+            if( values.ispublic) {
+            const message = `###  🎵  New Album Uploaded: "*${values.name}*" by "*${values.author}*"  🎵 `;
+             await sendDiscordMessage(message);
+            }
             reset();
             setProgress(0);
             setTotalSongs(0);

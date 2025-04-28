@@ -13,6 +13,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
+import { sendDiscordMessage } from "@/actions/discord";
 
 const CreatePlaylistModal = () => {
     const router = useRouter();
@@ -99,6 +100,10 @@ const CreatePlaylistModal = () => {
             router.refresh();
             setIsLoading(false);
             toast.success("Playlist Created successfully");
+            if (values.isPublic) {
+                const message = `###  🎵  New public playlist created: *${values.name}*,  *${values.description}*  🎵 `;
+                await sendDiscordMessage(message);
+            }
             reset();
             createPlaylistModal.onClose();
         } catch (error) {

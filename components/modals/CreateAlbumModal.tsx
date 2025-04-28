@@ -13,6 +13,7 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import { useCreateAlbumModal } from "@/hooks/useCreateAlbumModal";
+import { sendDiscordMessage } from "@/actions/discord";
 
 const CreateAlbumModal = () => {
     const router = useRouter();
@@ -98,6 +99,10 @@ const CreateAlbumModal = () => {
 
             router.refresh();
             setIsLoading(false);
+             if( values.ispublic) {
+                const message = `###  🎵  New Album Created: "*${values.name}*" by "*${values.author}*"  🎵 `;
+                await sendDiscordMessage(message);
+            }
             toast.success("Album Created successfully");
             reset();
             createAlbumModal.onClose();

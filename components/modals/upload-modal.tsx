@@ -14,6 +14,8 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import SearchSelect from "../SearchSelect";
+import { sendDiscordMessage } from "@/actions/discord";
+
 
 const UploadModal = () => {
     const router = useRouter();
@@ -152,6 +154,8 @@ const UploadModal = () => {
             router.refresh();
             setIsLoading(false);
             toast.success("Song uploaded successfully");
+            const message = `##  🎵  New song uploaded: "*${values.title}*" by "*${values.author}*"  🎵 `;
+            await sendDiscordMessage(message);
             reset();
             uploadModal.onClose();
         } catch (error) {
