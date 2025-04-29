@@ -1,6 +1,6 @@
 
 
-import getCurrentlyFollowing from "@/actions/getCurrentlyFollowing";
+import { getCurrentlyFollowing } from "@/actions/getCurrentlyFollowing";
 import getUser from "@/actions/getUser";
 import { getUserById, getUsersIndex } from "@/actions/getUsers";
 import { Header } from "@/components/header";

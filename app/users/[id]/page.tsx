@@ -1,4 +1,5 @@
-import getCurrentlyFollowing from "@/actions/getCurrentlyFollowing";
+
+import { getCurrentlyFollowing } from "@/actions/getCurrentlyFollowing";
 import getFollowerAmount from "@/actions/getFollowerAmount";
 import getSongsWithLikeCounts from "@/actions/getMostLiked";
 import getPlaylistsByUser from "@/actions/getPlaylistsByUser";

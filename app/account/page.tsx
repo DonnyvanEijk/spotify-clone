@@ -8,6 +8,9 @@ import getSongsWithLikeCounts from "@/actions/getMostLiked";
 import { UserContent } from "./components/user-content";
 import { getUserById } from "@/actions/getUsers";
 import { getImage } from "@/lib/getImage";
+import { getFollowedUsers } from "@/actions/getCurrentlyFollowing";
+import FollowerContent from "./components/follower-content";
+import getFollowingYou from "@/actions/getFollowingYou";
 
 const AccountPage = async () => {
     const user = await getUser();
@@ -19,6 +22,8 @@ const AccountPage = async () => {
     const songLikes = await getSongsWithLikeCounts(user?.id as string);
     const currentUser = await getUserById(user?.id as string);
     const avatarImage  = await getImage(currentUser?.avatar_url || "")
+    const followingUsers = await getFollowedUsers(user?.id as string);
+    const followingYou = await getFollowingYou();
 
     if (!currentUser) {
         return new Error("User not found");
@@ -37,6 +42,7 @@ const AccountPage = async () => {
                 avatar_url={currentUser?.avatar_url ?? null}
                 username={currentUser?.username ?? null}
             />
+            <FollowerContent followingYou={followingYou} followingUsers={followingUsers}/>
             <BillingContent />
             <InfoContent />
             {user?.id && <LikeOverview userId={user.id} songs={songLikes} />}
