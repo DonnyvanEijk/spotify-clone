@@ -1,5 +1,6 @@
 
 
+import getCurrentlyFollowing from "@/actions/getCurrentlyFollowing";
 import getUser from "@/actions/getUser";
 import { getUserById, getUsersIndex } from "@/actions/getUsers";
 import { Header } from "@/components/header";
@@ -12,6 +13,7 @@ const UsersPage = async () => {
     const user = await getUser();
     const currentUser = await getUserById(user?.id as string);
     const avatarImage  = await getImage(currentUser?.avatar_url || "")
+    const currentlyFollowing = await getCurrentlyFollowing(user?.id as string);
 
     return ( 
         <div className="text-white">
@@ -19,7 +21,7 @@ const UsersPage = async () => {
                 <h1 className="text-2xl font-bold">Users</h1>
                 <p className="text-gray-400">Every user on the platform!</p>
             </Header>
-            <UsersContent users={users} />
+            <UsersContent users={users} following={currentlyFollowing} />
         </div>
     );
 }

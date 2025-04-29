@@ -105,3 +105,10 @@ export interface Album {
   ispublic: boolean;
   image_path: string;
 }
+
+export interface Followers {
+  id: string;
+  follower_id: string;
+  followed_id: string;
+  created_at: string;
+}

@@ -1,11 +1,16 @@
+import getCurrentlyFollowing from "@/actions/getCurrentlyFollowing";
+import getFollowerAmount from "@/actions/getFollowerAmount";
 import getSongsWithLikeCounts from "@/actions/getMostLiked";
 import getPlaylistsByUser from "@/actions/getPlaylistsByUser";
 import getUser from "@/actions/getUser";
 import { getUserById } from "@/actions/getUsers";
 import { Header } from "@/components/header";
+import { FollowControls } from "@/components/users/FollowControls";
+
 import { PlayListList } from "@/components/users/playlists/Playlist-List";
 import { SongList } from "@/components/users/songs/SongList";
 import { getImage } from "@/lib/getImage";
+
 
 type Props = {
     params: {
@@ -17,6 +22,9 @@ const UserPage = async ({ params }: Props) => {
     const user = await getUserById(params.id);
     const userNOW = await getUser();
     const currentUser = await getUserById(userNOW?.id as string);
+    const currentFollows = await getCurrentlyFollowing(userNOW?.id as string);
+    const followerAmount = await getFollowerAmount(params.id);
+    console.log(currentFollows)
     const avatarImage  = await getImage(currentUser?.avatar_url || "")
     if (!user) {
         return new Error("User not found");
@@ -61,7 +69,15 @@ const UserPage = async ({ params }: Props) => {
                 <div className="flex flex-col gap-2 items-center">
                     <h2 className="text-2xl font-semibold">{user.username}</h2>
                     <p className="text-neutral-400 text-light">{user.bio}</p>
+                    <p className="text-neutral-400 text-light">Followers: {followerAmount}</p>
                 </div>
+                { currentUser?.id !== user.id && (
+                    <FollowControls 
+                        userId={currentUser?.id || ""} 
+                        followingId={params.id} 
+                        isInitiallyFollowing={currentFollows.some(follow => follow.followed_id === params.id)}
+                    />
+                )}
             </div>
             <div className="grid lg:grid-cols-2 grid-cols-1 ml-[4rem] mt-10 m-5 mb-10">
                 <SongList songs={songsWithLikes} />
