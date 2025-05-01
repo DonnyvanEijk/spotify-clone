@@ -33,6 +33,39 @@ export const FollowControls = ({ userId, followingId, isInitiallyFollowing }: Pr
                     console.error("Error following user:", error);
                     return;
                 }
+
+                const { data: existingNotification, error: fetchError } = await supabase
+                    .from("notifications")
+                    .select("*")
+                    .eq("target_id", followingId)
+                    .eq("sent_id", userId)
+                    .eq("message", "You got a new follow from:")
+                    .maybeSingle();
+
+                if (fetchError) {
+                    console.error("Error checking existing notification:", fetchError.message);
+                    return;
+                }
+
+                if (!existingNotification) {
+                    const { error: notificationError } = await supabase
+                        .from("notifications")
+                        .insert({ 
+                            target_id: followingId, 
+                            sent_id: userId, 
+                            message: `You got a new follow from:` 
+                        });
+
+                    if (notificationError) {
+                        console.error("Error creating notification:", notificationError.message);
+                        return;
+                    }
+                }
+
+
+                
+
+
                 toast.success("Followed user successfully!");
                 setIsFollowing(true);
                 router.refresh();
