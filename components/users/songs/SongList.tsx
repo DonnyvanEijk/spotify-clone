@@ -31,7 +31,7 @@ export const SongList = async ({ songs }: Props) => {
                                     </div>
                                     <div className="flex justify-end items-end">
                                         <span className="flex flex-row justify-end items-center gap-2">
-                                            {like_count} Likes <LikeButton songId={song.id} /> <PlaylistButton songId={song.id} />
+                                            {like_count} Likes <LikeButton creatorId={song.user_id} songId={song.id} /> <PlaylistButton songId={song.id} />
                                         </span>
                                     </div>
                                 </div>

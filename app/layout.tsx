@@ -10,6 +10,7 @@ import getSongsByUserId from "@/actions/getSongsByUser";
 import Player from "@/components/player";
 import getActiveProductsWithPrices from "@/actions/getActiveProductsWithPrices";
 import getUser from "@/actions/getUser";
+import {getIncomingNotifications} from "@/actions/getIncomingNotifications";
 
 const figtree = Figtree({subsets: ["latin"]});
 
@@ -28,6 +29,8 @@ export default async function RootLayout({
   const userSongs = await getSongsByUserId();
   const products = await getActiveProductsWithPrices();
   const user = await getUser();
+  const notifications = user?.id ? await getIncomingNotifications(user.id) : 0;
+
   return (
     <html lang="en">
       <head>
@@ -40,7 +43,7 @@ export default async function RootLayout({
         <SupabaseProvider>
           <UserProvider> 
             <ModalProvider products={products}/>
-              <Sidebar songs={userSongs} userId={user?.id}>
+              <Sidebar songs={userSongs} userId={user?.id} newNotifiations={notifications}>
                 {children}
               </Sidebar>
               <Player/>

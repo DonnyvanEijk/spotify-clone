@@ -105,3 +105,20 @@ export interface Album {
   ispublic: boolean;
   image_path: string;
 }
+
+export interface Followers {
+  id: string;
+  follower_id: string;
+  followed_id: string;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  target_id: string;
+  sent_id: string;
+  song_id: string;
+  message: string;
+  created_at: string;
+  deleted_at?: string | null;
+}

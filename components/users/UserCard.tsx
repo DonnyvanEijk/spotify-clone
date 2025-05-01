@@ -9,9 +9,10 @@ type Props = {
     bio?: string;
     avatar_url?: string;
     currentUser?: string | null;
+    isFollowed?: boolean;
 };
 
-export const UserCard = async ({ id, username, bio, avatar_url, currentUser }: Props) => {
+export const UserCard = async ({ id, username, bio, avatar_url, currentUser, isFollowed }: Props) => {
     if (!username) {
         return null; 
     }
@@ -30,8 +31,8 @@ export const UserCard = async ({ id, username, bio, avatar_url, currentUser }: P
             {avatarPath && (
                 <img src={avatarPath} alt="User Avatar" className="rounded-full w-16 h-16 mb-4" />
             )}
-            <h2 className="text-xl font-semibold flex">
-                {username} {isHighlighted && "- This is you!"}
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+                {username} {isHighlighted && "- This is you!"}{isFollowed && ( <span className="text-sm font-light">Following</span>)}
             </h2>
             <p className="text-gray-400">{bio || "No bio has been set"}</p>
             <Link href={`/users/${id}`}>

@@ -44,8 +44,6 @@ const PlaylistSearchContent: React.FC<PlaylistSearchContentProps> = ({
                         data={playlist}
                         />
                     </div>
-                    {/* <PlaylistButton playlistId={playlist.id}/>
-                    <LikeButton playlistId={playlist.id} /> */}
                 </div>
             ))}
         </div>

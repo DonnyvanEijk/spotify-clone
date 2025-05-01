@@ -77,7 +77,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
                     </div>
                     <PlaylistItemDropdown songId={song.id} playlistId={PlaylistId} isOwner={isOwner} />
                     {/* <PlaylistButton songId={song.id} /> */}
-                    <LikeButton songId={song.id} />
+                    <LikeButton songId={song.id} creatorId={song.user_id} />
                 </div>
             ))}
         </div>
