@@ -78,7 +78,7 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
                 }
 
                 if (!existingNotification && creatorId !== user.id) {
-                    console.log(creatorId, user.id)
+                  
                     const { error: notificationError } = await supabaseClient
                         .from("notifications")
                         .insert({ 
