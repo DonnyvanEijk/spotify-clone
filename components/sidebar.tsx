@@ -29,7 +29,7 @@ const Sidebar = ({ children, songs, userId, newNotifiations }: SidebarProps) => 
       {
         icon: HiHome,
         label: 'Home',
-        active: pathname !== '/search',
+        active: pathname === '/',
         href: '/',
       },
       {
