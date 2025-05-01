@@ -49,7 +49,11 @@ const getSongsWithLikeCounts = async (id:string): Promise<{ song: Song; like_cou
   });
 
   // Step 5: Sort songs by like count in descending order
-  songsWithLikeCounts.sort((a, b) => b.like_count - a.like_count);
+  songsWithLikeCounts.sort((a, b) => {
+    const dateA = new Date(a.song.created_at).getTime();
+    const dateB = new Date(b.song.created_at).getTime();
+    return dateB - dateA;
+  });
 
   return songsWithLikeCounts;
 };
