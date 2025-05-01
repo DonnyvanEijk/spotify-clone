@@ -112,3 +112,13 @@ export interface Followers {
   followed_id: string;
   created_at: string;
 }
+
+export interface Notification {
+  id: string;
+  target_id: string;
+  sent_id: string;
+  song_id: string;
+  message: string;
+  created_at: string;
+  deleted_at?: string | null;
+}

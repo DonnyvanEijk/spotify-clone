@@ -1,7 +1,7 @@
 'use client';
 
 import { HiHome } from 'react-icons/hi';
-import { BiSearch } from 'react-icons/bi';
+import { BiBell, BiSearch } from 'react-icons/bi';
 import { twMerge } from 'tailwind-merge';
 import { usePathname } from 'next/navigation';
 
@@ -17,9 +17,10 @@ interface SidebarProps {
   children: React.ReactNode;
   songs: Song[];
   userId : string | undefined
+  newNotifiations: number;
 }
 
-const Sidebar = ({ children, songs, userId }: SidebarProps) => {
+const Sidebar = ({ children, songs, userId, newNotifiations }: SidebarProps) => {
   const pathname = usePathname();
   const player = usePlayer();
 
@@ -36,6 +37,12 @@ const Sidebar = ({ children, songs, userId }: SidebarProps) => {
         label: 'Search',
         href: '/search',
         active: pathname === '/search',
+      },
+      {
+        icon: BiBell,
+        label: 'Notifications',
+        href: '/notifications',
+        active: pathname === '/notifications',
       },
     ],
     [pathname]
@@ -66,7 +73,14 @@ const Sidebar = ({ children, songs, userId }: SidebarProps) => {
         <Box>
           <div className='flex flex-col gap-y-4 px-5 py-4'>
             {routes.map((item) => (
-              <SidebarItem key={item.label} {...item} />
+              <div key={item.label} className="relative">
+          <SidebarItem {...item} />
+          {item.label === 'Notifications' && newNotifiations > 0 && (
+            <span className="absolute top-2 right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {newNotifiations}
+            </span>
+          )}
+              </div>
             ))}
           </div>
         </Box>
