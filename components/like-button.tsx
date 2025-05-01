@@ -69,6 +69,7 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
                     .select("*")
                     .eq("target_id", creatorId)
                     .eq("sent_id", user.id)
+                    .eq("song_id", songId)
                     .eq("message", `You got a new like from:`)
                     .maybeSingle();
 
@@ -87,6 +88,8 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
                             song_id: songId,
                             message: `You got a new like from:`, 
                         });
+
+                        console.log("Notification sent: Liking");
 
                     if (notificationError) {
                         console.error("Error creating notification:", notificationError.message);
