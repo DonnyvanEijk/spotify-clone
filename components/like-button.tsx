@@ -9,10 +9,11 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 
 type Props  ={
     songId: string;
+    creatorId: string;
 }
 
 
-export const LikeButton = ({ songId }:Props) => {
+export const LikeButton = ({ songId, creatorId }:Props) => {
     const { supabaseClient} = useSessionContext();
     const  router = useRouter()
     const authModal = useAuthModal();
@@ -62,6 +63,37 @@ export const LikeButton = ({ songId }:Props) => {
                 router.refresh();
             }
         } else {
+
+            const { data: existingNotification, error: fetchError } = await supabaseClient
+                    .from("notifications")
+                    .select("*")
+                    .eq("target_id", creatorId)
+                    .eq("sent_id", user.id)
+                    .eq("message", `You got a new like from:`)
+                    .maybeSingle();
+
+                if (fetchError) {
+                    console.error("Error checking existing notification:", fetchError.message);
+                    return;
+                }
+
+                if (!existingNotification && creatorId !== user.id) {
+                    console.log(creatorId, user.id)
+                    const { error: notificationError } = await supabaseClient
+                        .from("notifications")
+                        .insert({ 
+                            target_id: creatorId, 
+                            sent_id: user.id, 
+                            song_id: songId,
+                            message: `You got a new like from:`, 
+                        });
+
+                    if (notificationError) {
+                        console.error("Error creating notification:", notificationError.message);
+                        return;
+                    }
+                }
+            
             const {error} = await supabaseClient
             .from("liked_songs")
             .insert({

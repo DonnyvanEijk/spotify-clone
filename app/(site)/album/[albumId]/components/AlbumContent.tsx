@@ -73,7 +73,7 @@ const AlbumContent: React.FC<AlbumContentProps> = ({
                     {/* <AlbumItemDropdown songId={song.id} albumId={AlbumId} isOwner={isOwner} /> */}
                     {/* <AlbumButton songId={song.id} /> */}
                     <PlaylistButton songId={song.id} />
-                    <LikeButton songId={song.id} />
+                    <LikeButton songId={song.id} creatorId={song.user_id} />
                 </div>
             ))}
         </div>

@@ -44,8 +44,6 @@ const AlbumSearchContent: React.FC<AlbumSearchContentProps> = ({
                             data={album}
                         />
                     </div>
-                    {/* <AlbumButton albumId={album.id}/>
-                    <LikeButton albumId={album.id} /> */}
                 </div>
             ))}
         </div>

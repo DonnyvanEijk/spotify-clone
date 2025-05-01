@@ -41,7 +41,7 @@ export const LikedContent  = ({songs, userId}:Props) => {
                         <MediaItem isOwner={song.user_id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
                     </div>
                     <PlaylistButton songId={song.id}/>
-                    <LikeButton songId={song.id}/>
+                    <LikeButton songId={song.id} creatorId={song.user_id}/>
                 </div>
             ))}
         </div>

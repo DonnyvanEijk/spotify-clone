@@ -248,7 +248,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             
             <div className="hidden md:flex justify-end pr-2">
                 <div className="flex flex-row gap-3 mr-5">
-                     <LikeButton songId={song.id} />
+                     <LikeButton songId={song.id} creatorId={song.user_id} />
                      <PlaylistButton songId={song.id} />
                 </div>
            
