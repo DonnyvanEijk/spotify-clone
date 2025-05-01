@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import SearchSelect from "../SearchSelect";
 import { sendDiscordMessage } from "@/actions/discord";
-import getFollowingYou from "@/actions/getFollowingYou";
+
 
 
 const UploadModal = () => {
