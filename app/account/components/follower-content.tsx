@@ -13,20 +13,25 @@ const FollowerContent = async ({ followingUsers, followingYou }: Props) => {
                 <h1 className="text-2xl font-bold text-white">Currently following</h1>
                 <div className="overflow-y-auto w-fit rounded flex flex-col pr-5 max-h-64">
                     {followingUsers.length > 0 ? (
-                        followingUsers.map(async (user) => (
-                            <Link
-                                href={`/users/${user.id}`}
-                                className="flex items-center w-fit cursor-pointer space-x-4 my-5"
-                                key={user.id}
-                            >
-                                <img
-                                    src={await getImage(user.avatar_url || "") || undefined}
-                                    alt={`${user.username}'s avatar`}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <h2 className="text-white">{user.username}</h2>
-                            </Link>
-                        ))
+                        followingUsers.map(async (user) => {
+                            const imageUrl = await getImage(user.avatar_url || "");
+                            return (
+                                <Link
+                                    href={`/users/${user.id}`}
+                                    className="flex items-center w-fit cursor-pointer space-x-4 my-5"
+                                    key={user.id}
+                                >
+                                    {imageUrl && (
+                                        <img
+                                            src={imageUrl}
+                                            alt={`${user.username}'s avatar`}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    )}
+                                    <h2 className="text-white">{user.username}</h2>
+                                </Link>
+                            );
+                        })
                     ) : (
                         <div>
                             <p className="text-white">No one is being followed</p>
@@ -39,20 +44,25 @@ const FollowerContent = async ({ followingUsers, followingYou }: Props) => {
                 <h1 className="text-2xl font-bold text-white">Following you</h1>
                 <div className="overflow-y-auto w-fit rounded flex flex-col pr-5 max-h-64">
                     {followingYou.length > 0 ? (
-                        followingYou.map(async (user) => (
-                            <Link
-                                href={`/users/${user.id}`}
-                                className="flex items-center w-fit cursor-pointer space-x-4 my-5"
-                                key={user.id}
-                            >
-                                <img
-                                    src={await getImage(user.avatar_url || "") || undefined}
-                                    alt={`${user.username}'s avatar`}
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <h2 className="text-white">{user.username}</h2>
-                            </Link>
-                        ))
+                        followingYou.map(async (user) => {
+                            const imageUrl = await getImage(user.avatar_url || "");
+                            return (
+                                <Link
+                                    href={`/users/${user.id}`}
+                                    className="flex items-center w-fit cursor-pointer space-x-4 my-5"
+                                    key={user.id}
+                                >
+                                    {imageUrl && (
+                                        <img
+                                            src={imageUrl}
+                                            alt={`${user.username}'s avatar`}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    )}
+                                    <h2 className="text-white">{user.username}</h2>
+                                </Link>
+                            );
+                        })
                     ) : (
                         <div>
                             <p className="text-white">No one is following you...</p>

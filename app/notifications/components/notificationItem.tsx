@@ -13,9 +13,7 @@ interface NotificationItemProps {
     song: Song | null; 
     sentAvatar: string | null;
     songImage: string | null;
-
 }
-  
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
     notification,
@@ -23,7 +21,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     song,
     sentAvatar,
     songImage,
-
 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const supabase = useSupabaseClient();
@@ -32,8 +29,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
-          
-            const { error } =  await supabase
+            const { error } = await supabase
                 .from("notifications")
                 .update({
                     deleted_at: new Date(),
@@ -56,9 +52,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         <div className="notification-item p-4 border-b border-gray-700 flex justify-between items-center">
             <div className="flex flex-row">
                 <h2 className="text-white font-medium">
-                    {notification.message.includes("follow") && (
+                    {notification.message.includes("follow") && sentAvatar && (
                         <img
-                            src={sentAvatar || ""}
+                            src={sentAvatar}
                             alt={`${sentUser?.username}'s avatar`}
                             className="inline-block w-[10rem] h-[10rem] object-cover rounded-full mr-5"
                         />

@@ -18,11 +18,13 @@ export const PlayListList = async ({ playlists }: Props) => {
                         return (
                             <li key={playlist.id} className="p-2 hover:bg-neutral-800 rounded">
                                 <a href={`/playlist/${playlist.id}`} className="flex items-center space-x-4">
-                                    <img
-                                        src={new_path || '/images/liked.png'}
-                                        alt={playlist.name}
-                                        className="w-12 h-12 rounded"
-                                    />
+                                    {new_path && (
+                                        <img
+                                            src={new_path}
+                                            alt={playlist.name}
+                                            className="w-12 h-12 rounded"
+                                        />
+                                    )}
                                     <div className="flex flex-col justify-start items-start gap-1 w-full">
                                         <span className="text-white font-medium">{playlist.name}</span>
                                         <span className="text-md font-light text-neutral-400">{playlist.description}</span>

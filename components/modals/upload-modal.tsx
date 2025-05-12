@@ -181,39 +181,6 @@ const UploadModal = () => {
                 setIsLoading(false);
                 return toast.error(songNameError.message);
             }
-
-      
-       
-            // Fetch all follower IDs
-            const { data: followersData, error: followersError } = await supabaseClient
-                .from('followers')
-                .select('follower_id')
-                .eq('followed_id', user.id);
-        
-            if (followersError) {
-                console.error(followersError);
-                return []; // Return an empty array in case of an error
-            }
-
-            
-
-            for (const follower of followersData) {
-                const { follower_id } = follower;
-                const { error: notificationError } = await supabaseClient
-                    .from("notifications")
-                    .insert({ 
-                        song_id: newSongData.id,
-                        sent_id: user.id,
-                        target_id: follower_id,
-                        message: `New song uploaded by ${nameData.username}: ${values.title}`,
-                    });
-
-                if (notificationError) {
-                    console.error(`Error creating notification for follower ${follower_id}:`, notificationError.message);
-                }
-            }
-        
-
             router.refresh();
             setIsLoading(false);
             toast.success("Song uploaded successfully");

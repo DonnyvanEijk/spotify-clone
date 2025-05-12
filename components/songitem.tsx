@@ -8,6 +8,7 @@ import { twMerge } from 'tailwind-merge';
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import SongRightClickContent from './right_click/SongRightClickContent';
 import { differenceInHours } from 'date-fns';
+import { getImage } from '@/lib/getImage';
 
 interface SongItemProps {
   data: Song;
@@ -19,7 +20,7 @@ interface SongItemProps {
 }
 
 const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, uploader, user_id}) => {
-  const imagePath = useLoadImage(data);
+  const imagePath =  useLoadImage(data)
   const isNew = differenceInHours(new Date(), new Date(data.created_at)) <= 24;
 
   return (
@@ -46,33 +47,35 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
       hover:animate-wave
       `}
     >
-      <div
-      className='
+      {imagePath && (
+        <div
+          className='
         relative 
         aspect-square 
         w-full
         h-full 
         rounded-md 
         overflow-hidden
-      '
-      >
-      <Image
+          '
+        >
+          <Image
         className='object-cover'
-        src={imagePath || '/images/music-placeholder.png'}
+        src={imagePath}
         fill
         alt='Image'
-      />
-      {isNew && (
+          />
+          {isNew && (
         <div className='absolute top-2 right-2'>
-        <Image
-          src='/images/new_badge.png'
-          width={50}
-          height={50}
-          alt='New Badge'
-        />
+          <Image
+            src='/images/new_badge.png'
+            width={50}
+            height={50}
+            alt='New Badge'
+          />
+        </div>
+          )}
         </div>
       )}
-      </div>
       <div className='flex flex-col items-start w-full pt-4 gap-y-1'>
       <p className={twMerge(`font-semibold truncate w-full`, reactive && "text-purple-500 font-semibold")}>{data.title}</p>
       <p

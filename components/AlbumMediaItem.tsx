@@ -48,21 +48,23 @@ const AlbumMediaItem: React.FC<MediaItemProps> = ({
         rounded-md
         "
                 >
-                    <div
-                        className="
+                    {imageUrl && (
+                        <div
+                            className="
             relative
             rounded-md
             min-h-[48px]
             min-w-[48px]
             "
-                    >
-                        <Image
-                            fill
-                            src={imageUrl || "/images/liked.png"}
-                            alt="mediaItem"
-                            className="object-cover"
-                        />
-                    </div>
+                        >
+                            <Image
+                                fill
+                                src={imageUrl}
+                                alt="mediaItem"
+                                className="object-cover"
+                            />
+                        </div>
+                    )}
                     <div className="flex flex-col gap-y-1 overflow-hidden">
                         <p className={twMerge("text-white truncate")}>{data.name}</p>
                         <p className="text-neutral-400 text-sm truncate">By {data.author}</p>

@@ -164,12 +164,14 @@ export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, 
 
     return (
         <div className='flex flex-col m-5 gap-3'>
+             {avatar_url && (
             <img
                 className='rounded-full mb-5'
                 src={getPublicUrl(avatar_url || '')}
                 alt="User Avatar"
                 style={{ width: 100, height: 100 }}
             />
+        )}
             <h2 className='text-2xl font-semibold '>Welcome, {username}!</h2>
             <p className='text-neutral-400 text-light'>Biography: {bio}</p>
             <Button className='w-1/4' onClick={() => setIsEditing(true)}>Edit User Info</Button>

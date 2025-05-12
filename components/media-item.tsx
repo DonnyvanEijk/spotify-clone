@@ -88,22 +88,24 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactiv
             p-2 
             rounded-md`, className)}
         >
-          <div
-            className='
+            {imageUrl && (
+            <div
+              className='
               relative 
               rounded-md 
               min-h-[48px] 
               min-w-[48px] 
               overflow-hidden
-            '
-          >
-            <Image
+              '
+            >
+              <Image
               fill
-              src={imageUrl || '/images/music-placeholder.png'}
+              src={imageUrl}
               alt='MediaItem'
               className='object-cover'
-            />
-          </div>
+              />
+            </div>
+            )}
           <div className='flex flex-col gap-y-1 overflow-hidden'>
             <p className={twMerge(` truncate`, reactive && "font-semibold text-purple-500")}>{data.title}</p>
             <p className='text-neutral-400 text-sm truncate'>By {data.author}</p>

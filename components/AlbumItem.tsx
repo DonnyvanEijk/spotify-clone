@@ -47,14 +47,16 @@ const AlbumItem: React.FC<AlbumItemProps> = ({
         p-3
         "
                     >
-                        <div className="relative aspect-square w-full h-full rounded-md overflow-hidden">
-                            <Image
-                                className="object-cover"
-                                src={imagePath || '/images/liked.png'}
-                                fill
-                                alt="Image"
-                            />
-                        </div>
+                        {imagePath ? (
+                            <div className="relative aspect-square w-full h-full rounded-md overflow-hidden">
+                                <Image
+                                    className="object-cover"
+                                    src={imagePath}
+                                    fill
+                                    alt="Image"
+                                />
+                            </div>
+                        ) : null}
                         <div className="flex flex-col items-start w-full pt-4 gap-y-1">
                             <p className={twMerge("font-semibold truncate w-full", playing && "text-purple-500")}>
                                 {data.name}

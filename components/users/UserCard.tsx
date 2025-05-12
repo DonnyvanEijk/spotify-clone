@@ -19,7 +19,6 @@ export const UserCard = async ({ id, username, bio, avatar_url, currentUser, isF
 
     const isHighlighted = currentUser === id;
     const avatarPath = await getImage(avatar_url || ""); 
-    
 
     return (
         <div
@@ -28,7 +27,7 @@ export const UserCard = async ({ id, username, bio, avatar_url, currentUser, isF
                 isHighlighted ? "bg-purple-700" : "bg-gray-900"
             }`}
         >
-            {avatarPath && (
+            {avatarPath && avatarPath.trim() && (
                 <img src={avatarPath} alt="User Avatar" className="rounded-full w-16 h-16 mb-4" />
             )}
             <h2 className="text-xl font-semibold flex items-center gap-2">

@@ -3,7 +3,6 @@ import PlaylistButton from "@/components/PlaylistButton";
 import { getImage } from "@/lib/getImage";
 import { Song } from "@/types"
 
-
 type Props = {
     songs: {
         song: Song;
@@ -23,7 +22,9 @@ export const SongList = async ({ songs }: Props) => {
                         const imagePath = await getImage(song.image_path);
                         return (
                             <li key={index} className="flex items-center p-3 border-b border-neutral-800">
-                                <img src={imagePath || '/images/liked.png'} alt="Song Cover" className="w-16 h-16 rounded" />
+                                {imagePath && (
+                                    <img src={imagePath} alt="Song Cover" className="w-16 h-16 rounded" />
+                                )}
                                 <div className="flex flex-row justify-between w-full">
                                     <div className="ml-5 flex flex-col justify-start items-start gap-1 w-1/2">
                                         <span className="text-md font-semibold">{song.title}</span>
