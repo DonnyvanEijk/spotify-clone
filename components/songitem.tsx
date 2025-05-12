@@ -8,7 +8,7 @@ import { twMerge } from 'tailwind-merge';
 import * as ContextMenu from "@radix-ui/react-context-menu"
 import SongRightClickContent from './right_click/SongRightClickContent';
 import { differenceInHours } from 'date-fns';
-import { getImage } from '@/lib/getImage';
+
 
 interface SongItemProps {
   data: Song;
