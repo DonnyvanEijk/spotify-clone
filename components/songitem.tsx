@@ -76,6 +76,14 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
           )}
         </div>
       )}
+      {reactive && (
+  <div className="absolute top-2 left-2 z-10">
+    <span className="px-3 py-1 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-md animate-pulse">
+      <em>Playing</em>
+    </span>
+  </div>
+)}
+
       <div className='flex flex-col items-start w-full pt-4 gap-y-1'>
       <p className={twMerge(`font-semibold truncate w-full`, reactive && "text-purple-500 font-semibold")}>{data.title}</p>
       <p
