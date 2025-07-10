@@ -47,7 +47,7 @@ export const Header  = ({children, className, image}:Props) => {
                          <RxCaretRight className="text-white" size={35}/>
                 </button>
 
-               <p className="ml-5">Images are undergoing issues at our host! Some images might not load in!</p> 
+               {/* <p className="ml-5">Images are undergoing issues at our host! Some images might not load in!</p>  */}
             </div>
             <div className="flex md:hidden gap-x-2 items-center">
                 <button onClick={() => router.push("/")} className="rounded-full p-2  bg-white flex  items-center justify-center hover:opacity-75 transition">

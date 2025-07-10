@@ -45,6 +45,7 @@ const UploadModal = () => {
             is_private: false,
             song: null,
             image: null,
+            lyrics: '',
         }
     })
 
@@ -135,26 +136,42 @@ const UploadModal = () => {
 
    
         
-            
+         const {
+            data: songInsertData,
+            error: supabaseError
+        } = await supabaseClient
+            .from(`songs`)
+            .insert({
+                user_id: user.id,
+                title: values.title,
+                author: values.author,
+                is_private: values.is_private,
+                image_path: imageData.path,
+                song_path: songData.path,
+                album_id: selectedAlbum ? parseInt(selectedAlbum) : null
+            })
+            .select()
+            .single();
 
-            const {
-                error: supabaseError
-            } = await supabaseClient
-                .from(`songs`)
+        if (supabaseError) {
+            setIsLoading(false);
+            return toast.error(supabaseError.message);
+        }
+
+        // Insert lyrics if provided
+        if (values.lyrics && songInsertData?.id) {
+            const { error: lyricsError } = await supabaseClient
+                .from('song_lyrics')
                 .insert({
                     user_id: user.id,
-                    title: values.title,
-                    author: values.author,
-                    is_private: values.is_private,
-                    image_path: imageData.path,
-                    song_path: songData.path,
-                    album_id: selectedAlbum ? parseInt(selectedAlbum) : null
+                    song_id: songInsertData.id,
+                    lyrics: values.lyrics,
                 });
 
-            if (supabaseError) {
-                setIsLoading(false);
-                return toast.error(supabaseError.message);
+            if (lyricsError) {
+                toast.error("Lyrics could not be saved, but song was uploaded.");
             }
+        }
 
           
 
@@ -181,6 +198,7 @@ const UploadModal = () => {
             isOpen={uploadModal.isOpen}
             onChange={onChange}
         >
+            <div className="max-w-3xl w-full mx-auto">
             <SearchSelect
                 disabled={isLoading}
                 isOpen={selectOpen}
@@ -234,10 +252,24 @@ const UploadModal = () => {
                         {...register('image', { required: true })}
                     />
                 </div>
+                 <div>
+        <div className="pb-1">
+            Add lyrics (optional)
+        </div>
+        <textarea
+            id="lyrics"
+            disabled={isLoading}
+            {...register('lyrics')}
+            placeholder="Song Lyrics"
+            className="w-full p-2 rounded bg-neutral-800 text-white"
+            rows={5}
+        />
+    </div>
                 <Button disabled={isLoading} type="submit">
                     Create Song
                 </Button>
             </form>
+            </div>
         </Modal>
     );
 }

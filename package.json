@@ -11,7 +11,7 @@
   "dependencies": {
     "@radix-ui/colors": "^3.0.0",
     "@radix-ui/react-context-menu": "^2.2.4",
-    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-progress": "^1.1.1",
     "@radix-ui/react-select": "^2.1.4",
@@ -27,6 +27,7 @@
     "next": "14.2.14",
     "query-string": "^9.1.1",
     "react": "^18",
+    "react-dialog": "^0.1.0",
     "react-dom": "^18",
     "react-hook-form": "^7.53.2",
     "react-hot-toast": "^2.4.1",

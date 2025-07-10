@@ -251,7 +251,7 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
 										<div className="absolute left-0 inline-flex w-[25px] items-center justify-center">
 											<CiTextAlignCenter />
 										</div>
-										Add lyrics
+										Edit lyrics
 									</ContextMenu.Item>
 								</ContextMenu.SubContent>
 							</ContextMenu.Portal>
