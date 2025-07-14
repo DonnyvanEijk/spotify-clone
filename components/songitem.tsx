@@ -77,7 +77,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
         </div>
       )}
       {reactive && (
-  <div className="absolute top-2 left-2 z-10">
+  <div className="absolute top-2 left-2 z-2">
     <span className="px-3 py-1 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-md animate-pulse">
       <em>Playing</em>
     </span>
