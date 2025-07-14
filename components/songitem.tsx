@@ -56,6 +56,7 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
         h-full 
         rounded-md 
         overflow-hidden
+        shadow-lg
           '
         >
           <Image
@@ -65,12 +66,12 @@ const SongItem: React.FC<SongItemProps> = ({ data, onClick, reactive, isOwner, u
         alt='Image'
           />
           {isNew && (
-        <div className='absolute top-2 right-2'>
+        <div className='absolute top-0 right-0 '>
           <Image
-            src='/images/new_badge.png'
-            width={50}
-            height={50}
-            alt='New Badge'
+        src='/images/New.png'
+        width={60}
+        height={60}
+        alt='New Badge'
           />
         </div>
           )}
