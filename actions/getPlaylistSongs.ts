@@ -11,7 +11,8 @@ const getPlaylistSongs = async (playlistId: string): Promise<Song[]> => {
         const { data, error } = await supabase
             .from('playlist_songs')
             .select('*, songs(*)')
-            .eq('playlist_id', playlistId);
+            .eq('playlist_id', playlistId)
+            .order('created_at', { ascending: true });;
 
         if (error) {
             console.error('Error fetching playlist songs:', error);
