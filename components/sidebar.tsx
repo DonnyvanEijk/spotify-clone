@@ -1,7 +1,7 @@
 'use client';
 
 import { HiHome } from 'react-icons/hi';
-import { BiBell, BiSearch } from 'react-icons/bi';
+import { BiBell, BiRadio, BiSearch } from 'react-icons/bi';
 import { usePathname } from 'next/navigation';
 import { Song } from '@/types';
 import { SidebarItem } from './sidebar-item';
@@ -23,6 +23,7 @@ const Sidebar = ({ children, songs, userId, newNotifiations }: SidebarProps) => 
       { icon: HiHome, label: 'Home', href: '/', active: pathname === '/' },
       { icon: BiSearch, label: 'Search', href: '/search', active: pathname === '/search' },
       { icon: BiBell, label: 'Notifications', href: '/notifications', active: pathname === '/notifications' },
+      { icon: BiRadio, label: 'Radio', href: '/radio', active: pathname === '/radio' },
     ],
     [pathname]
   );
