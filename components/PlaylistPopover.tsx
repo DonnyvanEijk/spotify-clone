@@ -175,64 +175,58 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
     }
 
     return (
-        <div>
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                    <button className="flex flex-col justify-center">
-                        <FaEllipsisH className="text-neutral-400 hover:text-neutral-300 transition hover:outline-none" size={25} />
-                    </button>
-                </DropdownMenu.Trigger>
+      <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+                <button className="flex justify-center items-center">
+                    <FaEllipsisH className="text-neutral-400 hover:text-white transition" size={24} />
+                </button>
+            </DropdownMenu.Trigger>
 
-                <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                        className="py-2 min-w-[220px] rounded-md bg-neutral-800 p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade"
+            <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                    className="bg-neutral-900 rounded-xl p-2 shadow-lg min-w-[220px] space-y-1 animate-slide-up-fade"
+                >
+                    {isOwner && (
+                        <>
+                            <DropdownMenu.Item
+                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
+                                onClick={handleDeletePlaylist}
+                            >
+                                Delete <HiOutlineTrash size={18} />
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Item
+                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition"
+                                onClick={handleEditPlaylist}
+                            >
+                                Edit <MdOutlineModeEditOutline size={18} />
+                            </DropdownMenu.Item>
+                        </>
+                    )}
+
+                    <DropdownMenu.Item
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-green-400 hover:bg-green-500/20 hover:text-green-300 transition"
+                        onClick={handleDownload}
+                        disabled={!subscription}
                     >
-                        {isOwner && (
-                            <>
-                                <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleDeletePlaylist}>
-                                    Delete Playlist <HiOutlineTrash size={20} className="text-neutral-400" />
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleEditPlaylist}>
-                                    Edit Playlist <MdOutlineModeEditOutline size={20} className="text-neutral-400" />
-                                </DropdownMenu.Item>
+                        {subscription ? "Download" : "Upgrade to Pro"} {subscription ? <TbDownload size={18} /> : <TbDownloadOff size={18} />}
+                    </DropdownMenu.Item>
 
-                                <DropdownMenu.Separator className="m-[5px] h-px bg-neutral-400" />
-                            </>
-                        )}
+                    <DropdownMenu.Item
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition"
+                        onClick={handleBatchAddToPlaylist}
+                    >
+                        Add to Playlist <MdPlaylistAdd size={18} />
+                    </DropdownMenu.Item>
 
-                        <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 disabled:text-neutral-600 px-3 transition" onClick={handleDownload} disabled={!subscription}>
-                            {subscription ? (
-                                <>
-                                    Donwload Playlist <TbDownload size={20} className="text-neutral-400" />
-                                </>
-                            ) : (
-                                <>
-                                    Upgrade to pro to Downloa <TbDownloadOff size={20} className="text-neutral-400" />
-                                </>
-                            )}
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleBatchAddToPlaylist} disabled={!user}>
-                            {!user ? (
-                                <>Login to add to other Playlist <MdPlaylistAdd size={20} className="text-neutral-400" /></>
-                            ) : (
-                                <>
-                                    Add to other Playlist <MdPlaylistAdd size={20} className="text-neutral-400" />
-                                </>
-                            )}
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleClonePlaylist} disabled={!subscription}>
-                            {!subscription ? (
-                                <>Upgrade to pro to clone Playlist <RiPlayListFill size={20} className="text-neutral-400" /></>
-                            ) : (
-                                <>
-                                    Clone Playlist <RiPlayListFill size={20} className="text-neutral-400" />
-                                </>
-                            )} 
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-        </div>
+                    <DropdownMenu.Item
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300 transition"
+                        onClick={handleClonePlaylist}
+                    >
+                        Clone <RiPlayListFill size={18} />
+                    </DropdownMenu.Item>
+                </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+        </DropdownMenu.Root>
     );
 }
 

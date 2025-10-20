@@ -2,39 +2,41 @@ import { getImage } from "@/lib/getImage";
 import { Playlist } from "@/types";
 
 type Props = {
-    playlists: Playlist[];
+  playlists: Playlist[];
 };
 
 export const PlayListList = async ({ playlists }: Props) => {
-    return (
-        <div className="flex flex-col items-center bg-neutral-900 rounded w-[90%] lg:mb-0 mb-10">
-            <h2 className="font-semibold text-2xl p-5">Public Playlists</h2>
-            {playlists.length === 0 ? (
-                <p className="text-neutral-400 p-5">No playlists are available</p>
-            ) : (
-                <ul className="w-full max-h-[75vh] overflow-y-auto">
-                    {playlists.map(async (playlist) => {
-                        const new_path = await getImage(playlist.image_path);
-                        return (
-                            <li key={playlist.id} className="p-2 hover:bg-neutral-800 rounded">
-                                <a href={`/playlist/${playlist.id}`} className="flex items-center space-x-4">
-                                    {new_path && (
-                                        <img
-                                            src={new_path}
-                                            alt={playlist.name}
-                                            className="w-12 h-12 rounded"
-                                        />
-                                    )}
-                                    <div className="flex flex-col justify-start items-start gap-1 w-full">
-                                        <span className="text-white font-medium">{playlist.name}</span>
-                                        <span className="text-md font-light text-neutral-400">{playlist.description}</span>
-                                    </div>
-                                </a>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
-        </div>
-    );
+  return (
+    <div className="flex flex-col gap-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex-1 max-h-[75vh] overflow-y-auto transition hover:scale-[1.01]">
+      <h2 className="text-2xl font-semibold text-white mb-3">Public Playlists</h2>
+      {playlists.length === 0 ? (
+        <p className="text-neutral-400">No playlists are available</p>
+      ) : (
+        playlists.map(async (playlist) => {
+          const new_path = await getImage(playlist.image_path);
+          return (
+            <a
+              key={playlist.id}
+              href={`/playlist/${playlist.id}`}
+              className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/10 transition"
+            >
+              {new_path && (
+                <img
+                  src={new_path}
+                  alt={playlist.name}
+                  className="w-12 h-12 rounded object-cover"
+                />
+              )}
+              <div className="flex flex-col truncate">
+                <span className="text-white font-medium">{playlist.name}</span>
+                <span className="text-neutral-400 text-sm truncate">
+                  {playlist.description}
+                </span>
+              </div>
+            </a>
+          );
+        })
+      )}
+    </div>
+  );
 };

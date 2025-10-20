@@ -1,25 +1,26 @@
-
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { Song } from '@/types';
-import { cookies } from 'next/headers';
 
-const getSongByid = async (song_id: string): Promise<Song | null> => {
-  const supabase = createServerComponentClient({
-    cookies: cookies,
-  });
+const getSongById = async (
+  supabaseClient: SupabaseClient,
+  song_id: string | undefined
+): Promise<Song[] | Error> => {
+  try {
+    const { data, error } = await supabaseClient
+      .from('songs')
+      .select('*')
+      .eq('id', song_id);
 
-  const { data, error } = await supabase
-    .from('songs')
-    .select('*')
-    .eq('id', song_id)
-    .single(); 
+    if (error) {
+      console.error(error.message);
+      return new Error('Failed to fetch song');
+    }
 
-  if (error) {
-    console.error(error.message);
-    throw new Error('Failed to fetch song');
+    return data as Song[];
+  } catch (err) {
+    console.error(err);
+    return new Error('Something went wrong fetching the song');
   }
-
-  return data as Song || null; 
 };
 
-export default getSongByid;
+export default getSongById;

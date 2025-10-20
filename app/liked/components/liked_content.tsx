@@ -1,49 +1,55 @@
-"use client"
-import { LikeButton } from "@/components/like-button"
-import MediaItem from "@/components/media-item"
-import PlaylistButton from "@/components/PlaylistButton"
-import useOnPlay from "@/hooks/useOnPlay"
-import usePlayer from "@/hooks/usePlayer"
-import { useUser } from "@/hooks/useUser"
-import { Song } from "@/types"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+"use client";
 
-type Props = {
-    songs: Song[]
-    userId: string | undefined
+import MediaItem from "@/components/media-item";
+import { Song } from "@/types";
+import PlaylistButton from "@/components/PlaylistButton";
+import { LikeButton } from "@/components/like-button";
+import usePlayer from "@/hooks/usePlayer";
+
+interface Props {
+    songs: Song[];
+    userId: string | undefined;
 }
 
-export const LikedContent  = ({songs, userId}:Props) => {
-    const onPlay = useOnPlay(songs)
-    const router = useRouter();
-    const {isLoading, user} = useUser();
-    const {activeId} = usePlayer();
-
-    useEffect(() => {
-        if(!user && !isLoading) {
-            router.replace('/')
-        }
-    }, [isLoading, user, router])
+const LikedContent: React.FC<Props> = ({ songs, userId }) => {
+    const { activeId } = usePlayer();
 
     if (songs.length === 0) {
         return (
-            <div className="flex flex-col gap-y-2 w-full px-6 text-neutral-400">
-                No liked songs..
+            <div className="flex flex-col gap-3 w-full px-6 py-4 bg-white/5 backdrop-blur-[20px] rounded-2xl shadow-lg shadow-purple-500/20">
+                <p className="text-white text-center">You haven&apos;t liked any songs yet.</p>
             </div>
-        )
+        );
     }
-    return(
-        <div className="flex flex-col gap-y-2 w-full p-6 mb-16">
-            {songs.map((song) => (
-                <div key={song.id} className="flex items-center gap-x-4 w-full">
-                    <div className="flex-1 truncate">
-                        <MediaItem isOwner={song.user_id === userId} onClick={(id:string) => {onPlay(id)}} data={song} reactive={activeId === song.id}/>
+
+    // Sort by creation date (oldest first)
+    const sortedSongs = [...songs].sort((a, b) =>
+        String(a.created_at).localeCompare(String(b.created_at))
+    );
+
+    return (
+        <div className="flex flex-col gap-3 w-full px-6 py-4">
+            {sortedSongs.map((song) => (
+                <div
+                    key={song.id}
+                    className="flex items-center gap-2 w-full group transition hover:bg-white/10 rounded-2xl  backdrop-blur-md"
+                >
+                    <div className="flex-1 ">
+                        <MediaItem
+                            data={song}
+                            isOwner={song.user_id === userId}
+                            reactive={song.id === activeId}
+                            disablePlay={false}
+                            className="hover:scale-1"
+                        />
                     </div>
-                    <PlaylistButton songId={song.id}/>
-                    <LikeButton songId={song.id} creatorId={song.user_id}/>
+
+                    <PlaylistButton songId={song.id} />
+                    <LikeButton songId={song.id} creatorId={song.user_id} />
                 </div>
             ))}
         </div>
-    )
-}
+    );
+};
+
+export default LikedContent;

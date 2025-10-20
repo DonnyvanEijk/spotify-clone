@@ -124,46 +124,66 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
     }
 
     return (
-        <div>
-            <DropdownMenu.Root modal={false}>
-                <DropdownMenu.Trigger asChild>
-                    <button className="flex flex-col justify-center">
-                        <FaEllipsisH className="text-neutral-400 hover:text-neutral-300 transition hover:outline-none" size={25} />
-                    </button>
-                </DropdownMenu.Trigger>
+    
+           <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger asChild>
+        <button className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 focus:outline-none">
+          <FaEllipsisH className="text-neutral-400 hover:text-white transition-all duration-300" size={20} />
+        </button>
+      </DropdownMenu.Trigger>
 
-                <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                        className="py-2 min-w-[220px] rounded-md bg-neutral-800 p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade"
-                    >
-                        {isOwner && (
-                            <>
-                                <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleDeleteAlbum}>
-                                    Delete Album <HiOutlineTrash size={20} className="text-neutral-400" />
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 px-3 transition" onClick={handleEditAlbum}>
-                                    Edit Album <MdOutlineModeEditOutline size={20} className="text-neutral-400" />
-                                </DropdownMenu.Item>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          sideOffset={5}
+          className="
+            min-w-[220px] rounded-2xl bg-white/10 backdrop-blur-md border border-white/20
+            shadow-lg py-2 flex flex-col gap-2 text-white
+            will-change-[opacity,transform]
+            data-[side=bottom]:animate-slideUpAndFade
+            data-[side=top]:animate-slideDownAndFade
+            data-[side=left]:animate-slideRightAndFade
+            data-[side=right]:animate-slideLeftAndFade
+          "
+        >
+          {isOwner && (
+            <>
+              <DropdownMenu.Item
+                onClick={handleDeleteAlbum}
+                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
+              >
+                Delete Album <HiOutlineTrash size={20} />
+              </DropdownMenu.Item>
 
-                                <DropdownMenu.Separator className="m-[5px] h-px bg-neutral-400" />
-                            </>
-                        )}
+              <DropdownMenu.Item
+                onClick={handleEditAlbum}
+                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
+              >
+                Edit Album <MdOutlineModeEditOutline size={20} />
+              </DropdownMenu.Item>
 
-                        <DropdownMenu.Item className="flex flex-row justify-between cursor-pointer focus:outline-none text-neutral-400 hover:text-neutral-300 disabled:text-neutral-600 px-3 transition" onClick={handleDownload} disabled={!subscription}>
-                            {subscription ? (
-                                <>
-                                    Donwload Album <TbDownload size={20} className="text-neutral-400" />
-                                </>
-                            ) : (
-                                <>
-                                    Upgrade to pro to Download <TbDownloadOff size={20} className="text-neutral-400" />
-                                </>
-                            )}
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-        </div>
+              <DropdownMenu.Separator className="my-1 h-px bg-white/20" />
+            </>
+          )}
+
+          <DropdownMenu.Item
+            onClick={handleDownload}
+            disabled={!subscription}
+            className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:text-neutral-500"
+          >
+            {subscription ? (
+              <>
+                Download Album <TbDownload size={20} />
+              </>
+            ) : (
+              <>
+                Upgrade to Pro <TbDownloadOff size={20} />
+              </>
+            )}
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+
     );
 }
 
