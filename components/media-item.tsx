@@ -1,14 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-
-import useLoadImage from '@/hooks/useLoadImage';
-import { Song } from '@/types';
 import { twMerge } from 'tailwind-merge';
+import * as ContextMenu from "@radix-ui/react-context-menu";
+import { Song } from '@/types';
 import usePlayer from '@/hooks/usePlayer';
-import * as ContextMenu from "@radix-ui/react-context-menu"
-import SongRightClickContent from './right_click/SongRightClickContent';
+import useLoadImage from '@/hooks/useLoadImage';
 import useGetAlbumName from '@/hooks/useGetAlbumName';
+import SongRightClickContent from './right_click/SongRightClickContent';
 
 interface MediaItemProps {
   data: Song;
@@ -21,98 +20,57 @@ interface MediaItemProps {
   disablePlay?: boolean;
 }
 
-const MediaItem: React.FC<MediaItemProps> = ({ data, onClick, className, reactive, isPlayer, isOwner, hasAlbumName = false, disablePlay = false }) => {
+const MediaItem: React.FC<MediaItemProps> = ({
+  data,
+  onClick,
+  className,
+  reactive,
+  isOwner,
+  hasAlbumName = false,
+  disablePlay = false
+}) => {
   const player = usePlayer();
   const imageUrl = useLoadImage(data);
   const { albumName } = useGetAlbumName(data.album_id);
 
   const handleClick = () => {
     if (disablePlay) return;
-
-    if (onClick) {
-      return onClick(data.id);
-    }
-
-    return player.setId(data.id);
+    if (onClick) return onClick(data.id);
+    player.setId(data.id);
   };
-
-  if (isPlayer) {
-    return (
-      <div
-        onClick={handleClick}
-        className="
-          flex
-          items-center
-          gap-x-3
-          cursor-pointer
-          hover:bg-neutral-800/50
-          w-full
-          p-2
-          rounded-md
-        "
-      >
-        <div
-          className="
-            relative
-            rounded-md
-            min-h-[48px]
-            min-w-[48px]
-          "
-        >
-          <Image
-            fill
-            src={imageUrl || "/images/liked.png"}
-            alt="mediaItem"
-            className="object-cover"
-          />
-        </div>
-        <div className="flex flex-col gap-y-1 overflow-hidden">
-          <p className={twMerge("text-white truncate", reactive && "text-purple-500")}>{data.title}</p>
-          <p className="text-neutral-400 text-sm truncate">{data.author}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ContextMenu.Root modal={false}>
       <ContextMenu.Trigger>
         <div
           onClick={handleClick}
-          className={twMerge(` flex 
-            items-center 
-            gap-x-3 
-            cursor-pointer 
-            hover:bg-neutral-800/50 
-            w-full 
-            p-2 
-            rounded-md`, className)}
+          className={twMerge(`
+            relative flex items-center gap-x-3 cursor-pointer
+            w-full p-2 rounded-xl overflow-hidden
+            bg-white/5 backdrop-blur-[20px]
+            border border-white/20
+            transition-all duration-300
+            hover:scale-[1.03] 
+          `, reactive && "ring-2 ring-purple-500/70", className)}
         >
-            {imageUrl && (
-            <div
-              className='
-              relative 
-              rounded-md 
-              min-h-[48px] 
-              min-w-[48px] 
-              overflow-hidden
-              '
-            >
-              <Image
-              fill
-              src={imageUrl}
-              alt='MediaItem'
-              className='object-cover'
-              />
+          {imageUrl && (
+            <div className="relative min-h-[48px] min-w-[48px] rounded-2xl overflow-hidden shadow-inner shadow-white/10">
+              <Image fill src={imageUrl} alt={data.title} className="object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl" />
             </div>
-            )}
-          <div className='flex flex-col gap-y-1 overflow-hidden'>
-            <p className={twMerge(` truncate`, reactive && "font-semibold text-purple-500")}>{data.title}</p>
-            <p className='text-neutral-400 text-sm truncate'>By {data.author}</p>
-            {hasAlbumName && albumName && <p className='text-neutral-400 text-sm truncate'>{albumName}</p>}
+          )}
+
+          <div className="flex flex-col gap-y-1 overflow-hidden">
+            <p className={twMerge("truncate", reactive ? "font-semibold text-purple-500" : "text-white")}>
+              {data.title}
+            </p>
+            <p className="text-neutral-400 text-sm truncate">{data.author}</p>
+            {hasAlbumName && albumName && <p className="text-neutral-400 text-sm truncate">{albumName || ""}</p>}
           </div>
+
+          <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
         </div>
       </ContextMenu.Trigger>
+
       <SongRightClickContent isOwner={isOwner} song={data} />
     </ContextMenu.Root>
   );

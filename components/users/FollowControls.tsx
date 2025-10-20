@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import { AiFillPlusCircle } from "react-icons/ai";
 import { Button } from "../button";
 import { useEffect, useState, useTransition } from "react";
@@ -7,96 +8,67 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 type Props = {
-    userId: string;
-    followingId: string;
-    isInitiallyFollowing: boolean;
+  userId: string;
+  followingId: string;
+  isInitiallyFollowing: boolean;
 };
 
-export const FollowControls = ({ userId, followingId, isInitiallyFollowing }: Props) => {
-    const [isFollowing, setIsFollowing] = useState(isInitiallyFollowing);
+export const FollowControls = ({
+  userId,
+  followingId,
+  isInitiallyFollowing,
+}: Props) => {
+  const [isFollowing, setIsFollowing] = useState(isInitiallyFollowing);
+  const [isPending, startTransition] = useTransition();
+  const supabase = createClientComponentClient();
+  const router = useRouter();
 
-    useEffect(() => {
-        setIsFollowing(isInitiallyFollowing);
-    }, [isInitiallyFollowing]);
-    const [isPending, startTransition] = useTransition();
-    const supabase = createClientComponentClient();
-    const router = useRouter();
+  useEffect(() => {
+    setIsFollowing(isInitiallyFollowing);
+  }, [isInitiallyFollowing]);
 
-    const toggleFollow = () => {
-        startTransition(async () => {
-            if (!isFollowing) {
-                const { error } = await supabase
-                    .from("followers")
-                    .insert({ follower_id: userId, followed_id: followingId });
+  const toggleFollow = () => {
+    startTransition(async (): Promise<void> => { // <- ensure returns void
+      if (!isFollowing) {
+        const { error } = await supabase
+          .from("followers")
+          .insert({ follower_id: userId, followed_id: followingId });
 
-                if (error) {
-                    console.error("Error following user:", error);
-                    return;
-                }
+        if (error) {
+          void toast.error(error.message); // <- void to ignore return type
+          return;
+        }
 
-                const { data: existingNotification, error: fetchError } = await supabase
-                    .from("notifications")
-                    .select("*")
-                    .eq("target_id", followingId)
-                    .eq("sent_id", userId)
-                    .eq("message", "You got a new follow from:")
-                    .maybeSingle();
+        void toast.success("Followed user successfully!");
+        setIsFollowing(true);
+      } else {
+        const { error } = await supabase
+          .from("followers")
+          .delete()
+          .eq("follower_id", userId)
+          .eq("followed_id", followingId);
 
-                if (fetchError) {
-                    console.error("Error checking existing notification:", fetchError.message);
-                    return;
-                }
+        if (error) {
+          void toast.error(error.message);
+          return;
+        }
 
-                if (!existingNotification) {
-                    const { error: notificationError } = await supabase
-                        .from("notifications")
-                        .insert({ 
-                            target_id: followingId, 
-                            sent_id: userId, 
-                            message: `You got a new follow from:` 
-                        });
+        void toast.success("Unfollowed user successfully!");
+        setIsFollowing(false);
+      }
 
-                    if (notificationError) {
-                        console.error("Error creating notification:", notificationError.message);
-                        return;
-                    }
-                }
+      router.refresh();
+    });
+  };
 
-
-                
-
-
-                toast.success("Followed user successfully!");
-                setIsFollowing(true);
-                router.refresh();
-            } else {
-                const { error } = await supabase
-                    .from("followers")
-                    .delete()
-                    .eq("follower_id", userId)
-                    .eq("followed_id", followingId);
-
-                if (error) {
-                    console.error("Error unfollowing user:", error);
-                    return;
-                }
-                toast.success("Unfollowed user successfully!");
-                setIsFollowing(false);
-                router.refresh();
-            }
-        });
-    };
-
-    return (
-        <div className="flex-row justify-center items-center">
-            <Button
-                className="text-white p-5 w-[10vw] flex flex-row items-center justify-center gap-2"
-                onClick={toggleFollow}
-                disabled={isPending}
-            >
-                {isPending ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}{" "}
-                {isFollowing ? <AiFillPlusCircle className="rotate-45" /> : <AiFillPlusCircle />}
-            </Button>
-        </div>
-    );
+  return (
+    <Button
+      onClick={toggleFollow}
+      disabled={isPending}
+      className="flex items-center justify-between gap-2 bg-purple-500 hover:bg-purple-600 text-white w-[200px] rounded-2xl p-3 transition-all"
+    >
+      {isPending ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
+      <AiFillPlusCircle className={isFollowing ? "rotate-45" : ""} />
+    </Button>
+  );
 };

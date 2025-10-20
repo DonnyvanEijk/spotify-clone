@@ -80,7 +80,7 @@ const UserPage = async ({ params }: Props) => {
                     />
                 )}
             </div>
-            <div className="grid lg:grid-cols-2 grid-cols-1 ml-[4rem] mt-10 m-5 mb-10">
+            <div className="grid lg:grid-cols-2 grid-cols-1  mt-10 m-5">
                 <SongList songs={songsWithLikes} />
                 <PlayListList playlists={playlists} />
             </div>

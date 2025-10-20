@@ -24,72 +24,59 @@ export const Header  = ({children, className, image}:Props) => {
     const supabaseClient = useSupabaseClient()
     const { user } = useUser();
     const authModal = useAuthModal()
+
     const handleLogout = async () => {
         const { error } = await supabaseClient.auth.signOut()
         player.reset()
         router.refresh()
-
-        if(error) {
-            toast.error(error.message)
-            console.log(error)
-        } else {
-            toast.success("Logged out successfully")
-        }
+        if(error) toast.error(error.message)
+        else toast.success("Logged out successfully")
     }
+
     return(
-        <div className={twMerge("h-fit bg-gradient-to-b from-purple-800 p-6", className)}>
+        <div className={twMerge("h-fit  backdrop-blur-[20px]   p-6", className)}>
            <div className="w-full mb-4 flex items-center justify-between">
             <div className="hidden md:flex gap-x-2 items-center">
-                <button onClick={() => router.back()} className="rounded-full bg-black  flex items-center justify-center hover:opacity-75 transition">
-                         <RxCaretLeft className="text-white" size={35}/>
+                <button onClick={() => router.back()} className="rounded-full bg-white/10 backdrop-blur-md p-2 flex items-center justify-center hover:bg-white/20 transition">
+                    <RxCaretLeft className="text-purple-400" size={35}/>
                 </button>
-                <button onClick={() => router.forward()} className="rounded-full bg-black  flex items-center justify-center hover:opacity-75 transition">
-                         <RxCaretRight className="text-white" size={35}/>
+                <button onClick={() => router.forward()} className="rounded-full bg-white/10 backdrop-blur-md p-2 flex items-center justify-center hover:bg-white/20 transition">
+                    <RxCaretRight className="text-purple-400" size={35}/>
                 </button>
-
-               {/* <p className="ml-5">Images are undergoing issues at our host! Some images might not load in!</p>  */}
             </div>
             <div className="flex md:hidden gap-x-2 items-center">
-                <button onClick={() => router.push("/")} className="rounded-full p-2  bg-white flex  items-center justify-center hover:opacity-75 transition">
-                    <HiHome className="text-black" size={20}/>
+                <button onClick={() => router.push("/")} className="rounded-full p-2 bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
+                    <HiHome className="text-purple-400" size={20}/>
                 </button>
-                <button onClick={() => router.push("/search")} className="rounded-full p-2  bg-white flex  items-center justify-center hover:opacity-75 transition">
-                    <BiSearch className="text-black" size={20}/>
+                <button onClick={() => router.push("/search")} className="rounded-full p-2 bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
+                    <BiSearch className="text-purple-400" size={20}/>
                 </button>
             </div>
             <div className="flex justify-between items-center gap-x-4 ">
                 {user ? (
                     <div className="flex gap-x-4 items-center">
-                        <Button onClick={handleLogout} className="bg-white px-6 PY-2">
+                        <Button onClick={handleLogout} className="bg-purple-600/80 text-white px-6 py-2 rounded-2xl shadow-md hover:bg-purple-600 transition">
                             Logout
                         </Button>
                         {image ? (
                             <img 
                                 src={image} 
                                 alt="Profile" 
-                                className="w-10 h-10 rounded-full object-cover cursor-pointer" 
+                                className="w-10 h-10 rounded-full object-cover cursor-pointer border border-white/20 shadow-md hover:scale-105 transition-transform" 
                                 onClick={() => router.push('/account')} 
                             />
                         ) : (
-                            <Button className="bg-white" onClick={() => router.push('/account')}>
+                            <Button className="bg-white/20 backdrop-blur-md text-purple-400 px-4 py-2 rounded-full shadow hover:bg-white/30 transition" onClick={() => router.push('/account')}>
                                 <FaUserAlt/>
                             </Button>
                         )}
-
                     </div>
                 ): (
-                <>
-                <div>
-                    <Button className="bg-transparent text-neutral-300 font-medium"  onClick={authModal.onOpen}>
-                        Sign up
-                    </Button>
-                </div>
-                <div>
-                    <Button className="bg-white px-6 py-2" onClick={authModal.onOpen}>
-                        Log in
-                    </Button>
-                </div>
-                </>
+                    <>
+                        <Button className="bg-purple-600/80 text-white px-6 py-2 rounded-2xl shadow-md hover:bg-purple-600 transition" onClick={authModal.onOpen}>
+                            Log in
+                        </Button>
+                    </>
                 )}
             </div>
            </div>
