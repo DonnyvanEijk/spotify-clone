@@ -18,6 +18,7 @@ interface MediaItemProps {
   isPlayer?: boolean;
   hasAlbumName?: boolean;
   disablePlay?: boolean;
+  hideBackground?: boolean; // new prop
 }
 
 const MediaItem: React.FC<MediaItemProps> = ({
@@ -27,7 +28,8 @@ const MediaItem: React.FC<MediaItemProps> = ({
   reactive,
   isOwner,
   hasAlbumName = false,
-  disablePlay = false
+  disablePlay = false,
+  hideBackground = false, // default false
 }) => {
   const player = usePlayer();
   const imageUrl = useLoadImage(data);
@@ -47,8 +49,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
           className={twMerge(`
             relative flex items-center gap-x-3 cursor-pointer
             w-full p-2 rounded-xl overflow-hidden
-            bg-white/5 backdrop-blur-[20px]
-            border border-white/20
+            ${hideBackground ? "bg-transparent border-none" : "bg-white/5 border border-white/20 backdrop-blur-[20px]"}
             transition-all duration-300
             hover:scale-[1.03] 
           `, reactive && "ring-2 ring-purple-500/70", className)}
@@ -67,7 +68,9 @@ const MediaItem: React.FC<MediaItemProps> = ({
             {hasAlbumName && albumName && <p className="text-neutral-400 text-sm truncate">{albumName || ""}</p>}
           </div>
 
-          <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
+          {!hideBackground && (
+            <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
+          )}
         </div>
       </ContextMenu.Trigger>
 
