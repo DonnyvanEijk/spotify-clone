@@ -11,6 +11,17 @@ export interface Song {
   created_at: string;
 }
 
+export interface Radio {
+  id: string;
+  created_at: string;
+  name: string;
+  genres?: string;
+  image_path?: string;
+  radio_path?: string;
+  user_id: string;
+}
+
+
 export interface SongWithLikes {
   song: {
     id: string;

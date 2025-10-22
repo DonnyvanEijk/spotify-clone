@@ -6,6 +6,7 @@ import AuthModal from "@/components/modals/auth-modal"
 import BatchAddToPlaylistModal from "@/components/modals/BatchAddToPlaylistModal"
 import ClonePlaylistModal from "@/components/modals/ClonePlaylistModal"
 import CreateAlbumModal from "@/components/modals/CreateAlbumModal"
+import CreateExistingRadioModal from "@/components/modals/CreateExistingRadioModal"
 import CreatePlaylistModal from "@/components/modals/CreatePlaylistModal"
 import DeleteAlbumModal from "@/components/modals/DeleteAlbumModal"
 import DeletePlaylistModal from "@/components/modals/DeletePlaylistModal"
@@ -41,6 +42,7 @@ export const ModalProvider: React.FC<Props> = ({ products }) => {
             <SubscribeModal products={products} />
             <UploadAlbumModal/>
             <CreatePlaylistModal />
+            <CreateExistingRadioModal/>
             <AddToPlaylistModal />
             <DeletePlaylistModal />
             <DeleteSongModal />
