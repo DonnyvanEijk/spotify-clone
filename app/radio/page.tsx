@@ -5,7 +5,6 @@ import { getImage } from "@/lib/getImage";
 import { CreateExistingRadioButton } from "./components/CreateExistingButton";
 import getRadios from "@/actions/getRadios";
 import RadioGrid from "./components/RadioGrid";
-import { RadioVolumeSlider } from "./components/RadioVolumeSlider";
 
 const RadioPage = async () => {
   const currentUser = await getUser();
