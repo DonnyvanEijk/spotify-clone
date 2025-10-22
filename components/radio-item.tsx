@@ -15,12 +15,14 @@ interface RadioItemProps {
 }
 
 export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive }) => {
+
+    const imagePath = useLoadImage(data);
+    
   if (!data) {
     console.error("Data was not found for radios!");
     return null;
   }
 
-  const imagePath = useLoadImage(data);
   const isNew = differenceInHours(new Date(), new Date(data.created_at)) <= 24;
 
   return (
