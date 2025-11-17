@@ -13,9 +13,12 @@ interface ShuffleControlProps {
 }
 
 const ShuffleControl: React.FC<ShuffleControlProps> = ({ songs, isOwner, id }) => {
+      const sortedSongs = [...songs].sort((a, b) =>
+    String(a.created_at).localeCompare(String(b.created_at))
+  );
     return (
         <div className="flex flex-row gap-x-3 ml-5 w-full items-center">
-            <UsablePlayButton songs={songs} />
+            <UsablePlayButton songs={sortedSongs} />
             <ShuffleButton size={30} />
             {isOwner && (
                 <PlaylistPopover playlistId={id} />

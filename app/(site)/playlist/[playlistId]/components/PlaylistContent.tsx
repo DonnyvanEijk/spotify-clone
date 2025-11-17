@@ -27,7 +27,10 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
   const { activeId } = usePlayer();
   const router = useRouter();
   const { isLoading, user } = useUser();
-  const onPlay = useOnPlay(songs);
+    const sortedSongs = [...songs].sort((a, b) =>
+    String(a.created_at).localeCompare(String(b.created_at))
+  );
+  const onPlay = useOnPlay(sortedSongs);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -48,9 +51,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
     );
   }
 
-  const sortedSongs = [...songs].sort((a, b) =>
-    String(a.created_at).localeCompare(String(b.created_at))
-  );
+
 
   return (
     <div className="flex flex-col gap-y-4 w-full p-6">
