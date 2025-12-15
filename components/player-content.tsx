@@ -23,6 +23,7 @@ interface PlayerContentProps {
 const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     const player = usePlayer();
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [duration, setDuration] = useState<string | null>(null);
     const [durationInSeconds, setDurationInSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -38,6 +39,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
 
     const [play, { pause, sound }] = useSound(songUrl, {
         volume,
+        onload: () => setIsLoading(false),
         onplay: () => setIsPlaying(true),
         onend: () => {
             setIsPlaying(false);
@@ -57,6 +59,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     }, [isPlaying, pause]);
 
     const handlePlay = () => {
+        if (isLoading) return; // Prevent playing until loaded
         if (!isPlaying) {
             // Pause other audio before playing
             window.dispatchEvent(new Event("stopAllAudio"));
@@ -103,18 +106,29 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         sound?.seek(value);
     };
 
-    useEffect(() => {
+useEffect(() => {
+    let raf: number;
+
+    const update = () => {
         if (sound) {
-            const interval = setInterval(() => {
-                const currentSec = sound.seek();
-                const minutes = Math.floor(currentSec / 60);
-                const seconds = Math.floor(currentSec % 60);
-                setCurrentTime(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
-                setCurrentTimeInSeconds(currentSec);
-            }, 1000);
-            return () => clearInterval(interval);
+            const currentSec = sound.seek();
+            setCurrentTimeInSeconds(currentSec);
+
+            const minutes = Math.floor(currentSec / 60);
+            const seconds = Math.floor(currentSec % 60);
+            setCurrentTime(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
+
+            raf = requestAnimationFrame(update);
         }
-    }, [sound]);
+    };
+
+    if (isPlaying) {
+        raf = requestAnimationFrame(update);
+    }
+
+    return () => cancelAnimationFrame(raf);
+}, [isPlaying, sound]);
+
 
     useEffect(() => {
         getAudioDuration(songUrl, (formattedDuration, error) => {
@@ -147,7 +161,11 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                     onClick={handlePlay}
                     className="h-10 w-10 flex items-center justify-center rounded-full bg-white cursor-pointer"
                 >
-                    <Icon size={30} className="text-black" />
+                    {isLoading ? (
+                        <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+                    ) : (
+                        <Icon size={30} className="text-black" />
+                    )}
                 </div>
             </div>
 
@@ -158,7 +176,11 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                         onClick={handlePlay}
                         className="flex items-center justify-center h-10 w-10 rounded-full bg-white p-1 cursor-pointer"
                     >
-                        <Icon size={30} className="text-black" />
+                        {isLoading ? (
+                            <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+                        ) : (
+                            <Icon size={30} className="text-black" />
+                        )}
                     </div>
                     <AiFillStepForward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayNext} />
                 </div>
