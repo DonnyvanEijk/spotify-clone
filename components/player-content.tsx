@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { getAudioDuration, getAudioDurationInSecconds } from "@/lib/getDuration";
 import PlayerSlider from "./player-slider";
 import PlaylistButton from "./PlaylistButton";
+import { MdLoop } from "react-icons/md";
 
 interface PlayerContentProps {
     song: Song;
@@ -22,6 +23,7 @@ interface PlayerContentProps {
 
 const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     const player = usePlayer();
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [duration, setDuration] = useState<string | null>(null);
@@ -34,6 +36,9 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         return cachedVolume ? parseFloat(cachedVolume) : 1;
     });
 
+    const isLooping = player.loop;
+    const toggleLoop = player.toggleLoop;
+
     const Icon = isPlaying ? BsPauseFill : BsPlayFill;
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
@@ -41,15 +46,28 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         volume,
         onload: () => setIsLoading(false),
         onplay: () => setIsPlaying(true),
-        onend: () => {
-            setIsPlaying(false);
-            onPlayNext();
-        },
         onpause: () => setIsPlaying(false),
         format: ["mp3"]
     });
 
-    // Global listener: stop this player if any other audio starts
+    const handleSongEnd = () => {
+        if (isLooping) {
+            sound?.seek(0);
+            play();
+        } else {
+            onPlayNext();
+        }
+    };
+
+    useEffect(() => {
+        if (!sound) return;
+
+        sound.on("end", handleSongEnd);
+        return () => {
+            sound.off("end", handleSongEnd);
+        };
+    }, [sound, isLooping]);
+
     useEffect(() => {
         const stopHandler = () => {
             if (isPlaying) pause();
@@ -59,9 +77,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     }, [isPlaying, pause]);
 
     const handlePlay = () => {
-        if (isLoading) return; // Prevent playing until loaded
+        if (isLoading) return;
         if (!isPlaying) {
-            // Pause other audio before playing
             window.dispatchEvent(new Event("stopAllAudio"));
             play();
         } else {
@@ -74,10 +91,18 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     const onPlayNext = () => {
         if (player.ids.length === 0) return;
 
+        if (isLooping) {
+            pause()
+            sound?.seek(0);
+            play();
+            return;
+        }
+
         if (player.shuffle) {
             const randomIndex = Math.floor(Math.random() * player.ids.length);
             const randomSong = player.ids[randomIndex];
-            return player.setId(randomSong);
+            player.setId(randomSong);
+            return;
         }
 
         const currentIndex = player.ids.findIndex((id) => id === player.activeId);
@@ -87,6 +112,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
 
     const onPlayPrevious = () => {
         if (player.ids.length === 0) return;
+
+        if (isLooping) {
+            pause()
+            sound?.seek(0);
+            play();
+            return;
+        }
 
         const currentIndex = player.ids.findIndex((id) => id === player.activeId);
         const previousSong = player.ids[currentIndex - 1] || player.ids[player.ids.length - 1];
@@ -106,29 +138,28 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         sound?.seek(value);
     };
 
-useEffect(() => {
-    let raf: number;
+    useEffect(() => {
+        let raf: number;
 
-    const update = () => {
-        if (sound) {
-            const currentSec = sound.seek();
-            setCurrentTimeInSeconds(currentSec);
+        const update = () => {
+            if (sound) {
+                const currentSec = sound.seek();
+                setCurrentTimeInSeconds(currentSec);
 
-            const minutes = Math.floor(currentSec / 60);
-            const seconds = Math.floor(currentSec % 60);
-            setCurrentTime(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
+                const minutes = Math.floor(currentSec / 60);
+                const seconds = Math.floor(currentSec % 60);
+                setCurrentTime(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
 
+                raf = requestAnimationFrame(update);
+            }
+        };
+
+        if (isPlaying) {
             raf = requestAnimationFrame(update);
         }
-    };
 
-    if (isPlaying) {
-        raf = requestAnimationFrame(update);
-    }
-
-    return () => cancelAnimationFrame(raf);
-}, [isPlaying, sound]);
-
+        return () => cancelAnimationFrame(raf);
+    }, [isPlaying, sound]);
 
     useEffect(() => {
         getAudioDuration(songUrl, (formattedDuration, error) => {
@@ -183,6 +214,14 @@ useEffect(() => {
                         )}
                     </div>
                     <AiFillStepForward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayNext} />
+                    <button
+                        onClick={toggleLoop}
+                        className={`p-2 rounded-full transition ${
+                            isLooping ? "bg-white text-black" : "bg-gray-700 text-gray-300"
+                        }`}
+                    >
+                        <MdLoop/>
+                    </button>
                 </div>
                 <div className="flex flex-row items-center w-full gap-2">
                     <p className="mt-2 text-center">{currentTime}</p>
