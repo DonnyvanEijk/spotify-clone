@@ -50,6 +50,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         format: ["mp3"]
     });
 
+    
+
     const handleSongEnd = () => {
         if (isLooping) {
             sound?.seek(0);
@@ -178,6 +180,28 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         }, 5000);
         return () => clearInterval(interval);
     }, [volume]);
+
+
+    useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        const isTyping =
+            target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.isContentEditable;
+
+        if (isTyping) return;
+
+        if (e.code === "Space") {
+            e.preventDefault(); 
+            handlePlay();
+        }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+}, [handlePlay, isLoading, isPlaying]);
+
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 h-full">
