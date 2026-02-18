@@ -179,6 +179,10 @@ const UploadModal = () => {
             router.refresh();
             setIsLoading(false);
             toast.success("Song uploaded successfully");
+            if (values.is_private) {
+                const message = `##  🎵  New private song uploaded: "*${values.title}*" by "*${values.author}*"  🎵 `;
+                await sendDiscordMessage(message);
+            }
             const message = `##  🎵  New song uploaded: "*${values.title}*" by "*${values.author}*"  🎵 `;
             await sendDiscordMessage(message);
             reset();
