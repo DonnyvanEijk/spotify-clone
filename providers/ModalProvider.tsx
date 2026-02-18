@@ -14,6 +14,7 @@ import DeleteSongModal from "@/components/modals/DeleteSongModal"
 import AlbumEditModal from "@/components/modals/EditAlbumModal"
 import PlaylistEditModal from "@/components/modals/EditPlaylistModal"
 import SongEditModal from "@/components/modals/EditSongModal"
+import ShareSongModal from "@/components/modals/SharedSongModal"
 import { SubscribeModal } from "@/components/modals/SubscribeModal"
 import  UploadModal from "@/components/modals/upload-modal"
 import UploadAlbumModal from "@/components/modals/UploadAlbumModal"
@@ -38,6 +39,7 @@ export const ModalProvider: React.FC<Props> = ({ products }) => {
     return (
         <>
             <AuthModal />
+            <ShareSongModal/>
             <UploadModal />
             <SubscribeModal products={products} />
             <UploadAlbumModal/>

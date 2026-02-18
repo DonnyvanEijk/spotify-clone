@@ -8,7 +8,7 @@ import { MdAccountCircle, MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAdd
 import { Song } from "@/types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "@/hooks/useUser";
-import { TbDownload, TbDownloadOff, TbMicrophone } from "react-icons/tb";
+import { TbDownload, TbDownloadOff, TbMicrophone, TbShare3 } from "react-icons/tb";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 
 interface SongRightClickContentProps {
   isOwner: boolean;
-  song: Song
+  song: Song;
   user_id?: string;
 }
 
@@ -93,6 +93,18 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
   const handleEditSong = () => editSongModal.onOpen(song.id);
   const handleAddLyrics = () => addLyricsModal.onOpen(song.id);
 
+  const handleShare = async () => {
+    if (!user) return authModal.onOpen();
+    const shareUrl = `https://don-beat.vercel.app?songId=${song.id}&sentId=${user.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Song URL copied to your clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy URL.");
+      console.error(err);
+    }
+  };
+
   return (
     <ContextMenu.Portal>
       <ContextMenu.Content
@@ -104,7 +116,6 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
           flex flex-col
         "
       >
-        {/* Download */}
         <ContextMenu.Item
           className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
           onClick={handleDownload}
@@ -114,7 +125,6 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
           {subscription ? "Download Song" : "Upgrade to pro to Download"}
         </ContextMenu.Item>
 
-        {/* Add to Playlist */}
         <ContextMenu.Item
           className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
           onClick={handleAddToPlaylist}
@@ -123,7 +133,6 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
           <Icon /> {user ? "Add To Playlist" : "Login to add To Playlist"}
         </ContextMenu.Item>
 
-        {/* View Lyrics */}
         <ContextMenu.Item
           className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
           onClick={() => router.push(`/lyrics/${song.id}`)}
@@ -132,7 +141,14 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
           <TbMicrophone /> View Lyrics
         </ContextMenu.Item>
 
-        {/* Go to uploader */}
+        <ContextMenu.Item
+          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
+          onClick={handleShare}
+          disabled={!user}
+        >
+          <TbShare3 /> Share
+        </ContextMenu.Item>
+
         {user_id && (
           <ContextMenu.Item
             className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
@@ -143,7 +159,6 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
           </ContextMenu.Item>
         )}
 
-        {/* Owner Options */}
         {isOwner && (
           <>
             <ContextMenu.Separator className="my-2 h-px bg-white/20" />
