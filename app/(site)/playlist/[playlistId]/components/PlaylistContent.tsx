@@ -27,10 +27,7 @@ const PlaylistContent: React.FC<PlaylistContentProps> = ({
   const { activeId } = usePlayer();
   const router = useRouter();
   const { isLoading, user } = useUser();
-    const sortedSongs = [...songs].sort((a, b) =>
-    String(a.created_at).localeCompare(String(b.created_at))
-  );
-  const onPlay = useOnPlay(sortedSongs);
+  const onPlay = useOnPlay(songs);
 
   useEffect(() => {
     if (!isLoading && !user) {
