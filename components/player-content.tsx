@@ -248,12 +248,12 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
               <MdLoop />
             </button>
             {/* Button to open visualizer popup */}
-            <button
+            {/* <button
               onClick={() => setShowVisualizer(true)}
               className="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition"
             >
               <MdAudiotrack/>
-            </button>
+            </button> */}
           </div>
     <div className="flex flex-row items-center w-full gap-2">
                     <p className="mt-2 text-center">{currentTime}</p>
