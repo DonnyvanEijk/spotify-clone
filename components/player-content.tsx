@@ -14,7 +14,8 @@ import toast from "react-hot-toast";
 import { getAudioDuration, getAudioDurationInSecconds } from "@/lib/getDuration";
 import PlayerSlider from "./player-slider";
 import PlaylistButton from "./PlaylistButton";
-import { MdLoop } from "react-icons/md";
+import { MdAudiotrack, MdClose, MdLoop } from "react-icons/md";
+import AudioVisualizer from "./Visualizer";
 
 interface PlayerContentProps {
     song: Song;
@@ -30,6 +31,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     const [durationInSeconds, setDurationInSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState<string | null>(null);
     const [currentTimeInSeconds, setCurrentTimeInSeconds] = useState<number | null>(null);
+    const [showVisualizer, setShowVisualizer] = useState(false);
 
     const [volume, setVolume] = useState<number>(() => {
         const cachedVolume = localStorage.getItem("player-volume");
@@ -127,10 +129,11 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         player.setId(previousSong);
     };
 
-    useEffect(() => {
-        sound?.play();
-        return () => sound?.unload();
-    }, [sound]);
+  useEffect(() => {
+    sound?.play();
+  }, [sound]); 
+
+
 
     useEffect(() => {
         if (sound) sound.volume(volume);
@@ -204,68 +207,89 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
 
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 h-full">
-            <div className="flex w-full justify-start">
-                <div className="flex items-center gap-x-4 md:w-[220px] lg:w-[400px] 2xl:w-[600px] xl:w-[400px] w-[300px] lg:truncate md:truncate">
-                    <MediaItem hideBackground className="border-none bg-transparent mb-2" data={song} reactive={false} isPlayer={true} isOwner={false} />
-                </div>
-            </div>
+         <div className="relative w-full">
+      {/* Main player layout */}
+      <div className="grid grid-cols-2 md:grid-cols-3 h-full">
+        <div className="flex w-full justify-start">
+          <div className="flex items-center gap-x-4 md:w-[220px] lg:w-[400px] 2xl:w-[600px] xl:w-[400px] w-[300px] lg:truncate md:truncate">
+            <MediaItem hideBackground className="border-none bg-transparent mb-2" data={song} reactive={false} isPlayer={true} isOwner={false} />
+          </div>
+        </div>
 
-            <div className="flex md:hidden coll-auto w-full justify-end items-center">
-                <div
-                    onClick={handlePlay}
-                    className="h-10 w-10 flex items-center justify-center rounded-full bg-white cursor-pointer"
-                >
-                    {isLoading ? (
-                        <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
-                    ) : (
-                        <Icon size={30} className="text-black" />
-                    )}
-                </div>
-            </div>
+        <div className="flex md:hidden coll-auto w-full justify-end items-center">
+          <div
+            onClick={handlePlay}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-white cursor-pointer"
+          >
+            {isLoading ? (
+              <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+            ) : (
+              <Icon size={30} className="text-black" />
+            )}
+          </div>
+        </div>
 
-            <div className="hidden h-full md:flex flex-col justify-center items-center w-full max-w-[722px] gap-x-6">
-                <div className="flex items-center gap-x-6">
-                    <AiFillStepBackward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayPrevious} />
-                    <div
-                        onClick={handlePlay}
-                        className="flex items-center justify-center h-10 w-10 rounded-full bg-white p-1 cursor-pointer"
-                    >
-                        {isLoading ? (
-                            <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
-                        ) : (
-                            <Icon size={30} className="text-black" />
-                        )}
-                    </div>
-                    <AiFillStepForward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayNext} />
-                    <button
-                        onClick={toggleLoop}
-                        className={`p-2 rounded-full transition ${
-                            isLooping ? "bg-white text-black" : "bg-gray-700 text-gray-300"
-                        }`}
-                    >
-                        <MdLoop/>
-                    </button>
-                </div>
-                <div className="flex flex-row items-center w-full gap-2">
+        {/* Desktop controls */}
+        <div className="hidden h-full md:flex flex-col justify-center items-center w-full max-w-[722px] gap-x-6">
+          <div className="flex items-center gap-x-6">
+            <AiFillStepBackward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayPrevious} />
+            <div onClick={handlePlay} className="flex items-center justify-center h-10 w-10 rounded-full bg-white p-1 cursor-pointer">
+              {isLoading ? (
+                <div className="loader w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+              ) : (
+                <Icon size={30} className="text-black" />
+              )}
+            </div>
+            <AiFillStepForward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayNext} />
+            <button
+              onClick={toggleLoop}
+              className={`p-2 rounded-full transition ${isLooping ? "bg-white text-black" : "bg-gray-700 text-gray-300"}`}
+            >
+              <MdLoop />
+            </button>
+            {/* Button to open visualizer popup */}
+            <button
+              onClick={() => setShowVisualizer(true)}
+              className="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition"
+            >
+              <MdAudiotrack/>
+            </button>
+          </div>
+    <div className="flex flex-row items-center w-full gap-2">
                     <p className="mt-2 text-center">{currentTime}</p>
                     <PlayerSlider duration={durationInSeconds} currentTime={currentTimeInSeconds} onSeek={handleSeek} />
                     <p className="mt-2 text-center">{duration}</p>
-                </div>
-            </div>
-
-            <div className="hidden md:flex justify-end pr-2">
-                <div className="flex flex-row gap-3 mr-5">
-                    <LikeButton songId={song.id} creatorId={song.user_id} />
-                    <PlaylistButton songId={song.id} />
-                </div>
-
-                <div className="flex items-center gap-x-2 w-[120px]">
-                    <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={34} />
-                    <Slider value={volume} onChange={(v) => setVolume(v)} />
-                </div>
-            </div>
         </div>
+        </div>
+
+        <div className="hidden md:flex justify-end pr-2">
+          <div className="flex flex-row gap-3 mr-5">
+            <LikeButton songId={song.id} creatorId={song.user_id} />
+            <PlaylistButton songId={song.id} />
+          </div>
+
+          <div className="flex items-center gap-x-2 w-[120px]">
+            <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={34} />
+            <Slider value={volume} onChange={(v) => setVolume(v)} />
+          </div>
+        </div>
+      </div>
+
+      {/* Visualizer popup */}
+      {showVisualizer && (
+        <div className="fixed inset-0 mb-10 z-50 flex items-center justify-center">
+          <div className="relative bg-neutral-900 rounded-xl p-4 m-5 flex flex-col items-center">
+            <button
+              onClick={() => setShowVisualizer(false)}
+              className="absolute top-2 right-2 text-white text-xl"
+            >
+              <MdClose/>
+            </button>
+            <AudioVisualizer isPlaying={isPlaying} width={700} height={100} />
+          </div>
+        </div>
+      )}
+    </div>
     );
 };
 

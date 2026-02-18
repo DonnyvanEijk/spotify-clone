@@ -24,10 +24,12 @@
     "@supabase/supabase-js": "^2.46.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
+    "howler": "^2.2.4",
     "jszip": "^3.10.1",
     "next": "14.2.35",
     "query-string": "^9.1.1",
     "react": "^18",
+    "react-audio-visualize": "^1.2.0",
     "react-dialog": "^0.1.0",
     "react-dom": "^18",
     "react-hook-form": "^7.53.2",
@@ -41,6 +43,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
