@@ -70,7 +70,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
             onPlayNext();
         }
     };
-    //@ts-expect-error
+    //@ts-expect-error This works and errors beecause it wants me to return
     useEffect(() => {
         if (!sound) return;
         sound.on("end", handleSongEnd);
@@ -135,7 +135,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         player.setId(previousSong);
     };
 
-    //@ts-expect-error
+    //@ts-expect-error works but expects void?
     useEffect(() => {
         sound?.play();
         return () => sound?.unload();
