@@ -1,22 +1,47 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, CSSProperties } from "react";
 import { Howler } from "howler";
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
-  width?: number;
   height?: number;
+  style?: CSSProperties;
+  className?: string;
+  top?: number | string;
+  left?: number | string;
+  right?: number | string;
+  bottom?: number | string;
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   isPlaying,
-  width = 400, 
-  height = 50, 
+  height = 50,
+  style,
+  className,
+  top,
+  left,
+  right,
+  bottom,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
+
+  const resizeCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const parentWidth = canvas.parentElement?.clientWidth || 400;
+    canvas.width = parentWidth;
+    canvas.height = height;
+  };
+
+  useEffect(() => {
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, [height]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,14 +50,11 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     const audioCtx = Howler.ctx;
     if (!audioCtx) return;
 
-    // Create analyser once
     if (!analyserRef.current) {
       const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 128; // smaller FFT for smoother bars
+      analyser.fftSize = 128;
 
       Howler.masterGain.connect(analyser);
-      analyser.connect(audioCtx.destination);
-
       analyserRef.current = analyser;
     }
 
@@ -47,21 +69,21 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       rafRef.current = requestAnimationFrame(draw);
 
       if (!isPlaying) {
-        ctx.clearRect(0, 0, width, height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         return;
       }
 
       analyser.getByteFrequencyData(dataArray);
-      ctx.clearRect(0, 0, width, height); // transparent background
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const barWidth = (width / bufferLength) * 1.2; // thinner bars
+      const barWidth = (canvas.width / bufferLength) * 1.2;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i] / 3; // shorter bars
+        const barHeight = dataArray[i] / 3;
 
-        ctx.fillStyle = "#a855f7"; // purple
-        ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+        ctx.fillStyle = "#a855f7";
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
         x += barWidth + 1;
       }
@@ -72,14 +94,22 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPlaying, width, height]);
+  }, [isPlaying]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={width}
-      height={height}
-      className="rounded-xl" 
+      className={className}
+      style={{
+        width: "100%",
+        height,
+        position: top || left || right || bottom ? "absolute" : "relative",
+        top,
+        left,
+        right,
+        bottom,
+        ...style,
+      }}
     />
   );
 };
