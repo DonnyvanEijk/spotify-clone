@@ -7,6 +7,7 @@ import usePlayer from "@/hooks/usePlayer";
 import { Song, UserDetails } from "@/types";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { Modal } from "../modal";
+import { LuLoader } from "react-icons/lu";
 
 interface SharedSongData {
   songId: string;
@@ -18,6 +19,7 @@ const ShareSongModal = () => {
   const [sharedData, setSharedData] = useState<SharedSongData | null>(null);
   const player = usePlayer();
   const supabaseClient = useSupabaseClient();
+  const [loading, setLoading] = useState(false);
 
   const [songData, setSongData] = useState<Song | null>(null);
   const [userData, setUserData] = useState<UserDetails | null>(null);
@@ -28,6 +30,7 @@ const ShareSongModal = () => {
     if (!sharedData) return;
 
     const fetchData = async () => {
+      setLoading(true);
       try {
         const { data: song, error: songError } = await supabaseClient
           .from("songs")
@@ -54,6 +57,7 @@ const ShareSongModal = () => {
           const { data } = supabaseClient.storage.from("images").getPublicUrl(user.avatar_url);
           setUserAvatarUrl(data.publicUrl);
         }
+        setLoading(false);
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch song or user data");
@@ -100,7 +104,8 @@ const ShareSongModal = () => {
       isOpen={sharesModal.isOpen}
       onChange={handleClose}
     >
-      {sharedData && (
+    {loading && <div className="flex justify-center items-center h-16"><LuLoader className="animate-spin text-white"/></div>}
+      {sharedData && !loading && (
         <div className="flex flex-col gap-4 mt-4">
           <div className="flex gap-4 items-center">
             {userAvatarUrl && (
