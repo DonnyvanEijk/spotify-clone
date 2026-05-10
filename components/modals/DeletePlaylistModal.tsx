@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import { useDeletePlaylist } from "@/hooks/useDeletePlaylistModal";
 
@@ -122,22 +122,28 @@ const DeletePlaylistModal = () => {
 
     return (
         <Modal
-            title={`Delete Playlist ${playListName}`}
-            description=""
+            title="Delete Playlist"
+            description={`Are you sure you want to delete "${playListName}"? This cannot be undone.`}
             isOpen={deletePlaylistModal.isOpen}
             onChange={onChange}
         >
-            <form className="w-full flex flex-row justify-evenly items-center">
-                <Button disabled={isLoading} onClick={DeletePlaylist} className="w-[170px]">
-                    Delete Playlist
-                </Button>
-                <Button disabled={isLoading} onClick={() => {
-                    deletePlaylistModal.onClose()
-                }} className="bg-neutral-500 w-[170px]">
+            <div className="flex gap-3 mt-2">
+                <Button
+                    disabled={isLoading}
+                    onClick={() => deletePlaylistModal.onClose()}
+                    className="bg-white/5 border border-white/10 text-neutral-300 hover:bg-white/10 hover:text-white rounded-lg"
+                >
                     Cancel
                 </Button>
-            </form>
-        </Modal >
+                <Button
+                    disabled={isLoading}
+                    onClick={DeletePlaylist}
+                    className="bg-red-500/15 border border-red-500/20 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg"
+                >
+                    Delete Playlist
+                </Button>
+            </div>
+        </Modal>
     );
 }
 

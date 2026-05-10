@@ -9,10 +9,11 @@ import { useDeleteAlbumModal } from "@/hooks/useDeleteAlbumModal";
 import { useEditAlbumModal } from "@/hooks/useEditAlbumModal";
 import JSZip from "jszip";
 import toast from "react-hot-toast";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { TbDownload, TbDownloadOff } from "react-icons/tb";
 import { MdOutlineModeEditOutline } from "react-icons/md";
+import { Song } from "@/types"; // Importing your existing Song interface
 
 interface AlbumPopoverProps {
     albumId: string;
@@ -26,85 +27,78 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
     const { subscription } = useUser();
 
     const handleDeleteAlbum = async () => {
-        console.log("Delete Album");
         deleteAlbumModal.onOpen(albumId);
     }
 
     const handleDownload = async () => {
-        const { data: albumData, error: albumError } = await supabaseClient
-            .from('albums')
+        if (!subscription) {
+            toast.error("Upgrade to Pro to download albums");
+            return;
+        }
+
+        // Use 'as any' to bypass the strict table name check
+        const { data: albumData, error: albumError } = await (supabaseClient
+            .from('albums' as any)
             .select('*')
             .eq('id', albumId)
-            .single();
+            .single() as any);
 
-        if (albumError) {
+        if (albumError || !albumData) {
             console.error('Error fetching album:', albumError);
             toast.error('Error fetching album');
             return;
         }
 
-        const { data: PsData, error: PsError } = await supabaseClient
-            .from('album_songs')
+        const { data: PsData, error: PsError } = await (supabaseClient
+            .from('album_songs' as any)
             .select('song_id')
-            .eq('album_id', albumId);
+            .eq('album_id', albumId) as any);
 
-        if (PsError) {
+        if (PsError || !PsData) {
             console.error('Error fetching album songs:', PsError);
             toast.error('Error fetching album songs');
             return;
         }
 
-        const songIds = PsData.map((song) => song.song_id);
+        // Ensure IDs are treated as numbers for the next query
+        const numericSongIds = PsData.map((song: any) => Number(song.song_id));
 
         const { data: SData, error: SError } = await supabaseClient
             .from('songs')
             .select('*')
-            .in('id', songIds);
+            .in('id', numericSongIds);
 
-        if (SError) {
+        if (SError || !SData) {
             console.error('Error fetching songs:', SError);
             toast.error('Error fetching songs');
             return;
         }
 
-        const songs = SData.map((song) => song);
+        // Cast to your Song interface
+        const songs = (SData as unknown as Song[]);
 
         const zip = new JSZip();
         const folder = zip.folder(albumData.name);
 
         if (albumData.image_path) {
-            const { data: imageData, error: imageError } = await supabaseClient.storage.from('images').download(albumData.image_path);
+            const { data: imageData, error: imageError } = await supabaseClient.storage
+                .from('images')
+                .download(albumData.image_path);
 
-            if (imageError) {
-                console.error('Error downloading album image:', imageError);
-                toast.error('Error downloading album image');
-                return;
-            }
-
-            if (folder) {
+            if (!imageError && imageData && folder) {
                 folder.file(`${albumData.name}.png`, imageData);
-            } else {
-                console.error('Folder is null');
-                toast.error('Folder is not available');
-                return;
             }
         }
 
         for (const song of songs) {
-            const { data, error } = await supabaseClient.storage.from('songs').download(song.song_path);
+            if (!song.song_path || !song.title) continue;
 
-            if (error) {
-                console.error('Error downloading file:', error);
-                toast.error('Error downloading file');
-                return;
-            }
+            const { data, error } = await supabaseClient.storage
+                .from('songs')
+                .download(song.song_path);
 
-            if (folder) {
+            if (!error && data && folder) {
                 folder.file(`${song.title}.mp3`, data);
-            } else {
-                console.error('Folder is null');
-                toast.error('Folder is not available');
-                return;
             }
         }
 
@@ -116,6 +110,7 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
         document.body.appendChild(a);
         a.click();
         a.remove();
+        URL.revokeObjectURL(url);
         toast.success('Album downloaded successfully');
     }
 
@@ -124,66 +119,62 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
     }
 
     return (
-    
-           <DropdownMenu.Root modal={false}>
-      <DropdownMenu.Trigger asChild>
-        <button className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 focus:outline-none">
-          <FaEllipsisH className="text-neutral-400 hover:text-white transition-all duration-300" size={20} />
-        </button>
-      </DropdownMenu.Trigger>
+        <DropdownMenu.Root modal={false}>
+            <DropdownMenu.Trigger asChild>
+                <button className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 focus:outline-none">
+                    <FaEllipsisH className="text-neutral-400 hover:text-white transition-all duration-300" size={20} />
+                </button>
+            </DropdownMenu.Trigger>
 
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          sideOffset={5}
-          className="
-            min-w-[220px] rounded-2xl bg-white/10 backdrop-blur-md border border-white/20
-            shadow-lg py-2 flex flex-col gap-2 text-white
-            will-change-[opacity,transform]
-            data-[side=bottom]:animate-slideUpAndFade
-            data-[side=top]:animate-slideDownAndFade
-            data-[side=left]:animate-slideRightAndFade
-            data-[side=right]:animate-slideLeftAndFade
-          "
-        >
-          {isOwner && (
-            <>
-              <DropdownMenu.Item
-                onClick={handleDeleteAlbum}
-                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
-              >
-                Delete Album <HiOutlineTrash size={20} />
-              </DropdownMenu.Item>
+            <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                    sideOffset={5}
+                    className="
+                        min-w-55 rounded-2xl bg-neutral-800/90 backdrop-blur-md border border-white/10
+                        shadow-lg py-2 flex flex-col text-white z-100
+                    "
+                >
+                    {isOwner && (
+                        <>
+                            <DropdownMenu.Item
+                                onClick={handleDeleteAlbum}
+                                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none"
+                            >
+                                Delete Album <HiOutlineTrash size={20} />
+                            </DropdownMenu.Item>
 
-              <DropdownMenu.Item
-                onClick={handleEditAlbum}
-                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
-              >
-                Edit Album <MdOutlineModeEditOutline size={20} />
-              </DropdownMenu.Item>
+                            <DropdownMenu.Item
+                                onClick={handleEditAlbum}
+                                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none"
+                            >
+                                Edit Album <MdOutlineModeEditOutline size={20} />
+                            </DropdownMenu.Item>
 
-              <DropdownMenu.Separator className="my-1 h-px bg-white/20" />
-            </>
-          )}
+                            <div className="my-1 h-px bg-white/10" />
+                        </>
+                    )}
 
-          <DropdownMenu.Item
-            onClick={handleDownload}
-            disabled={!subscription}
-            className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:text-neutral-500"
-          >
-            {subscription ? (
-              <>
-                Download Album <TbDownload size={20} />
-              </>
-            ) : (
-              <>
-                Upgrade to Pro <TbDownloadOff size={20} />
-              </>
-            )}
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-
+                    <DropdownMenu.Item
+                        onClick={(e) => {
+                            if (!subscription) e.preventDefault();
+                            handleDownload();
+                        }}
+                        className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none disabled:text-neutral-500"
+                        disabled={!subscription}
+                    >
+                        {subscription ? (
+                            <>
+                                Download Album <TbDownload size={20} />
+                            </>
+                        ) : (
+                            <>
+                                Upgrade to Pro <TbDownloadOff size={20} />
+                            </>
+                        )}
+                    </DropdownMenu.Item>
+                </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+        </DropdownMenu.Root>
     );
 }
 

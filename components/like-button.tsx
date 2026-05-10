@@ -1,7 +1,7 @@
 "use client"
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useUser } from "@/hooks/useUser";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { useSessionContext } from "@/hooks/useSessionContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -21,25 +21,28 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
 
     const [isLiked, setIsLiked] = useState(false);
 
-    useEffect(() => {
-
-    
-    const fetchData  = async () => {
-        const {data, error} = await supabaseClient
-        .from('liked_songs')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('song_id', songId)
-        .single();
-
-
-        if(!error && data) {
-            setIsLiked(true)
-        }
+   useEffect(() => {
+    // 1. Return early if we don't have the necessary IDs
+    if (!user?.id || !songId) {
+        return;
     }
 
-     fetchData()
-    }, [songId, supabaseClient, user?.id])
+    const fetchData = async () => {
+        const { data, error } = await supabaseClient
+            .from('liked_songs')
+            .select('*')
+            // 2. user.id is now guaranteed to be a string
+            .eq('user_id', user.id) 
+            .eq('song_id', Number(songId))
+            .single();
+
+        if (!error && data) {
+            setIsLiked(true);
+        }
+    };
+
+    fetchData();
+}, [songId, supabaseClient, user?.id]);
 
     const Icon = isLiked ? AiFillHeart : AiOutlineHeart;
 
@@ -53,7 +56,7 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
             .from("liked_songs")
             .delete()
             .eq("user_id", user.id)
-            .eq("song_id", songId);
+            .eq("song_id", Number(songId));
 
             if(error) {
                 toast.error(error.message)
@@ -64,44 +67,44 @@ export const LikeButton = ({ songId, creatorId }:Props) => {
             }
         } else {
 
-            const { data: existingNotification, error: fetchError } = await supabaseClient
-                    .from("notifications")
-                    .select("*")
-                    .eq("target_id", creatorId)
-                    .eq("sent_id", user.id)
-                    .eq("song_id", songId)
-                    .eq("message", `You got a new like from:`)
-                    .maybeSingle();
+            const { data: existingNotification, error: fetchError } = await (supabaseClient
+    .from("notifications" as any) // Bypass strict table check
+    .select("*")
+    .eq("target_id", creatorId)
+    .eq("sent_id", user.id)
 
-                if (fetchError) {
-                    console.error("Error checking existing notification:", fetchError.message);
-                    return;
-                }
+    .eq("song_id", songId) 
+    .eq("message", `You got a new like from:`)
+    .maybeSingle() as any);
 
-                if (!existingNotification && creatorId !== user.id) {
-                  
-                    const { error: notificationError } = await supabaseClient
-                        .from("notifications")
-                        .insert({ 
-                            target_id: creatorId, 
-                            sent_id: user.id, 
-                            song_id: songId,
-                            message: `You got a new like from:`, 
-                        });
+if (fetchError) {
+    console.error("Error checking existing notification:", fetchError.message);
+    return;
+}
 
-                        console.log("Notification sent: Liking");
+if (!existingNotification && creatorId !== user.id) {
+    const { error: notificationError } = await (supabaseClient
+        .from("notifications" as any)
+        .insert({ 
+            target_id: creatorId, 
+            sent_id: user.id, 
+            song_id: songId,
+            message: `You got a new like from:`, 
+        }) as any);
 
-                    if (notificationError) {
-                        console.error("Error creating notification:", notificationError.message);
-                        return;
-                    }
-                }
+    console.log("Notification sent: Liking");
+
+    if (notificationError) {
+        console.error("Error creating notification:", notificationError.message);
+        return;
+    }
+}
             
             const {error} = await supabaseClient
             .from("liked_songs")
             .insert({
                 user_id: user.id,
-                song_id: songId
+                song_id: Number(songId)
             });
 
             if(error) {

@@ -34,41 +34,39 @@ const SongItem: React.FC<SongItemProps> = ({
         <div
           onClick={() => onClick(data.id)}
           className={twMerge(`
-            relative 
-            group 
-            flex 
-            flex-col 
-            items-center 
-            justify-center 
-            rounded-3xl 
-            overflow-hidden 
-            bg-white/10
-            backdrop-blur-[20px]
-            border border-white/20
-            shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-            transition-all duration-300 
-            hover:scale-[1.05] hover:shadow-[0_12px_48px_0_rgba(31,38,135,0.45)]
+            relative
+            group
+            flex
+            flex-col
+            items-center
+            justify-center
+            rounded-2xl
+            overflow-hidden
+            bg-white/5
+            backdrop-blur-md
+            border border-white/10
+            transition-all duration-300
+            hover:scale-[1.03]
+            hover:bg-white/10
+            hover:border-white/20
             cursor-pointer
-            p-4
-            before:absolute before:inset-0 before:bg-gradient-to-tr before:from-white/10 before:via-white/5 before:to-white/10 before:opacity-0 group-hover:before:opacity-40 before:rounded-3xl
-          `, reactive && "ring-2 ring-purple-500/70 shadow-purple-500/30")}
+            p-3
+          `, reactive && "ring-2 ring-white/20")}
         >
-          {imagePath && (
-            <div className="relative w-full pt-[100%] rounded-2xl overflow-hidden shadow-inner shadow-white/10">
-              <img
-                src={imagePath}
-                alt={data.title}
-                onError={(e) => (e.currentTarget.src = '/images/fallback.png')}
-                className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl"
-              />
+          <div className="relative w-full pt-[100%] rounded-2xl overflow-hidden shadow-inner shadow-white/10 bg-white/10">
+            <img
+              src={imagePath || '/images/fallback.png'}
+              alt={data.title}
+              onError={(e) => (e.currentTarget.src = '/images/fallback.png')}
+              className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl"
+            />
 
-              {isNew && (
-                <div className="absolute top-2 right-2">
-                  <img src="/images/New.png" width={50} height={50} alt="New Badge" />
-                </div>
-              )}
-            </div>
-          )}
+            {isNew && (
+              <div className="absolute top-2 right-2">
+                <img src="/images/New.png" width={50} height={50} alt="New Badge" />
+              </div>
+            )}
+          </div>
 
           {reactive && (
             <div className="absolute top-3 left-3">
@@ -112,7 +110,7 @@ const SongItem: React.FC<SongItemProps> = ({
           </div>
 
           {/* subtle shine overlay */}
-          <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
+          <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-full group-hover:before:animate-shine rounded-3xl" />
         </div>
       </ContextMenu.Trigger>
       <SongRightClickContent isOwner={isOwner} song={data} user_id={user_id} />

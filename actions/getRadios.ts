@@ -1,13 +1,10 @@
 "use server";
 
-import { Radio } from "@/types"; 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { Radio } from "@/types";
+import { createClient } from "@/lib/supabase/server";
 
 const getRadios = async (): Promise<Radio[]> => {
-  const supabase = createServerComponentClient({
-    cookies: cookies,
-  });
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("radio")
@@ -23,14 +20,12 @@ const getRadios = async (): Promise<Radio[]> => {
     return [];
   }
 
-  const remappedData = data.map((radio: any) => ({
+  return data.map((radio: any) => ({
     ...radio,
     image_path: radio.image_path || "",
     radio_path: radio.radio_path || "",
     genres: radio.genres || "",
   }));
-
-  return remappedData;
 };
 
 export default getRadios;

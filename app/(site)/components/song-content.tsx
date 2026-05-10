@@ -4,7 +4,8 @@ import { Song, UserDetails } from '@/types';
 import SongItem from '@/components/songitem';
 import useOnPlay from '@/hooks/useOnPlay';
 import usePlayer from '@/hooks/usePlayer';
-import { motion } from 'framer-motion';
+import { HiOutlineMusicNote } from 'react-icons/hi';
+import Carousel from './Carousel';
 
 interface PageContentProps {
   songs: {
@@ -20,56 +21,31 @@ const SongContent: React.FC<PageContentProps> = ({ songs, userId }) => {
 
   if (songs.songs.length === 0) {
     return (
-      <div className="mt-10 text-center text-neutral-400 text-lg">
-        No songs available.
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-neutral-500">
+        <HiOutlineMusicNote size={36} />
+        <p className="text-sm">No songs yet</p>
       </div>
     );
   }
 
   return (
-    <motion.div
-      className="mt-6"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div
-        className="
-          grid
-          grid-cols-2
-          sm:grid-cols-3
-          md:grid-cols-3
-          lg:grid-cols-4
-          xl:grid-cols-5
-          2xl:grid-cols-7
-          gap-6
-          mt-4
-          px-2
-        "
-      >
-        {songs.songs.slice(0, 16).map((item, i) => {
-          const uploader = songs.users.find((u) => u.id === item.user_id)?.username;
-
-          return (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.04, duration: 0.3 }}
-            >
-              <SongItem
-                isOwner={item.user_id === userId}
-                onClick={(id: string) => onPlay(id)}
-                data={item}
-                reactive={activeId === item.id}
-                uploader={uploader}
-                user_id={item.user_id}
-              />
-            </motion.div>
-          );
-        })}
-      </div>
-    </motion.div>
+    <Carousel>
+      {songs.songs.slice(0, 20).map((item) => {
+        const uploader = songs.users.find((u) => u.id === item.user_id)?.username;
+        return (
+          <div key={item.id} className="shrink-0 w-40">
+            <SongItem
+              isOwner={item.user_id === userId}
+              onClick={(id: string) => onPlay(id)}
+              data={item}
+              reactive={activeId === item.id}
+              uploader={uploader}
+              user_id={item.user_id}
+            />
+          </div>
+        );
+      })}
+    </Carousel>
   );
 };
 

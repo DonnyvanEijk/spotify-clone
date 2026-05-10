@@ -14,43 +14,48 @@ import getFollowingYou from "@/actions/getFollowingYou";
 
 const AccountPage = async () => {
     const user = await getUser();
-    if (!user) return new Error("User not found");
+    if (!user) return null;
 
-    const songLikes = await getSongsWithLikeCounts(user?.id as string);
-    const currentUser = await getUserById(user?.id as string);
-    const avatarImage  = await getImage(currentUser?.avatar_url || "")
-    const followingUsers = await getFollowedUsers(user?.id as string);
+    const songLikes = user?.id ? await getSongsWithLikeCounts(user.id) : [];
+    const currentUser = user?.id ? await getUserById(user.id) : null;
+    const avatarImage = await getImage(currentUser?.avatar_url || "");
+    const followingUsers = user?.id ? await getFollowedUsers(user.id) : [];
     const followingYou = await getFollowingYou();
 
-    if (!currentUser) return new Error("User not found");
+    if (!currentUser) return null;
 
     return (
-        <div className="bg-neutral-900 p-6 rounded-2xl min-h-screen flex flex-col gap-6">
-            <Header image={avatarImage || ""} className="from-neutral-900/60 to-neutral-800/20 backdrop-blur-md rounded-2xl p-6">
-                <h1 className="text-white text-3xl font-semibold">Account Settings</h1>
+        <div className="h-full w-full overflow-hidden overflow-y-auto">
+            <Header image={avatarImage || ""}>
+                <div className="mt-20 px-6 md:px-12">
+                    <p className="text-neutral-400 text-sm font-medium uppercase tracking-widest mb-1">Your Account</p>
+                    <h1 className="text-white text-3xl font-bold">{currentUser.username || "Profile"}</h1>
+                </div>
             </Header>
 
-            {/* User Profile */}
-            <UserContent
-                id={user.id}
-                bio={currentUser?.bio ?? null}
-                avatar_url={currentUser?.avatar_url ?? null}
-                username={currentUser?.username ?? null}
-            />
+            <div className="px-6 md:px-12 pb-24 flex flex-col gap-6 mt-6">
+                {/* Profile */}
+                <UserContent
+                    id={user.id}
+                    bio={currentUser?.bio ?? null}
+                    avatar_url={currentUser?.avatar_url ?? null}
+                    username={currentUser?.username ?? null}
+                />
 
-            {/* Followers & Following */}
-            <FollowerContent followingYou={followingYou} followingUsers={followingUsers} />
+                {/* Followers */}
+                <FollowerContent followingYou={followingYou} followingUsers={followingUsers} />
 
-            {/* Billing / Info Sections */}
-            <div className="grid lg:grid-cols-2 gap-6">
-                <BillingContent />
-                <InfoContent />
+                {/* Billing + Info */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                    <BillingContent />
+                    <InfoContent />
+                </div>
+
+                {/* Song Likes */}
+                {user?.id && songLikes.length > 0 && (
+                    <LikeOverview userId={user.id} songs={songLikes} />
+                )}
             </div>
-
-            {/* Likes Overview */}
-            {user?.id && (
-                <LikeOverview userId={user.id} songs={songLikes} />
-            )}
         </div>
     );
 };

@@ -1,14 +1,11 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 export const getImage = async (path: string) => {
     if (!path) {
         return null;
     }
 
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+    const supabase = await createClient();
 
     const { data: imageData } = await supabase
         .storage

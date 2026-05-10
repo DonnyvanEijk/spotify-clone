@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { use, useEffect, useState } from 'react';
+import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import getSongsLyricsById from '@/actions/getSongLyricsById';
 import { Header } from '@/components/header';
 
 interface Props {
-    params: {
+    params: Promise<{
         songId: string;
-    };
+    }>;
 }
 
 interface Lyrics {
@@ -17,13 +17,14 @@ interface Lyrics {
 }
 
 const LyricsPage: React.FC<Props> = ({ params }) => {
+    const { songId } = use(params);
     const supabaseClient = useSupabaseClient();
     const [lyrics, setLyrics] = useState<Lyrics[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchLyrics = async () => {
-            const lyricsData = await getSongsLyricsById(supabaseClient, params.songId);
+            const lyricsData = await getSongsLyricsById(supabaseClient, songId);
             if (!(lyricsData instanceof Error)) {
                 //@ts-expect-error Its working so dont touch hehehe
                 setLyrics(lyricsData);
@@ -34,7 +35,7 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
       
 
         fetchLyrics();
-    }, [supabaseClient, params.songId]);
+    }, [supabaseClient, songId]);
 
     if (loading) {
         return (
@@ -45,17 +46,17 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
     }
 
     return (
-        <div className="flex flex-col w-full p-6 gap-6 mb-[5rem]">
-            <Header className="bg-white/10 backdrop-blur-[18px] rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
+        <div className="flex flex-col w-full p-6 gap-6 mb-20">
+            <Header className="bg-white/10 backdrop-blur-[18px] rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
                 <h2 className="font-semibold text-3xl text-purple-200">Lyrics</h2>
             </Header>
 
             {Array.isArray(lyrics) && lyrics.length > 0 ? (
-                <div className="flex flex-col gap-4 p-6 rounded-2xl bg-white/10 backdrop-blur-[18px] border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
+                <div className="flex flex-col gap-4 p-6 rounded-2xl bg-white/10 backdrop-blur-[18px] border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
                     {lyrics.map((data) =>
                         data.lyrics.split('\n').map((line, index) => (
                             <p
-                                className="font-bold text-[2rem] text-purple-100 break-words"
+                                className="font-bold text-[2rem] text-purple-100 wrap-break-words"
                                 key={`${data.id}-${index}`}
                             >
                                 {line}

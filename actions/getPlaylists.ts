@@ -1,29 +1,24 @@
 import { Playlist } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 const getPlaylists = async (): Promise<Playlist[]> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const {
-        data: {
-            session
-        }
-    } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-        .from('playlists')
-        .select('*')
-        .eq('user_id', session?.user.id)
-        .order('created_at', { ascending: false });
+  if (!user?.id) return [];
 
-    if (error) {
-        console.error(error);
-    }
+  const { data, error } = await supabase
+    .from('playlists')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
 
-    return (data as any) || [];
-}
+  if (error) {
+    console.error(error);
+  }
+
+  return (data as any) || [];
+};
 
 export default getPlaylists;

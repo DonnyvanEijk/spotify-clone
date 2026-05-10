@@ -1,43 +1,36 @@
 import { Notification } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 export const getIncomingNotifications = async (user_id: string): Promise<number> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const { count, error } = await supabase
-        .from('notifications')
-        .select('id', { count: 'exact' }) // Use 'exact' to get the count
-        .eq('target_id', user_id)
-        .is('deleted_at', null)
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact' })
+    .eq('target_id', user_id)
+    .is('deleted_at', null);
 
-    if (error) {
-        console.error(error);
-        return 0; // Return 0 in case of an error
-    }
+  if (error) {
+    console.error(error);
+    return 0;
+  }
 
-    return count || 0; // Return the count or 0 if undefined
-}
+  return count || 0;
+};
 
 export const getIncomingNotificationsData = async (user_id: string): Promise<Notification[]> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from('notifications')
-        .select('*') // Fetch all fields to match the Notification type
-        .eq('target_id', user_id)
-        .is('deleted_at', null)
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('target_id', user_id)
+    .is('deleted_at', null);
 
-    if (error) {
-        console.error(error);
-        return []; // Return 0 in case of an error
-    }
+  if (error) {
+    console.error(error);
+    return [];
+  }
 
-    return data as Notification[] || []; // Cast the data to Notification[]
-}
-
-
+  return (data as Notification[]) || [];
+};

@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { useSharesSongModal } from "@/hooks/useSharedSongModal";
 import usePlayer from "@/hooks/usePlayer";
 import { Song, UserDetails } from "@/types";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { Modal } from "../modal";
 import { LuLoader } from "react-icons/lu";
 
@@ -106,47 +106,39 @@ const ShareSongModal = () => {
     >
     {loading && <div className="flex justify-center items-center h-16"><LuLoader className="animate-spin text-white"/></div>}
       {sharedData && !loading && (
-        <div className="flex flex-col gap-4 mt-4">
-          <div className="flex gap-4 items-center">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
             {userAvatarUrl && (
-              <img
-                src={userAvatarUrl}
-                alt="User Avatar"
-                className="w-12 h-12 rounded-full object-cover"
-              />
+              <img src={userAvatarUrl} alt="User Avatar" className="w-10 h-10 rounded-full object-cover shrink-0" />
             )}
-            <div>
-              <p className="text-white font-semibold">{userData?.username || "Unknown User"}</p>
-              <p className="text-white">Sent you a song!</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{userData?.username || "Unknown User"}</p>
+              <p className="text-xs text-neutral-400">Shared a song with you</p>
             </div>
           </div>
 
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
             {songImageUrl && (
-              <img
-                src={songImageUrl}
-                alt="Song Cover"
-                className="w-24 h-24 rounded object-cover"
-              />
+              <img src={songImageUrl} alt="Song Cover" className="w-14 h-14 rounded-lg object-cover shrink-0" />
             )}
-            <div>
-              <p className="text-white font-semibold">{songData?.title || "Unknown Song"}</p>
-              <p className="text-white">By: {songData?.author || "Unknown Artist"}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{songData?.title || "Unknown Song"}</p>
+              <p className="text-xs text-neutral-400 truncate">{songData?.author || "Unknown Artist"}</p>
             </div>
           </div>
 
-          <div className="flex gap-4 mt-4">
+          <div className="flex gap-3 mt-2">
             <button
-              className="px-4 py-2 bg-purple-600 rounded text-white hover:bg-purple-700"
-              onClick={handlePlay}
-            >
-              Play
-            </button>
-            <button
-              className="px-4 py-2 bg-gray-600 rounded text-white hover:bg-gray-700"
+              className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-neutral-300 hover:bg-white/10 hover:text-white transition-all duration-150"
               onClick={handleClose}
             >
               Close
+            </button>
+            <button
+              className="flex-1 px-4 py-2.5 bg-white rounded-lg text-sm font-semibold text-black hover:bg-neutral-200 active:scale-95 transition-all duration-150"
+              onClick={handlePlay}
+            >
+              Play
             </button>
           </div>
         </div>

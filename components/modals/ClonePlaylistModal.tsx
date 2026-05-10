@@ -10,7 +10,7 @@ import {Input} from "../input";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import { Playlist } from "@/types";
@@ -254,8 +254,8 @@ const ClonePlaylistModal = () => {
 }
                 {!useOriginalImage ? (
                     <div>
-                        <div className="pb-1">
-                            Select an image
+                        <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                            Cover image
                         </div>
                         <Input
                             id="image"

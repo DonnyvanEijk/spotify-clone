@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
 import AlbumItem from "@/components/AlbumItem";
 import { Album } from "@/types";
-import { motion } from "framer-motion";
+import { HiOutlineCollection } from "react-icons/hi";
+import Carousel from "./Carousel";
 
 interface PageContentProps {
   albums: Album[];
@@ -11,39 +12,26 @@ interface PageContentProps {
 
 const AlbumContent: React.FC<PageContentProps> = ({ albums, userId }) => {
   if (albums.length === 0) {
-    return <div className="mt-4 text-neutral-400">No Albums Available</div>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-neutral-500">
+        <HiOutlineCollection size={36} />
+        <p className="text-sm">No albums yet</p>
+      </div>
+    );
   }
 
   return (
-    <motion.div
-   className="
-  grid
-  grid-cols-2
-  sm:grid-cols-3
-  md:grid-cols-3
-  lg:grid-cols-4
-  xl:grid-cols-5
-  2xl:grid-cols-7
-  gap-6 mt-4 px-2
-"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ staggerChildren: 0.1 }}
-    >
-      {albums.slice(0, 8).map((item) => (
-        <motion.div
-          key={item.id}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-        >
+    <Carousel>
+      {albums.slice(0, 20).map((item) => (
+        <div key={item.id} className="shrink-0 w-40">
           <AlbumItem
             key={item.id}
             data={item}
             isOwner={item.user_id === userId}
           />
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </Carousel>
   );
 };
 

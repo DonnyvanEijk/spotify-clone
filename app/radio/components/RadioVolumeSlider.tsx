@@ -31,7 +31,7 @@ export const RadioVolumeSlider: React.FC<RadioVolumeSliderProps> = ({ onVolumeCh
     <div className="flex items-center gap-3 w-full max-w-xs">
       <button
         onClick={toggleMute}
-        className="text-white hover:text-purple-400 transition"
+        className="text-neutral-400 hover:text-white transition"
       >
         {volume === 0 ? <LuVolumeX size={20} /> : <LuVolume2 size={20} />}
       </button>

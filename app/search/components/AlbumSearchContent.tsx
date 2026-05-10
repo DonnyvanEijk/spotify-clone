@@ -8,38 +8,20 @@ interface AlbumSearchContentProps {
   userId: string | undefined;
 }
 
-const AlbumSearchContent: React.FC<AlbumSearchContentProps> = ({
-  albums,
-  userId,
-}) => {
+const AlbumSearchContent: React.FC<AlbumSearchContentProps> = ({ albums, userId }) => {
   if (albums.length === 0) {
-    return (
-      <div className="flex flex-col gap-y-2 w-full px-6 text-neutral-400">
-        <p>No albums found.</p>
-      </div>
-    );
+    return <p className="text-neutral-400 px-2">No albums found.</p>;
   }
 
   return (
-    <div className="flex flex-col gap-y-3 w-full px-6 py-4">
+    <div className="flex flex-col gap-y-4 w-full">
       {albums.map((album) => (
-        <div
-          key={album.id}
-          className="
-            flex items-center gap-x-4 w-full
-            bg-white/10 hover:bg-white/20
-            backdrop-blur-xl
-            border border-white/10
-            rounded-xl
-            p-3
-            transition-all duration-300
-            shadow-md hover:shadow-purple-500/20
-          "
-        >
-          <div className="flex-1 truncate">
+        <div key={album.id} className="flex items-center group w-full">
+          <div className="flex-1">
             <AlbumMediaItem
               isOwner={album.user_id === userId}
               data={album}
+              className="transition-transform duration-300 group-hover:scale-[1.02]"
             />
           </div>
         </div>

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import toast from "react-hot-toast";
 import { Notification, Song, UserDetails } from "@/types";
 import { useRouter } from "next/navigation";
+import { HiOutlineTrash } from "react-icons/hi";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -26,74 +27,80 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const supabase = useSupabaseClient();
   const router = useRouter();
 
+  const isFollow = notification.message.includes("follow");
+  const isLike = notification.message.includes("like");
+  const isUpload = notification.message.includes("uploaded");
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("notifications")
         .update({ deleted_at: new Date() })
         .eq("id", notification.id);
 
       if (error) throw new Error(error.message);
-      toast.success("Notification deleted successfully!");
+      toast.success("Notification dismissed");
       router.refresh();
     } catch {
-      toast.error("Failed to delete notification.");
+      toast.error("Failed to dismiss notification.");
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <div className="flex justify-between items-center p-4 rounded-2xl backdrop-blur-[20px] bg-white/5 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] hover:scale-[1.01] transition-transform duration-200">
-      <div className="flex items-center gap-4">
-        {sentAvatar && notification.message.includes("follow") && (
+    <div className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group">
+      {/* Avatar or song image */}
+      <div className="shrink-0">
+        {isFollow && sentAvatar ? (
           <img
             src={sentAvatar}
             alt={sentUser.username || "avatar"}
-            className="w-14 h-14 rounded-full object-cover shadow-lg shadow-purple-500/30"
+            className="w-11 h-11 rounded-full object-cover"
           />
-        )}
-
-        {song && (notification.message.includes("like") || notification.message.includes("uploaded")) && songImage && (
+        ) : (isLike || isUpload) && songImage ? (
           <img
             src={songImage}
-            alt={song.title}
-            className="w-14 h-14 rounded-xl object-cover shadow-lg shadow-purple-500/30"
+            alt={song?.title || "song"}
+            className="w-11 h-11 rounded-lg object-cover"
           />
+        ) : (
+          <div className="w-11 h-11 rounded-full bg-white/10" />
         )}
-
-        <div className="flex flex-col gap-1">
-          <p className="text-white font-semibold">
-            {notification.message}{" "}
-            {(notification.message.includes("like") || notification.message.includes("follow")) &&
-              sentUser.username}
-          </p>
-
-          {notification.message.includes("like") && song && (
-            <p className="text-gray-400 text-sm">
-              On your song: {song.title} by <span className="text-purple-400">{song.author}</span>
-            </p>
-          )}
-
-          {(notification.message.includes("follow") || notification.message.includes("like") || notification.message.includes("uploaded")) && (
-            <Link href={`/users/${sentUser.id}`}>
-              <span className="text-gray-400 underline hover:text-gray-200 text-sm cursor-pointer">
-                Check out {sentUser.username}
-              </span>
-            </Link>
-          )}
-        </div>
       </div>
 
+      {/* Content */}
+      <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+        <p className="text-sm font-medium text-white truncate">
+          {notification.message}{" "}
+          {(isLike || isFollow) && (
+            <span className="text-neutral-300">{sentUser.username}</span>
+          )}
+        </p>
+
+        {isLike && song && (
+          <p className="text-xs text-neutral-400 truncate">
+            {song.title} · {song.author}
+          </p>
+        )}
+
+        {(isFollow || isLike || isUpload) && (
+          <Link href={`/users/${sentUser.id}`}>
+            <span className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors duration-200">
+              View profile →
+            </span>
+          </Link>
+        )}
+      </div>
+
+      {/* Dismiss */}
       <button
         onClick={handleDelete}
         disabled={isDeleting}
-        className={`text-gray-400 hover:text-gray-200 font-bold text-xl ${
-          isDeleting ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className="shrink-0 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 disabled:opacity-40 transition-all duration-200 opacity-0 group-hover:opacity-100"
       >
-        {isDeleting ? "Deleting..." : "✕"}
+        <HiOutlineTrash size={16} />
       </button>
     </div>
   );

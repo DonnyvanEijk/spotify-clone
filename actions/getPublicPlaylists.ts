@@ -1,22 +1,20 @@
 import { Playlist } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 const getPublicPlaylists = async (): Promise<Playlist[]> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
-    const { data, error } = await supabase
-        .from('playlists')
-        .select('*')
-        .eq('is_public', true)
-        .order('created_at', { ascending: false });
+  const supabase = await createClient();
 
-    if (error) {
-        console.error(error);
-    }
+  const { data, error } = await supabase
+    .from('playlists')
+    .select('*')
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
 
-    return (data as any) || [];
-}
+  if (error) {
+    console.error(error);
+  }
+
+  return (data as any) || [];
+};
 
 export default getPublicPlaylists;

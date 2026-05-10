@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import { HiChevronRight } from "react-icons/hi";
-import { FaTrashAlt } from "react-icons/fa";
+import { HiChevronRight, HiOutlineTrash } from "react-icons/hi";
 import { MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAddCheck } from "react-icons/md";
 import { RiPlayListFill } from "react-icons/ri";
+import { TbDownload, TbDownloadOff } from "react-icons/tb";
 import { Playlist } from "@/types";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
@@ -16,7 +16,11 @@ import { useDeletePlaylist } from "@/hooks/useDeletePlaylistModal";
 import { useEditPlaylistModal } from "@/hooks/useEditPlaylistModal";
 import { useClonePlaylistModal } from "@/hooks/useClonePlaylistModal";
 import toast from "react-hot-toast";
-import { TbDownload, TbDownloadOff } from "react-icons/tb";
+
+const content = "min-w-[210px] overflow-hidden rounded-xl p-1.5 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/50 flex flex-col z-50";
+const item = "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none data-[disabled]:opacity-35 data-[disabled]:pointer-events-none";
+const danger = "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-red-500/15 hover:text-red-300 outline-none select-none";
+const sep = "my-1 h-px bg-white/8 mx-2";
 
 interface PlaylistRightClickContentProps {
   isOwner: boolean;
@@ -39,132 +43,82 @@ const PlaylistRightClickContent: React.FC<PlaylistRightClickContentProps> = ({ i
   useEffect(() => {
     if (!user?.id) return;
 
-    const checkUserPlaylist = async () => {
-      const { data } = await supabaseClient
-        .from("playlists")
-        .select("id")
-        .eq("user_id", user.id);
+    // Fixed: Added explicit ': any' to destructured 'data'
+    supabaseClient
+      .from("playlists")
+      .select("id")
+      .eq("user_id", user.id)
+      .then(({ data }: any) => { 
+        if (data?.length) setUserHasPlaylist(true); 
+      });
 
-      if (data?.length) setUserHasPlaylist(true);
-    };
-
-    const fetchData = async () => {
-      const { data } = await supabaseClient
-        .from("playlist_songs")
-        .select("playlist_id")
-        .eq("playlist_id", playlist.id)
-        .eq("user_id", user.id);
-
-      if (data?.length) setIsInPlaylist(true);
-    };
-
-    checkUserPlaylist();
-    fetchData();
+    supabaseClient
+      .from("playlist_songs")
+      .select("playlist_id")
+      .eq("playlist_id", playlist.id)
+      .eq("user_id", user.id)
+      .then(({ data }: any) => { 
+        if (data?.length) setIsInPlaylist(true); 
+      });
   }, [playlist.id, supabaseClient, user?.id]);
 
-  const Icon = isInPlaylist ? MdPlaylistAddCheck : MdPlaylistAdd;
-
-  const handleDownload = async () => {
-    if (!subscription) return;
-    // TODO: implement playlist download logic
-  };
+  const PlaylistIcon = isInPlaylist ? MdPlaylistAddCheck : MdPlaylistAdd;
 
   const handleAddToPlaylist = () => {
     if (!user) return authModal.onOpen();
-    if (!userHasPlaylist) {
-      toast.error("You need to create a playlist first!");
-      return createPlaylistModal.onOpen();
+    if (!userHasPlaylist) { 
+      toast.error("Create a playlist first!"); 
+      return createPlaylistModal.onOpen(); 
     }
     addToPlaylistModal.onOpen(playlist.id);
   };
 
- const handleClonePlaylist = () => {
-  if (!user || !subscription) return;
-  clonePlaylistModal.onOpen([playlist.id], playlist.id);
-};
-
-
-  const handleEditPlaylist = () => editPlaylistModal.onOpen(playlist.id);
-  const handleDeletePlaylist = () => deletePlaylistModal.onOpen(playlist.id);
+  const handleClonePlaylist = () => {
+    if (!user) return authModal.onOpen();
+    if (!subscription) return;
+    clonePlaylistModal.onOpen([playlist.id], playlist.id);
+  };
 
   return (
     <ContextMenu.Portal>
-      <ContextMenu.Content
-        className="
-          min-w-[220px] overflow-hidden rounded-2xl p-2
-          bg-white/10 backdrop-blur-[18px]
-          border border-white/20
-          shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-          flex flex-col
-        "
-      >
-        {/* Download */}
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleDownload}
-          disabled={!subscription}
-        >
-          {subscription ? <TbDownload /> : <TbDownloadOff />}
-          {subscription ? "Download Playlist" : "Upgrade to pro to Download"}
+      <ContextMenu.Content className={content}>
+        <ContextMenu.Item className={item} disabled={!subscription}>
+          {subscription ? <TbDownload size={15} /> : <TbDownloadOff size={15} />}
+          {subscription ? "Download" : "Pro required to download"}
         </ContextMenu.Item>
 
-        {/* Add to other Playlist */}
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleAddToPlaylist}
-          disabled={!user}
-        >
-          <Icon /> {user ? "Add to Playlist" : "Login to add to Playlist"}
+        <ContextMenu.Item className={item} onClick={handleAddToPlaylist} disabled={!user}>
+          <PlaylistIcon size={15} />
+          {user ? "Add to playlist" : "Sign in to add to playlist"}
         </ContextMenu.Item>
 
-        {/* Clone Playlist */}
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleClonePlaylist}
-          disabled={!subscription}
-        >
-          <RiPlayListFill /> {subscription ? "Clone Playlist" : "Upgrade to pro to Clone"}
+        <ContextMenu.Item className={item} onClick={handleClonePlaylist} disabled={!subscription}>
+          <RiPlayListFill size={15} />
+          {subscription ? "Clone playlist" : "Pro required to clone"}
         </ContextMenu.Item>
 
         {isOwner && (
           <>
-            <ContextMenu.Separator className="my-2 h-px bg-white/20" />
+            <ContextMenu.Separator className={sep} />
 
             <ContextMenu.Sub>
-              <ContextMenu.SubTrigger className="group relative flex items-center justify-between rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white">
-                <div className="flex items-center gap-2">
-                  <MdOutlineModeEditOutline /> Edit Playlist
-                </div>
-                <HiChevronRight />
+              <ContextMenu.SubTrigger className={`${item} justify-between`}>
+                <span className="flex items-center gap-2.5">
+                  <MdOutlineModeEditOutline size={15} /> Edit
+                </span>
+                <HiChevronRight size={13} className="text-neutral-500" />
               </ContextMenu.SubTrigger>
-
               <ContextMenu.Portal>
-                <ContextMenu.SubContent
-                  className="
-                    min-w-[200px] overflow-hidden rounded-2xl p-2
-                    bg-white/10 backdrop-blur-[18px]
-                    border border-white/20
-                    shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-                    flex flex-col
-                  "
-                  sideOffset={2}
-                  alignOffset={-5}
-                >
-                  <ContextMenu.Item
-                    className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-                    onClick={handleEditPlaylist}
-                  >
-                    <MdOutlineModeEditOutline /> Edit Playlist
+                <ContextMenu.SubContent className={content} sideOffset={4} alignOffset={-4}>
+                  <ContextMenu.Item className={item} onClick={() => editPlaylistModal.onOpen(playlist.id)}>
+                    <MdOutlineModeEditOutline size={15} /> Edit playlist
                   </ContextMenu.Item>
                 </ContextMenu.SubContent>
               </ContextMenu.Portal>
             </ContextMenu.Sub>
 
-            <ContextMenu.Item
-              className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-red-600 hover:text-white"
-              onClick={handleDeletePlaylist}
-            >
-              <FaTrashAlt /> Delete Playlist
+            <ContextMenu.Item className={danger} onClick={() => deletePlaylistModal.onOpen(playlist.id)}>
+              <HiOutlineTrash size={15} /> Delete playlist
             </ContextMenu.Item>
           </>
         )}

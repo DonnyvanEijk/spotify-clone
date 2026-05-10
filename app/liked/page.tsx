@@ -12,7 +12,7 @@ export const revalidate = 0;
 const LikedPage = async () => {
   const songs = await getLikedSongs();
   const user = await getUser();
-  const currentUser = await getUserById(user?.id as string);
+  const currentUser = user?.id ? await getUserById(user.id) : null;
   const avatarImage = await getImage(currentUser?.avatar_url || "");
 
   return (
@@ -22,9 +22,10 @@ const LikedPage = async () => {
         <div className="mt-20 px-6 md:px-12">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
             {/* Liked Songs Cover */}
-            <div className="relative h-32 w-32 md:h-44 md:w-44 lg:h-52 lg:w-52 flex-shrink-0 rounded-2xl overflow-hidden shadow-lg shadow-purple-500/20">
+            <div className="relative h-32 w-32 md:h-44 md:w-44 lg:h-52 lg:w-52 shrink-0 rounded-2xl overflow-hidden shadow-lg shadow-black/30">
               <Image
                 fill
+                sizes="(max-width: 768px) 128px, (max-width: 1024px) 176px, 208px"
                 src="/images/liked.png"
                 alt="Liked Songs"
                 className="object-cover transition-transform duration-500 hover:scale-105"

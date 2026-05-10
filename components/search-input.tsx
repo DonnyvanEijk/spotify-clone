@@ -1,9 +1,11 @@
 "use client";
+
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRouter } from "next/navigation";
 import qs from "query-string";
 import { useEffect, useState } from "react";
 import { Input } from "./input";
+import { BiSearch } from "react-icons/bi";
 
 export const SearchInput = () => {
   const router = useRouter();
@@ -17,32 +19,26 @@ export const SearchInput = () => {
   }, [debouncedValue, router]);
 
   return (
-    <div className="w-full max-w-xl relative">
+    <div className="w-full relative">
+      <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
       <Input
-        placeholder="What do you want to listen to?"
+        placeholder="Search songs, playlists, albums..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="
-          w-full px-4 py-3
-          rounded-2xl
+          w-full pl-9 pr-4 py-2.5
+          rounded-xl
           bg-white/10
           text-white
-          placeholder-white/50
-          backdrop-blur-xl
-          border border-white/20
-          focus:border-purple-400/50
-          focus:ring-2 focus:ring-purple-500/40
+          placeholder-neutral-400
+          border border-white/10
+          focus:border-white/30
+          focus:ring-0
           outline-none
-          shadow-inner
           transition-all
-          duration-300
+          duration-200
         "
       />
-      {value && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 text-sm">
-          ⌕
-        </span>
-      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
+import { motion } from 'framer-motion';
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import { Song } from '@/types';
 import usePlayer from '@/hooks/usePlayer';
@@ -14,11 +15,11 @@ interface MediaItemProps {
   onClick?: (id: string) => void;
   className?: string;
   isOwner: boolean;
-  reactive?: boolean;   
+  reactive?: boolean;
   isPlayer?: boolean;
   hasAlbumName?: boolean;
   disablePlay?: boolean;
-  hideBackground?: boolean; // new prop
+  hideBackground?: boolean;
 }
 
 const MediaItem: React.FC<MediaItemProps> = ({
@@ -29,7 +30,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
   isOwner,
   hasAlbumName = false,
   disablePlay = false,
-  hideBackground = false, // default false
+  hideBackground = false,
 }) => {
   const player = usePlayer();
   const imageUrl = useLoadImage(data);
@@ -43,33 +44,60 @@ const MediaItem: React.FC<MediaItemProps> = ({
 
   return (
     <ContextMenu.Root modal={false}>
-      <ContextMenu.Trigger>
+      <ContextMenu.Trigger asChild>
         <div
           onClick={handleClick}
-          className={twMerge(`
-            relative flex items-center gap-x-3 cursor-pointer
-            w-full p-2 rounded-xl overflow-hidden
-            ${hideBackground ? "bg-transparent border-none" : "bg-white/5 border border-white/20 backdrop-blur-[20px]"}
-            transition-all duration-300
-            hover:scale-[1.03] 
-          `, reactive && "ring-2 ring-purple-500/70", className)}
-        >
-          {imageUrl && (
-            <div className="relative min-h-[48px] min-w-[48px] rounded-2xl overflow-hidden shadow-inner shadow-white/10">
-              <Image fill src={imageUrl} alt={data.title} className="object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl" />
-            </div>
+          className={twMerge(
+            "group relative flex items-center gap-x-3 w-full rounded-xl cursor-pointer transition-all duration-200",
+            hideBackground
+              ? "p-1 hover:bg-white/5"
+              : "p-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20",
+            reactive && "bg-white/10 border-white/20",
+            className
           )}
-
-          <div className="flex flex-col gap-y-1 overflow-hidden">
-            <p className={twMerge("truncate", reactive ? "font-semibold text-purple-500" : "text-white")}>
-              {data.title}
-            </p>
-            <p className="text-neutral-400 text-sm truncate">{data.author}</p>
-            {hasAlbumName && albumName && <p className="text-neutral-400 text-sm truncate">{albumName || ""}</p>}
+        >
+          {/* Thumbnail */}
+          <div className="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-white/10">
+            {imageUrl ? (
+              <Image
+                fill
+                sizes="44px"
+                src={imageUrl}
+                alt={data.title}
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-white/10" />
+            )}
           </div>
 
-          {!hideBackground && (
-            <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
+          {/* Text */}
+          <div className="flex flex-col min-w-0 flex-1">
+            <p className={twMerge(
+              "text-sm font-medium truncate",
+              reactive ? "text-white" : "text-neutral-200 group-hover:text-white transition-colors duration-200"
+            )}>
+              {data.title}
+            </p>
+            <p className="text-xs text-neutral-400 truncate">{data.author}</p>
+            {hasAlbumName && albumName && (
+              <p className="text-xs text-neutral-500 truncate">{albumName}</p>
+            )}
+          </div>
+
+          {/* Equalizer bars — playing indicator */}
+          {reactive && (
+            <div className="shrink-0 flex items-end gap-0.75 h-4">
+              {[0, 0.15, 0.3].map((delay) => (
+                <motion.div
+                  key={delay}
+                  className="w-0.75 rounded-full bg-white"
+                  animate={{ scaleY: [0.25, 1, 0.25] }}
+                  transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut', delay }}
+                  style={{ originY: 1, height: '100%' }}
+                />
+              ))}
+            </div>
           )}
         </div>
       </ContextMenu.Trigger>
