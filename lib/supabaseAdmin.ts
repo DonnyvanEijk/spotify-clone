@@ -21,7 +21,10 @@ const upsertProductRecord = async (product: Stripe.Product) => {
     image: product.images?.[0] ?? null,
     metadata: product.metadata,
   };
-  const { error } = await supabaseAdmin.from("products").upsert([productData]);
+  
+  // Cast to any to bypass RejectExcessProperties errors caused by relational fields in the Product type
+  const { error } = await supabaseAdmin.from("products").upsert([productData as any]);
+  
   if (error) {
     throw error;
   }
@@ -43,7 +46,9 @@ const upsertPriceRecord = async (price: Stripe.Price) => {
     metadata: price.metadata,
   };
 
-  const { error } = await supabaseAdmin.from("prices").upsert([priceData]);
+  // Cast to any to bypass RejectExcessProperties errors (e.g., the 'products' property conflict)
+  const { error } = await supabaseAdmin.from("prices").upsert([priceData as any]);
+  
   if (error) {
     throw error;
   }
@@ -53,37 +58,48 @@ const upsertPriceRecord = async (price: Stripe.Price) => {
 
 const createOrRetrieveCustomer = async ({ email, uuid }: { email: string; uuid: string }) => {
   const { data, error } = await supabaseAdmin.from("customers").select("stripe_customer_id").eq("id", uuid).single();
+  
   if (error || !data?.stripe_customer_id) {
     const customerData: { metadata: { supabaseUUID: string }; email?: string } = {
       metadata: {
         supabaseUUID: uuid,
       },
     };
+    
     if (email) customerData.email = email;
+    
     const customer = await stripe.customers.create(customerData);
+    
     const { error: supabaseError } = await supabaseAdmin
       .from("customers")
       .insert([{ id: uuid, stripe_customer_id: customer.id }]);
+      
     if (supabaseError) throw supabaseError;
+    
     console.log(`New customer created and inserted for ${uuid}.`);
     return customer.id;
   }
+  
   return data.stripe_customer_id;
 };
 
 const copyBillingDetailsToCustomer = async (uuid: string, payment_method: Stripe.PaymentMethod) => {
   const customer = payment_method.customer as string;
   const { name, phone, address } = payment_method.billing_details;
+  
   if (!name || !phone || !address) return;
+  
   //@ts-expect-error expected
   await stripe.customers.update(customer, { name, phone, address });
+  
   const { error } = await supabaseAdmin
     .from("users")
     .update({
       billing_address: { ...address },
       payment_method: { ...payment_method[payment_method.type] },
-    })
+    } as any) // Cast to any to avoid 'never' errors on custom user columns
     .eq("id", uuid);
+    
   if (error) throw error;
 };
 
@@ -93,6 +109,7 @@ const manageSubscriptionStatusChange = async (subscriptionId: string, customerId
     .select("id")
     .eq("stripe_customer_id", customerId)
     .single();
+    
   if (noCustomerError) throw noCustomerError;
 
   const { id: uuid } = customerData!;
@@ -100,14 +117,15 @@ const manageSubscriptionStatusChange = async (subscriptionId: string, customerId
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ["default_payment_method"],
   });
+  
   const subscriptionData: Database["public"]["Tables"]["subscriptions"]["Insert"] = {
     id: subscription.id,
     user_id: uuid,
     metadata: subscription.metadata,
-   //@ts-expect-error expected
+    //@ts-expect-error expected
     status: subscription.status,
     price_id: subscription.items.data[0].price.id,
-  //@ts-expect-error expected
+    //@ts-expect-error expected
     quantity: subscription.quantity,
     cancel_at_period_end: subscription.cancel_at_period_end,
     cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
@@ -120,8 +138,10 @@ const manageSubscriptionStatusChange = async (subscriptionId: string, customerId
     trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
   };
 
-  const { error } = await supabaseAdmin.from("subscriptions").upsert([subscriptionData]);
+  const { error } = await supabaseAdmin.from("subscriptions").upsert([subscriptionData as any]);
+  
   if (error) throw error;
+  
   console.log(`Inserted/updated subscription [${subscription.id}] for user [${uuid}]`);
 
   if (createAction && subscription.default_payment_method && uuid) {
@@ -129,4 +149,9 @@ const manageSubscriptionStatusChange = async (subscriptionId: string, customerId
   }
 };
 
-export { upsertProductRecord, upsertPriceRecord, createOrRetrieveCustomer, manageSubscriptionStatusChange };
+export { 
+  upsertProductRecord, 
+  upsertPriceRecord, 
+  createOrRetrieveCustomer, 
+  manageSubscriptionStatusChange 
+};

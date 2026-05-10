@@ -1,4 +1,3 @@
-
 import { getCurrentlyFollowing } from "@/actions/getCurrentlyFollowing";
 import getFollowerAmount from "@/actions/getFollowerAmount";
 import getSongsWithLikeCounts from "@/actions/getMostLiked";
@@ -7,42 +6,35 @@ import getUser from "@/actions/getUser";
 import { getUserById } from "@/actions/getUsers";
 import { Header } from "@/components/header";
 import { FollowControls } from "@/components/users/FollowControls";
-
 import { PlayListList } from "@/components/users/playlists/Playlist-List";
 import { SongList } from "@/components/users/songs/SongList";
 import { getImage } from "@/lib/getImage";
-
+import { HiOutlineUsers } from "react-icons/hi";
 
 type Props = {
-    params: {
-        id: string;
-    }
+    params: Promise<{ id: string }>
 }
 
 const UserPage = async ({ params }: Props) => {
-    const user = await getUserById(params.id);
+    const { id } = await params;
+    const user = await getUserById(id);
     const userNOW = await getUser();
-    const currentUser = await getUserById(userNOW?.id as string);
-    const currentFollows = await getCurrentlyFollowing(userNOW?.id as string);
-    const followerAmount = await getFollowerAmount(params.id);
-    console.log(currentFollows)
-    const avatarImage  = await getImage(currentUser?.avatar_url || "")
-    if (!user) {
-        return new Error("User not found");
-    }
+    const currentUser = userNOW?.id ? await getUserById(userNOW.id) : null;
+    const currentFollows = userNOW?.id ? await getCurrentlyFollowing(userNOW.id) : [];
+    const followerAmount = await getFollowerAmount(id);
+    const avatarImage = await getImage(currentUser?.avatar_url || "");
 
-    const isProfileIncomplete = !user.username;
+    if (!user) return null;
 
-    if (isProfileIncomplete) {
+    if (!user.username) {
         return (
-            <div className="text-white">
+            <div className="h-full w-full overflow-hidden overflow-y-auto">
                 <Header image={avatarImage || ""}>
-                    <h1 className="text-3xl font-bold">Incomplete Profile</h1>
-                    <p className="text-gray-400">This user still needs to complete their profile to proceed.</p>
+                    <div className="mt-20 px-6 md:px-12">
+                        <h1 className="text-white text-2xl font-bold">Incomplete Profile</h1>
+                        <p className="text-neutral-400 text-sm mt-1">This user hasn't set up their profile yet.</p>
+                    </div>
                 </Header>
-                <div className="flex flex-col gap-5 items-center mt-10">
-                    <p className="text-neutral-400 text-light">No additional information available.</p>
-                </div>
             </div>
         );
     }
@@ -50,42 +42,55 @@ const UserPage = async ({ params }: Props) => {
     const avatarPath = await getImage(user.avatar_url || "");
     const songsWithLikes = await getSongsWithLikeCounts(user.id as string);
     const playlists = await getPlaylistsByUser(user.id as string);
+    const isOwnProfile = currentUser?.id === user.id;
+    const isFollowing = currentFollows.some(f => f.followed_id === id);
 
     return (
-        <div className="text-white">
+        <div className="h-full w-full overflow-hidden overflow-y-auto">
             <Header image={avatarImage || ""}>
-                <h1 className="text-3xl font-bold">User overview</h1>
-                <p className="text-gray-400">See more of the creator!</p>
-            </Header>
-            <div className="flex flex-col gap-5 items-center">
-                {avatarPath && (
-                    <img 
-                        src={avatarPath} 
-                        width={200} 
-                        height={200} 
-                        className="rounded-full object-cover aspect-square" 
-                        alt="User Avatar"
-                    />
-                )}
-                <div className="flex flex-col gap-2 items-center">
-                    <h2 className="text-2xl font-semibold">{user.username}</h2>
-                    <p className="text-neutral-400 text-light">{user.bio}</p>
-                    <p className="text-neutral-400 text-light">Followers: {followerAmount}</p>
+                <div className="mt-20 px-6 md:px-12">
+                    <p className="text-neutral-400 text-sm font-medium uppercase tracking-widest mb-1">Profile</p>
+                    <h1 className="text-white text-3xl font-bold">{user.username}</h1>
                 </div>
-                { currentUser?.id !== user.id && (
-                    <FollowControls 
-                        userId={currentUser?.id || ""} 
-                        followingId={params.id} 
-                        isInitiallyFollowing={currentFollows.some(follow => follow.followed_id === params.id)}
-                    />
-                )}
-            </div>
-            <div className="grid lg:grid-cols-2 grid-cols-1  mt-10 m-5">
-                <SongList songs={songsWithLikes} />
-                <PlayListList playlists={playlists} />
+            </Header>
+
+            <div className="px-6 md:px-12 mt-6 pb-24 flex flex-col gap-6">
+                {/* Profile card */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-white/10">
+                        {avatarPath && (
+                            <img src={avatarPath} alt={user.username} className="w-full h-full object-cover" />
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <p className="text-lg font-semibold text-white">{user.username}</p>
+                        <p className="text-sm text-neutral-400 line-clamp-2">{user.bio || "No bio"}</p>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-neutral-500">
+                            <HiOutlineUsers size={13} />
+                            <span>{followerAmount} {followerAmount === 1 ? "follower" : "followers"}</span>
+                        </div>
+                    </div>
+
+                    {!isOwnProfile && (
+                        <div className="shrink-0">
+                            <FollowControls
+                                userId={currentUser?.id || ""}
+                                followingId={id}
+                                isInitiallyFollowing={isFollowing}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Songs + Playlists */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                    <SongList songs={songsWithLikes} />
+                    <PlayListList playlists={playlists} />
+                </div>
             </div>
         </div>
     );
-}
+};
 
 export default UserPage;

@@ -7,7 +7,7 @@ import { Input } from "../input";
 import { Button } from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
 import CheckBox from "../CheckBox";
@@ -286,32 +286,33 @@ const SongEditModal = () => {
                     {...register('is_private')}
                 />
                 <div>
-                    <div className="pb-1">
-                        Select an image
+                    <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                        Cover image
                     </div>
                     <Input
                         id="image"
                         type="file"
                         disabled={isLoading}
                         accept="image/*"
-                        className="mb-5"
                         {...register('image')}
                     />
                     {song?.image_path && (
-                        <div className="mb-2">
-                            <div className="flex flex-row gap-3">
-                                <img src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl} alt="Current Song Image" className="mb-2 w-[100px] flex-shrink-0" />
-                            <Button disabled={isLoading} type="submit" className="h-[50px]">
-                                Edit Song
-                            </Button>
+                        <div className="mt-3 flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                            <img
+                                src={supabaseClient.storage.from('images').getPublicUrl(song.image_path).data.publicUrl}
+                                alt="Current cover"
+                                className="w-12 h-12 rounded-lg object-cover shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs text-neutral-400">Current cover</p>
+                                <p className="text-xs text-neutral-500 truncate">{song.image_path.split('/').pop()}</p>
                             </div>
-                            
-                            <div className="text-sm text-gray-500">Current Image: {song.image_path.split('/').pop()}</div>
-                           
                         </div>
                     )}
-                  
                 </div>
+                <Button disabled={isLoading} type="submit">
+                    Save Changes
+                </Button>
                 
             </form>
         </Modal>

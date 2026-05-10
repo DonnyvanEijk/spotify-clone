@@ -33,28 +33,25 @@ const AlbumItem: React.FC<AlbumItemProps> = ({ data, isOwner }) => {
               justify-center
               rounded-2xl
               overflow-hidden
-             bg-white/10
-              border border-white/20
-              gap-x-4
-              bg-gradient-to-br from-neutral-800/40 to-neutral-700/20
+              bg-white/5
               backdrop-blur-md
-              shadow-lg shadow-purple-500/10
-              transition-transform duration-300
-              hover:scale-[1.04] hover:shadow-purple-500/30
+              border border-white/10
+              transition-all duration-300
+              hover:scale-[1.03]
+              hover:bg-white/10
+              hover:border-white/20
               cursor-pointer
-              p-4
-            `, playing && "ring-2 ring-purple-500/70 shadow-purple-500/30")}
+              p-3
+            `, playing && "ring-2 ring-white/20")}
           >
-            {imagePath && (
-              <div className="relative w-full pt-[100%] rounded-xl overflow-hidden shadow-md">
-                <img
-                  src={imagePath}
-                  alt={data.name}
-                  onError={(e) => (e.currentTarget.src = "/images/fallback.png")}
-                  className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-            )}
+            <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10">
+              <img
+                src={imagePath || "/images/fallback.png"}
+                alt={data.name}
+                onError={(e) => (e.currentTarget.src = "/images/fallback.png")}
+                className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
 
             <div className="flex flex-col items-start w-full pt-3 gap-y-1">
               <p className={twMerge("font-semibold text-sm truncate w-full", playing && "text-purple-400")}>

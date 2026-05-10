@@ -8,17 +8,22 @@ const TextArea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HT
         className={twMerge(`
             flex
             w-full
-            rounded-md
-            bg-neutral-700
+            rounded-lg
+            bg-white/5
             border
-            border-transparent
+            border-white/10
             px-3
-            py-3
+            py-2.5
             text-sm
-            placeholder:text-neutral-400
+            text-white
+            placeholder:text-neutral-500
             disabled:cursor-not-allowed
             disabled:opacity-50
             focus:outline-none
+            focus:border-white/25
+            focus:bg-white/8
+            transition-colors
+            duration-150
             `,
           className
         )}

@@ -8,72 +8,52 @@ import * as ContextMenu from "@radix-ui/react-context-menu";
 import useLoadAlbumImage from "@/hooks/useLoadAlbumImage";
 import AlbumRightClickContent from "./right_click/AlbumRightClickContent";
 
-interface MediaItemProps {
+interface AlbumMediaItemProps {
     data: Album;
     onClick?: (id: string) => void;
     isOwner: boolean;
+    className?: string;
 }
 
-const AlbumMediaItem: React.FC<MediaItemProps> = ({
-    data,
-    onClick,
-    isOwner,
-}) => {
+const AlbumMediaItem: React.FC<AlbumMediaItemProps> = ({ data, onClick, isOwner, className }) => {
     const router = useRouter();
     const imageUrl = useLoadAlbumImage(data);
 
-    const playlistId = data.id;
-
     const handleClick = () => {
-        if (onClick) {
-            onClick(data.id);
-        }
-
-        router.push(`/album/${playlistId}`);
-    }
+        if (onClick) onClick(data.id);
+        router.push(`/album/${data.id}`);
+    };
 
     return (
         <ContextMenu.Root modal={false}>
-            <ContextMenu.Trigger>
+            <ContextMenu.Trigger asChild>
                 <div
                     onClick={handleClick}
-                    className="
-        flex
-        items-center
-        gap-x-3
-        cursor-pointer
-        hover:bg-neutral-800/50
-        w-full
-        p-2
-        rounded-md
-        "
-                >
-                    {imageUrl && (
-                        <div
-                            className="
-            relative
-            rounded-md
-            min-h-[48px]
-            min-w-[48px]
-            "
-                        >
-                            <Image
-                                fill
-                                src={imageUrl}
-                                alt="mediaItem"
-                                className="object-cover"
-                            />
-                        </div>
+                    className={twMerge(
+                        "group relative flex items-center gap-x-3 w-full rounded-xl cursor-pointer transition-all duration-200",
+                        "p-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20",
+                        className
                     )}
-                    <div className="flex flex-col gap-y-1 overflow-hidden">
-                        <p className={twMerge("text-white truncate")}>{data.name}</p>
-                        <p className="text-neutral-400 text-sm truncate">By {data.author}</p>
+                >
+                    <div className="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-white/10">
+                        {imageUrl ? (
+                            <Image fill sizes="44px" src={imageUrl} alt={data.name} className="object-cover" />
+                        ) : (
+                            <div className="w-full h-full bg-white/10" />
+                        )}
+                    </div>
+
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate text-neutral-200 group-hover:text-white transition-colors duration-200">
+                            {data.name}
+                        </p>
+                        <p className="text-xs text-neutral-400 truncate">By {data.author}</p>
                     </div>
                 </div>
             </ContextMenu.Trigger>
             <AlbumRightClickContent isOwner={isOwner} album={data} />
         </ContextMenu.Root>
     );
-}
+};
 
 export default AlbumMediaItem;

@@ -21,13 +21,13 @@ export const ListItem = ({ image, name, href, classname }: Props) => {
       className={twMerge(`
         relative group flex items-center rounded-2xl overflow-hidden gap-x-4
         bg-white/10 backdrop-blur-[15px] border border-white/20
-        shadow-[0_4px_30px_rgba(31,38,135,0.3)]
-        hover:bg-white/20 hover:shadow-[0_6px_40px_rgba(128,90,213,0.4)]
+        shadow-[0_4px_30px_rgba(0,0,0,0.25)]
+        hover:bg-white/20 hover:shadow-[0_6px_40px_rgba(0,0,0,0.4)]
         transition-all duration-300
         pr-4
       `, classname)}
     >
-      <div className="relative w-[64px] h-[64px] rounded-xl overflow-hidden shadow-inner shadow-white/10">
+      <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-inner shadow-white/10">
         <img
           src={image}
           alt={name}
@@ -41,7 +41,7 @@ export const ListItem = ({ image, name, href, classname }: Props) => {
       <div className="
         absolute right-5 top-1/2 -translate-y-1/2
         flex items-center justify-center p-3 rounded-full
-        bg-purple-500 drop-shadow-lg
+        bg-white drop-shadow-lg
         opacity-0 group-hover:opacity-100
         transition-all duration-300
         hover:scale-110
@@ -49,7 +49,7 @@ export const ListItem = ({ image, name, href, classname }: Props) => {
         <FaPlay className="text-black" />
       </div>
 
-      <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-2xl" />
+      <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-full group-hover:before:animate-shine rounded-2xl" />
     </button>
   );
 };

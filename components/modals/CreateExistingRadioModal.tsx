@@ -5,7 +5,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 
 import { Modal } from "../modal";
@@ -137,7 +137,9 @@ const CreateExistingRadioModal = () => {
           placeholder="Radio Stream URL"
         />
         <div>
-          <div className="pb-1">Select an image</div>
+          <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+            Cover image
+          </div>
           <Input
             id="image"
             type="file"

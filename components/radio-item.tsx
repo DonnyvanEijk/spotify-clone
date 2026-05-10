@@ -5,8 +5,8 @@ import { Radio } from "@/types";
 import { twMerge } from "tailwind-merge";
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import { differenceInHours } from "date-fns";
-import PlayButton from "./playbutton";
-import { BiPauseCircle } from "react-icons/bi";
+import { LuPlay, LuPause } from "react-icons/lu";
+import { motion } from "framer-motion";
 
 interface RadioItemProps {
   data: Radio;
@@ -16,92 +16,93 @@ interface RadioItemProps {
 
 export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive }) => {
   const imagePath = useLoadImage(data);
-
-  if (!data) {
-    console.error("Data was not found for radios!");
-    return null;
-  }
+  if (!data) return null;
 
   const isNew = differenceInHours(new Date(), new Date(data.created_at)) <= 24;
+  const genres = data.genres?.split(/[,·]/).map(g => g.trim()).filter(Boolean) ?? [];
 
   const handleClick = () => {
-    // Stop all other audio (including music player)
     window.dispatchEvent(new Event("stopAllAudio"));
-
-    // Play this radio
     onPlay(data);
   };
 
   return (
     <ContextMenu.Root modal={false}>
-      <ContextMenu.Trigger>
+      <ContextMenu.Trigger asChild>
         <div
           onClick={handleClick}
           className={twMerge(
-            `
-            relative
-            group
-            flex
-            flex-col
-            items-center
-            justify-center
-            rounded-3xl
-            overflow-hidden
-            bg-white/10
-            backdrop-blur-[20px]
-            border border-white/20
-            shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-            transition-all duration-300
-            hover:scale-[1.05]
-            hover:shadow-[0_12px_48px_0_rgba(31,38,135,0.45)]
-            cursor-pointer
-            p-4
-            before:absolute before:inset-0 before:bg-gradient-to-tr before:from-white/10 before:via-white/5 before:to-white/10 before:opacity-0 group-hover:before:opacity-40 before:rounded-3xl
-          `,
-            isActive && "ring-2 ring-purple-500/70 shadow-purple-500/30 scale-[1.03]"
+            "group flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-all duration-200",
+            isActive
+              ? "bg-white/10 border-white/20"
+              : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
           )}
         >
-          {imagePath && (
-            <div className="relative w-full pt-[100%] rounded-2xl overflow-hidden shadow-inner shadow-white/10">
-              <img
-                src={imagePath}
-                alt={data.name}
-                onError={(e) => (e.currentTarget.src = "/images/fallback.png")}
-                className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl"
-              />
-              {isNew && (
-                <div className="absolute top-2 right-2">
-                  <img src="/images/New.png" width={75} height={75} alt="New Badge" />
+          {/* Thumbnail */}
+          <div className="relative shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-white/10">
+            <img
+              src={imagePath || "/images/fallback.png"}
+              alt={data.name}
+              onError={e => (e.currentTarget.src = "/images/fallback.png")}
+              className="w-full h-full object-cover"
+            />
+            {isActive && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <div className="flex items-end gap-0.5 h-3">
+                  {[0, 0.15, 0.3].map(delay => (
+                    <motion.div
+                      key={delay}
+                      className="w-0.5 rounded-full bg-white"
+                      animate={{ scaleY: [0.3, 1, 0.3] }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay }}
+                      style={{ originY: 1, height: "100%" }}
+                    />
+                  ))}
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className={twMerge("text-sm font-semibold truncate", isActive ? "text-white" : "text-neutral-200")}>
+                {data.name}
+              </p>
+              {isNew && (
+                <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-white uppercase tracking-wide">
+                  New
+                </span>
               )}
             </div>
-          )}
+            {genres.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                {genres.map((g, i) => (
+                  <span key={g} className="text-xs text-neutral-500">
+                    {g}{i < genres.length - 1 && <span className="ml-1.5">·</span>}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {isActive && (
-            <div className="absolute top-3 left-3">
-              <span className="px-2 py-1 rounded-full bg-purple-600 text-white text-xs font-semibold shadow-md animate-pulse">
-                Live
+          {/* Live indicator / play button */}
+          <div className="shrink-0 flex items-center gap-3">
+            {isActive && (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-red-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+                LIVE
               </span>
+            )}
+            <div className={twMerge(
+              "w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-200",
+              isActive
+                ? "bg-white text-black border-white"
+                : "bg-white/5 text-neutral-400 border-white/10 group-hover:bg-white group-hover:text-black group-hover:border-white"
+            )}>
+              {isActive ? <LuPause size={13} /> : <LuPlay size={13} className="ml-0.5" />}
             </div>
-          )}
-
-          <div className="flex flex-col items-start w-full pt-3 gap-y-1 text-left">
-            <p
-              className={twMerge(
-                "font-semibold text-sm truncate w-full",
-                isActive ? "text-purple-400" : "text-white"
-              )}
-            >
-              {data.name}
-            </p>
-            {data.genres && <p className="text-neutral-300 text-xs truncate">{data.genres}</p>}
           </div>
-
-          <div className="absolute bottom-24 right-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {isActive ? <BiPauseCircle size={45} className="text-purple-400" /> : <PlayButton />}
-          </div>
-
-          <div className="absolute inset-0 pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] group-hover:before:animate-shine rounded-3xl" />
         </div>
       </ContextMenu.Trigger>
     </ContextMenu.Root>

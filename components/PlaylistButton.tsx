@@ -3,7 +3,7 @@ import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useUser } from "@/hooks/useUser";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { useSessionContext } from "@/hooks/useSessionContext";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { MdPlaylistAdd, MdPlaylistAddCheck } from "react-icons/md";

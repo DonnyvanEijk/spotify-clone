@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-      domains: [
+      remotePatterns: [
         'misc.scdn.co',
         'i.scdn.co',
         'geo-media.beatsource.com',
@@ -9,8 +9,8 @@ const nextConfig = {
         'media.pitchfork.com',
         'seed-mix-image.spotifycdn.com',
         'odofdqdzdcexavpydvyh.supabase.co',
-        "adxjpnustqsioshftfqe.supabase.co"
-      ],
+        'adxjpnustqsioshftfqe.supabase.co',
+      ].map(hostname => ({ protocol: 'https', hostname })),
     },
   };
   

@@ -3,21 +3,31 @@
 import React, { useEffect, useState } from "react";
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import { HiChevronRight } from "react-icons/hi";
-import { FaTrashAlt } from "react-icons/fa";
-import { MdAccountCircle, MdOutlineModeEditOutline, MdPlaylistAdd, MdPlaylistAddCheck } from "react-icons/md";
 import { Song } from "@/types";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
-import { TbDownload, TbDownloadOff, TbMicrophone, TbShare3 } from "react-icons/tb";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
 import { useAddToPlaylistModal } from "@/hooks/useAddToPlaylistModal";
 import { useAuthModal } from "@/hooks/useAuthModal";
-import toast from "react-hot-toast";
-import { CiTextAlignCenter } from "react-icons/ci";
 import { useDeleteSong } from "@/hooks/useDeleteSongModal";
 import { useEditSongModal } from "@/hooks/useEditSongModal";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import {
+  TbDownload, TbDownloadOff, TbMicrophone, TbShare3,
+} from "react-icons/tb";
+import {
+  MdAccountCircle, MdOutlineModeEditOutline,
+  MdPlaylistAdd, MdPlaylistAddCheck,
+} from "react-icons/md";
+import { CiTextAlignCenter } from "react-icons/ci";
+import { HiOutlineTrash } from "react-icons/hi";
+
+const content = "min-w-[210px] overflow-hidden rounded-xl p-1.5 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/50 flex flex-col z-50";
+const item = "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none data-[disabled]:opacity-35 data-[disabled]:pointer-events-none";
+const danger = "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-red-500/15 hover:text-red-300 outline-none select-none";
+const sep = "my-1 h-px bg-white/8 mx-2";
 
 interface SongRightClickContentProps {
   isOwner: boolean;
@@ -42,169 +52,155 @@ const SongRightClickContent: React.FC<SongRightClickContentProps> = ({ isOwner, 
   useEffect(() => {
     if (!user?.id) return;
 
-    const checkUserPlaylist = async () => {
-      const { data } = await supabaseClient
-        .from("playlists")
-        .select("id")
-        .eq("user_id", user.id);
+    // Explicitly typed { data } to any to resolve binding element implicit any error
+    supabaseClient
+      .from("playlists")
+      .select("id")
+      .eq("user_id", user.id)
+      .then(({ data }: any) => { 
+        if (data?.length) setUserHasPlaylist(true); 
+      });
 
-      if (data?.length) setUserHasPlaylist(true);
-    };
-
-    const fetchData = async () => {
-      const { data } = await supabaseClient
-        .from("playlist_songs")
-        .select("playlist_id")
-        .eq("song_id", song.id)
-        .eq("user_id", user.id);
-
-      if (data?.length) setIsInPlaylist(true);
-    };
-
-    checkUserPlaylist();
-    fetchData();
+    supabaseClient
+      .from("playlist_songs")
+      .select("playlist_id")
+      .eq("song_id", song.id)
+      .eq("user_id", user.id)
+      .then(({ data }: any) => { 
+        if (data?.length) setIsInPlaylist(true); 
+      });
   }, [song.id, supabaseClient, user?.id]);
 
-  const Icon = isInPlaylist ? MdPlaylistAddCheck : MdPlaylistAdd;
+  const PlaylistIcon = isInPlaylist ? MdPlaylistAddCheck : MdPlaylistAdd;
 
   const handleDownload = async () => {
-    const { data, error } = await supabaseClient.storage.from('songs').download(song.song_path);
-    if (error) return console.error('Download error:', error);
+    // Explicitly typed the result to bypass the loose client typing
+    const { data, error }: { data: any; error: any } = await supabaseClient
+      .storage
+      .from('songs')
+      .download(song.song_path);
+
+    if (error || !data) {
+      toast.error("Failed to download song");
+      return console.error('Download error:', error);
+    }
 
     const url = URL.createObjectURL(data);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = url; 
     a.download = `${song.title}.mp3`;
-    document.body.appendChild(a);
-    a.click();
+    document.body.appendChild(a); 
+    a.click(); 
     a.remove();
+    
+    // Revoke the URL to avoid memory leaks
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   const handleAddToPlaylist = () => {
     if (!user) return authModal.onOpen();
-    if (!userHasPlaylist) {
-      toast.error("You need to create a playlist first!");
-      return createPlaylistModal.onOpen();
+    if (!userHasPlaylist) { 
+      toast.error("Create a playlist first!"); 
+      return createPlaylistModal.onOpen(); 
     }
     addToPlaylistModal.onOpen(song.id);
   };
 
-  const handleDeleteSong = () => deleteSongModal.onOpen(song.id);
-  const handleEditSong = () => editSongModal.onOpen(song.id);
-  const handleAddLyrics = () => addLyricsModal.onOpen(song.id);
-
   const handleShare = async () => {
     if (!user) return authModal.onOpen();
-    const shareUrl = `https://don-beat.vercel.app?songId=${song.id}&sentId=${user.id}`;
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Song URL copied to your clipboard!");
-    } catch (err) {
-      toast.error("Failed to copy URL.");
-      console.error(err);
+      await navigator.clipboard.writeText(`https://don-beat.vercel.app?songId=${song.id}&sentId=${user.id}`);
+      toast.success("Link copied!");
+    } catch { 
+      toast.error("Failed to copy link."); 
     }
   };
 
   return (
     <ContextMenu.Portal>
-      <ContextMenu.Content
-        className="
-          min-w-[220px] overflow-hidden rounded-2xl p-2
-          bg-white/10 backdrop-blur-[18px]
-          border border-white/20
-          shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-          flex flex-col
-        "
-      >
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleDownload}
+      <ContextMenu.Content className={content}>
+        <ContextMenu.Item 
+          className={item} 
+          onClick={handleDownload} 
           disabled={!subscription}
         >
-          {subscription ? <TbDownload /> : <TbDownloadOff />}
-          {subscription ? "Download Song" : "Upgrade to pro to Download"}
+          {subscription ? <TbDownload size={15} /> : <TbDownloadOff size={15} />}
+          {subscription ? "Download" : "Pro required to download"}
         </ContextMenu.Item>
 
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleAddToPlaylist}
+        <ContextMenu.Item 
+          className={item} 
+          onClick={handleAddToPlaylist} 
           disabled={!user}
         >
-          <Icon /> {user ? "Add To Playlist" : "Login to add To Playlist"}
+          <PlaylistIcon size={15} />
+          {user ? "Add to playlist" : "Sign in to add to playlist"}
         </ContextMenu.Item>
 
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={() => router.push(`/lyrics/${song.id}`)}
+        <ContextMenu.Item 
+          className={item} 
+          onClick={() => router.push(`/lyrics/${song.id}`)} 
           disabled={!user}
         >
-          <TbMicrophone /> View Lyrics
+          <TbMicrophone size={15} /> View lyrics
         </ContextMenu.Item>
 
-        <ContextMenu.Item
-          className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-          onClick={handleShare}
+        <ContextMenu.Item 
+          className={item} 
+          onClick={handleShare} 
           disabled={!user}
         >
-          <TbShare3 /> Share
+          <TbShare3 size={15} /> Share
         </ContextMenu.Item>
 
         {user_id && (
-          <ContextMenu.Item
-            className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
+          <ContextMenu.Item 
+            className={item} 
             onClick={() => router.push(`/users/${user_id}`)}
-            disabled={!user}
           >
-            <MdAccountCircle /> Go to uploader
+            <MdAccountCircle size={15} /> Go to uploader
           </ContextMenu.Item>
         )}
 
         {isOwner && (
           <>
-            <ContextMenu.Separator className="my-2 h-px bg-white/20" />
+            <ContextMenu.Separator className={sep} />
 
             <ContextMenu.Sub>
-              <ContextMenu.SubTrigger className="group relative flex items-center justify-between rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white">
-                <div className="flex items-center gap-2">
-                  <MdOutlineModeEditOutline /> Edit Song
-                </div>
-                <HiChevronRight />
+              <ContextMenu.SubTrigger className={`${item} justify-between`}>
+                <span className="flex items-center gap-2.5">
+                  <MdOutlineModeEditOutline size={15} /> Edit
+                </span>
+                <HiChevronRight size={13} className="text-neutral-500" />
               </ContextMenu.SubTrigger>
-
               <ContextMenu.Portal>
-                <ContextMenu.SubContent
-                  className="
-                    min-w-[200px] overflow-hidden rounded-2xl p-2
-                    bg-white/10 backdrop-blur-[18px]
-                    border border-white/20
-                    shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-                    flex flex-col
-                  "
-                  sideOffset={2}
-                  alignOffset={-5}
+                <ContextMenu.SubContent 
+                  className={content} 
+                  sideOffset={4} 
+                  alignOffset={-4}
                 >
-                  <ContextMenu.Item
-                    className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-                    onClick={handleEditSong}
+                  <ContextMenu.Item 
+                    className={item} 
+                    onClick={() => editSongModal.onOpen(song.id)}
                   >
-                    <MdOutlineModeEditOutline /> Edit Song
+                    <MdOutlineModeEditOutline size={15} /> Edit song
                   </ContextMenu.Item>
-                  <ContextMenu.Separator className="my-2 h-px bg-white/20" />
-                  <ContextMenu.Item
-                    className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-white/10 hover:text-white"
-                    onClick={handleAddLyrics}
+                  <ContextMenu.Separator className={sep} />
+                  <ContextMenu.Item 
+                    className={item} 
+                    onClick={() => addLyricsModal.onOpen(song.id)}
                   >
-                    <CiTextAlignCenter /> Edit Lyrics
+                    <CiTextAlignCenter size={15} /> Edit lyrics
                   </ContextMenu.Item>
                 </ContextMenu.SubContent>
               </ContextMenu.Portal>
             </ContextMenu.Sub>
 
-            <ContextMenu.Item
-              className="group relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-purple-200 cursor-pointer transition-colors hover:bg-red-600 hover:text-white"
-              onClick={handleDeleteSong}
+            <ContextMenu.Item 
+              className={danger} 
+              onClick={() => deleteSongModal.onOpen(song.id)}
             >
-              <FaTrashAlt /> Delete Song
+              <HiOutlineTrash size={15} /> Delete song
             </ContextMenu.Item>
           </>
         )}

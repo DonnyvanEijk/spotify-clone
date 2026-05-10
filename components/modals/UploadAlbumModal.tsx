@@ -9,7 +9,7 @@ import {Input} from "../input";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import { useUploadAlbumModal } from "@/hooks/useUploadAlbumModal";

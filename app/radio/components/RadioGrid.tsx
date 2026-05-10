@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { Radio } from "@/types";
-import { RadioVolumeSlider } from "./RadioVolumeSlider";
 import { RadioItem } from "@/components/radio-item";
+import { AnimatePresence, motion } from "framer-motion";
+import NowPlayingHero from "./NowPlayingHero";
 
 interface RadioGridProps {
   radios: Radio[];
@@ -11,6 +12,7 @@ interface RadioGridProps {
 
 const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
   const [currentRadio, setCurrentRadio] = useState<Radio | null>(null);
+  const [activeGenre, setActiveGenre] = useState<string>("All");
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window !== "undefined") {
@@ -20,44 +22,86 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
     return 0.5;
   });
 
-  // Sync audio volume whenever it changes
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    if (audioRef.current) audioRef.current.volume = volume;
     localStorage.setItem("radio-volume", volume.toString());
   }, [volume]);
 
+  const genres = useMemo(() => {
+    const all = radios.flatMap(r => r.genres?.split(/[,·]/).map(g => g.trim()).filter(Boolean) ?? []);
+    return ["All", ...Array.from(new Set(all))];
+  }, [radios]);
+
+  const filtered = useMemo(() => {
+    if (activeGenre === "All") return radios;
+    return radios.filter(r => r.genres?.toLowerCase().includes(activeGenre.toLowerCase()));
+  }, [radios, activeGenre]);
+
   const handlePlay = (radio: Radio) => {
     if (!radio.radio_path) return;
-
-    // If clicking the same station, pause it
     if (currentRadio?.id === radio.id) {
       audioRef.current?.pause();
       setCurrentRadio(null);
       return;
     }
-
     setCurrentRadio(radio);
     if (audioRef.current) {
       audioRef.current.src = radio.radio_path;
-      audioRef.current.play().catch((err) => console.error(err));
+      audioRef.current.play().catch(console.error);
     }
   };
 
+  const handleStop = () => {
+    audioRef.current?.pause();
+    setCurrentRadio(null);
+  };
+
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <audio ref={audioRef} autoPlay hidden />
 
-  <div className="w-full max-w-xs p-4 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] mb-10">
-  <h3 className="text-white font-semibold text-sm mb-2">Volume</h3>
-  <RadioVolumeSlider onVolumeChange={setVolume} />
-</div>
+      {/* Now Playing Hero */}
+      <AnimatePresence>
+        {currentRadio && (
+          <motion.div
+            key={currentRadio.id}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <NowPlayingHero
+              radio={currentRadio}
+              onStop={handleStop}
+              onVolumeChange={setVolume}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Genre filter carousel */}
+      <div className="relative">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          {genres.map(genre => (
+            <button
+              key={genre}
+              onClick={() => setActiveGenre(genre)}
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+                activeGenre === genre
+                  ? "bg-white text-black border-white"
+                  : "bg-white/5 text-neutral-400 border-white/10 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {genre}
+            </button>
+          ))}
+        </div>
+        <div className="absolute right-0 top-0 bottom-1 w-12 bg-linear-to-l from-black to-transparent pointer-events-none" />
+      </div>
 
-      {/* Grid of radios */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        {radios.map((radio) => (
+      {/* Station list */}
+      <div className="flex flex-col gap-2">
+        {filtered.map(radio => (
           <RadioItem
             key={radio.id}
             data={radio}

@@ -10,7 +10,7 @@ import {Input} from "../input";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import SearchSelect from "../SearchSelect";
@@ -233,20 +233,20 @@ const UploadModal = () => {
                     {...register('is_private')}
                 />
                 <div>
-                    <div className="pb-1">
-                        Select a song file
+                    <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                        Song file
                     </div>
                     <Input
                         id="song"
                         type="file"
                         disabled={isLoading}
-                        accept=".mp3" // change to audio/* if want to
+                        accept=".mp3"
                         {...register('song', { required: true })}
                     />
                 </div>
                 <div>
-                    <div className="pb-1">
-                        Select an image
+                    <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                        Cover image
                     </div>
                     <Input
                         id="image"
@@ -256,19 +256,19 @@ const UploadModal = () => {
                         {...register('image', { required: true })}
                     />
                 </div>
-                 <div>
-        <div className="pb-1">
-            Add lyrics (optional)
-        </div>
-        <textarea
-            id="lyrics"
-            disabled={isLoading}
-            {...register('lyrics')}
-            placeholder="Song Lyrics"
-            className="w-full p-2 rounded bg-neutral-800 text-white"
-            rows={5}
-        />
-    </div>
+                <div>
+                    <div className="pb-1.5 text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                        Lyrics <span className="normal-case text-neutral-600">(optional)</span>
+                    </div>
+                    <textarea
+                        id="lyrics"
+                        disabled={isLoading}
+                        {...register('lyrics')}
+                        placeholder="Paste lyrics here..."
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/25 focus:bg-white/8 transition-colors duration-150 resize-none disabled:opacity-50"
+                        rows={4}
+                    />
+                </div>
                 <Button disabled={isLoading} type="submit">
                     Create Song
                 </Button>

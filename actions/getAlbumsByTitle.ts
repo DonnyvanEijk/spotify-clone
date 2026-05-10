@@ -1,40 +1,29 @@
 import { Album } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import getAlbums from "./getAlbums";
 
 const getAlbumsByTitle = async (title: string): Promise<Album[]> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  if (!title) {
+    return getAlbums();
+  }
 
-    if (!title)
-    {
-        const allAlbums = await getAlbums();
-        return allAlbums;
-    }
+  const supabase = await createClient();
 
-    const { data, error } = await supabase
+  const { data, error } = await supabase
     .from('albums')
     .select('*')
     .like('name', `%${title}%`)
     .order('created_at', { ascending: false });
 
-    if (error) {
-        console.error(error);
-    }
+  if (error) {
+    console.error(error);
+  }
 
-    if (!data) {
-        return [];
-    }
+  if (!data) {
+    return [];
+  }
 
-    const remappedData = data.map((album: any) => ({
-        ...album,
-        image_path: album.image_path,
-      
-    }));
-
-    return remappedData;
-}
+  return data.map((album: any) => ({ ...album, image_path: album.image_path }));
+};
 
 export default getAlbumsByTitle;

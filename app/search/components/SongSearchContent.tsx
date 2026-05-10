@@ -17,40 +17,24 @@ export const SongSearchContent = ({ songs, userId }: Props) => {
   const { activeId } = usePlayer();
 
   if (songs.length === 0) {
-    return (
-      <div className="flex flex-col gap-y-2 w-full px-6 text-neutral-400">
-        No songs found.
-      </div>
-    );
+    return <p className="text-neutral-400 px-2">No songs found.</p>;
   }
 
   return (
-    <div className="flex flex-col  w-full px-6 py-4">
+    <div className="flex flex-col gap-y-4 w-full">
       {songs.map((song) => (
-        <div
-          key={song.id}
-          className="
-            flex items-center gap-x-4 w-full
-            border-white/20
-            rounded-xl
-            p-3
-            transition-all duration-300
-            scale-1.2
-
-          "
-        >
-          <div className="flex-1 truncate">
+        <div key={song.id} className="flex items-center gap-x-8 group w-full">
+          <div className="flex-1">
             <MediaItem
-            className=" bg-white/10 hover:bg-white/20 hover:border-white-40 hover:scale-1 h-24"
               isOwner={song.user_id === userId}
               onClick={(id: string) => onPlay(id)}
               data={song}
               reactive={activeId === song.id}
               hasAlbumName
+              className="transition-transform duration-300 group-hover:scale-[1.02]"
             />
           </div>
-
-          <div className="flex items-center gap-x-2">
+          <div className="flex items-center gap-x-2 shrink-0">
             <PlaylistButton songId={song.id} />
             <LikeButton songId={song.id} creatorId={song.user_id} />
           </div>

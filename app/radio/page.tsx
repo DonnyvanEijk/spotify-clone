@@ -13,21 +13,19 @@ const RadioPage = async () => {
   const radios = await getRadios();
 
   return (
-    <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
+    <div className="h-full w-full overflow-hidden overflow-y-auto">
       <Header image={avatarImage || ""}>
-        <div className="mt-10 px-6 md:px-12">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-            <h1 className="text-white text-3xl font-semibold text-center sm:text-left">
-              Radio stations
-            </h1>
+        <div className="mt-20 px-6 md:px-12">
+          <p className="text-neutral-400 text-sm font-medium uppercase tracking-widest mb-1">Broadcast</p>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-white text-3xl font-bold">Radio</h1>
             <CreateExistingRadioButton />
           </div>
+          <p className="text-neutral-400 text-sm mt-1">{radios.length} {radios.length === 1 ? "station" : "stations"} available</p>
         </div>
       </Header>
 
-   
-
-      <div className="ml-20">
+      <div className="px-6 md:px-12 mt-6 pb-24">
         <RadioGrid radios={radios} />
       </div>
     </div>

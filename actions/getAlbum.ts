@@ -1,47 +1,32 @@
 import { Album } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 const getAlbum = async (id: string): Promise<Album> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const {
-        data: {
-            session
-        }
-    } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-        .from('albums')
-        .select('*')
-        .eq('id', id)
-        .order('created_at', { ascending: false })
-        .single();
+  const { data, error } = await supabase
+    .from('albums')
+    .select('*')
+    .eq('id', id)
+    .order('created_at', { ascending: false })
+    .single();
 
-    if (error) {
-        console.error(error);
-    }
+  if (error) {
+    console.error(error);
+  }
 
-    if (!data) {
-        throw new Error("Album not found.");
-        // throw new Error("You do not have access to this playlist.");
-        // toast.error("You do not have access to this playlist.");
-    }
+  if (!data) {
+    throw new Error("Album not found.");
+  }
 
-    if (data.user_id !== session?.user.id && !data.ispublic) {
-        redirect('/');
-    }
+  if (data.user_id !== user?.id && !data.ispublic) {
+    redirect('/');
+  }
 
-    const remappedData = {
-        ...data,
-        image_path: data.image_path,
-    };
-   
-
-    return remappedData;
-}
+  return { ...data, image_path: data.image_path };
+};
 
 export default getAlbum;

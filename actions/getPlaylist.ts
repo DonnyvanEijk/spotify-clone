@@ -1,40 +1,34 @@
 import { Playlist } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import toast from "react-hot-toast";
 
 const getPlaylist = async (id: string): Promise<Playlist> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const {
-        data: {
-            session
-        }
-    } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-        .from('playlists')
-        .select('*')
-        .eq('id', id)
-        .order('created_at', { ascending: false })
-        .single();
+  const { data, error } = await supabase
+    .from('playlists')
+    .select('*')
+    .eq('id', id)
+    .order('created_at', { ascending: false })
+    .single();
 
-    if (error) {
-        console.error(error);
-    }
-    if(!data) {
-       throw new Error('Playlist not found');
-    }
+  if (error) {
+    console.error(error);
+  }
 
-    if (data.user_id !== session?.user.id && !data.is_public) {
-        toast.error("You need to be authenticated to access playlists");
-        return redirect('/');
-    }
+  if (!data) {
+    throw new Error('Playlist not found');
+  }
 
-    return (data as any) || [];
-}
+  if (data.user_id !== user?.id && !data.is_public) {
+    toast.error("You need to be authenticated to access playlists");
+    return redirect('/');
+  }
+
+  return (data as any) || [];
+};
 
 export default getPlaylist;

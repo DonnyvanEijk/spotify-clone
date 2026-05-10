@@ -9,7 +9,7 @@ import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import TextArea from "../TextArea";
 import { useAddLyricsModal } from "@/hooks/useAddLyricsModal";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import getSongsLyricsById from "@/actions/getSongLyricsById";
 
 const AddLyricsModal = () => {

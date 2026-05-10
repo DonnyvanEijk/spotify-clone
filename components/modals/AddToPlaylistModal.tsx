@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import CheckBox from "../CheckBox";
 import { Playlist } from "@/types";
@@ -115,8 +115,9 @@ const AddToPlaylistModal = () => {
                 return;
             }
 
-            const existingPlaylistIds = new Set(existingEntries.map(entry => entry.playlist_id));
-
+            const existingPlaylistIds = new Set(
+                existingEntries.map((entry: { playlist_id: string }) => entry.playlist_id)
+            );
             const playlistsToInsert = selectedPlaylists.filter(playlistId => !existingPlaylistIds.has(playlistId));
 
             if (playlistsToInsert.length === 0) {

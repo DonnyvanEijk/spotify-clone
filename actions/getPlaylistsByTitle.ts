@@ -1,33 +1,27 @@
 import { Playlist } from "@/types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import getPlaylists from "./getPlaylists";
 import getPublicPlaylists from "./getPublicPlaylists";
 
 const getPlaylistsByTitle = async (title: string): Promise<Playlist[]> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  if (!title) {
+    const [own, pub] = await Promise.all([getPlaylists(), getPublicPlaylists()]);
+    return own.concat(pub.filter(p2 => !own.some(p1 => p1.id === p2.id)));
+  }
 
-    if (!title)
-    {
-        const allPlaylists1 = await getPlaylists();
-        const allPlaylists2 = await getPublicPlaylists();
-        const allPlaylists = allPlaylists1.concat(allPlaylists2.filter(p2 => !allPlaylists1.some(p1 => p1.id === p2.id)));
-        return allPlaylists;
-    }
+  const supabase = await createClient();
 
-    const { data, error } = await supabase
+  const { data, error } = await supabase
     .from('playlists')
     .select('*')
     .like('name', `%${title}%`)
     .order('created_at', { ascending: false });
 
-    if (error) {
-        console.error(error);
-    }
+  if (error) {
+    console.error(error);
+  }
 
-    return (data as any) || [];
-}
+  return (data as any) || [];
+};
 
 export default getPlaylistsByTitle;

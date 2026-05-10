@@ -13,11 +13,12 @@ import { useEditPlaylistModal } from "@/hooks/useEditPlaylistModal";
 import { useSubscribeModal } from "@/hooks/useSubscribeModal";
 import JSZip from "jszip";
 import toast from "react-hot-toast";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { TbDownload, TbDownloadOff } from "react-icons/tb";
 import { RiPlayListFill } from "react-icons/ri";
 import { MdOutlineModeEditOutline, MdPlaylistAdd } from "react-icons/md";
+import { Song } from "@/types";
 
 interface PlaylistPopoverProps {
     playlistId: string;
@@ -35,85 +36,74 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
     const { user, subscription } = useUser();
 
     const handleDeletePlaylist = async () => {
-        console.log("Delete Playlist");
         deletePlaylistModal.onOpen(playlistId);
     }
 
     const handleDownload = async () => {
-        const { data: playlistData, error: playlistError } = await supabaseClient
+        if (!subscription) {
+            toast.error("Upgrade to pro to download");
+            return;
+        }
+
+        const { data: playlistData, error: playlistError } = await (supabaseClient
             .from('playlists')
             .select('*')
             .eq('id', playlistId)
-            .single();
+            .single() as any);
 
-        if (playlistError) {
-            console.error('Error fetching playlist:', playlistError);
+        if (playlistError || !playlistData) {
             toast.error('Error fetching playlist');
             return;
         }
 
-        const { data: PsData, error: PsError } = await supabaseClient
+        const { data: PsData, error: PsError } = await (supabaseClient
             .from('playlist_songs')
             .select('song_id')
-            .eq('playlist_id', playlistId);
+            .eq('playlist_id', playlistId) as any);
 
-        if (PsError) {
-            console.error('Error fetching playlist songs:', PsError);
+        if (PsError || !PsData) {
             toast.error('Error fetching playlist songs');
             return;
         }
 
-        const songIds = PsData.map((song) => song.song_id);
+        // Explicitly type 'song' and convert to number for the songs table query
+        const numericSongIds = PsData.map((song: { song_id: any }) => Number(song.song_id));
 
         const { data: SData, error: SError } = await supabaseClient
             .from('songs')
             .select('*')
-            .in('id', songIds);
+            .in('id', numericSongIds);
 
-        if (SError) {
-            console.error('Error fetching songs:', SError);
+        if (SError || !SData) {
             toast.error('Error fetching songs');
             return;
         }
 
-        const songs = SData.map((song) => song);
+        // Use your Song interface for the zip loop
+        const songs = SData as unknown as Song[];
 
         const zip = new JSZip();
         const folder = zip.folder(playlistData.name);
 
         if (playlistData.image_path) {
-            const { data: imageData, error: imageError } = await supabaseClient.storage.from('images').download(playlistData.image_path);
+            const { data: imageData, error: imageError } = await supabaseClient.storage
+                .from('images')
+                .download(playlistData.image_path);
 
-            if (imageError) {
-                console.error('Error downloading playlist image:', imageError);
-                toast.error('Error downloading playlist image');
-                return;
-            }
-
-            if (folder) {
+            if (!imageError && imageData && folder) {
                 folder.file(`${playlistData.name}.png`, imageData);
-            } else {
-                console.error('Folder is null');
-                toast.error('Folder is not available');
-                return;
             }
         }
 
         for (const song of songs) {
-            const { data, error } = await supabaseClient.storage.from('songs').download(song.song_path);
+            if (!song.song_path) continue;
+            
+            const { data, error } = await supabaseClient.storage
+                .from('songs')
+                .download(song.song_path);
 
-            if (error) {
-                console.error('Error downloading file:', error);
-                toast.error('Error downloading file');
-                return;
-            }
-
-            if (folder) {
+            if (!error && data && folder) {
                 folder.file(`${song.title}.mp3`, data);
-            } else {
-                console.error('Folder is null');
-                toast.error('Folder is not available');
-                return;
             }
         }
 
@@ -125,49 +115,37 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
         document.body.appendChild(a);
         a.click();
         a.remove();
+        URL.revokeObjectURL(url);
         toast.success('Playlist downloaded successfully');
     }
 
     const handleClonePlaylist = async () => {
-        if (!user) {
-            authModal.onOpen();
-            return;
-        }
+        if (!user) return authModal.onOpen();
+        if (!subscription) return subscribeModal.onOpen();
 
-        if (!subscription) {
-            subscribeModal.onOpen();
-            return;
-        }
-
-        const { data, error } = await supabaseClient
+        const { data, error } = await (supabaseClient
             .from('playlist_songs')
             .select('song_id')
-            .eq('playlist_id', playlistId);
+            .eq('playlist_id', playlistId) as any);
 
-        if (error) {
-            console.error('Error fetching playlist songs:', error);
-            return;
-        }
+        if (error || !data) return;
 
-        const songIds = data.map((song) => song.song_id);
-
-        clonePlaylistModal.onOpen(songIds, playlistId);
+        // Convert to strings for the modal
+        const stringSongIds = data.map((song: { song_id: any }) => String(song.song_id));
+        clonePlaylistModal.onOpen(stringSongIds, playlistId);
     }
 
     const handleBatchAddToPlaylist = async () => {
-        const { data, error } = await supabaseClient
+        const { data, error } = await (supabaseClient
             .from('playlist_songs')
             .select('song_id')
-            .eq('playlist_id', playlistId);
+            .eq('playlist_id', playlistId) as any);
 
-        if (error) {
-            console.error('Error fetching playlist songs:', error);
-            return;
-        }
+        if (error || !data) return;
 
-        const songIds = data.map((song) => song.song_id);
-
-        batchAddToPlaylistModal.onOpen(songIds, playlistId);
+        // Convert to strings for the modal
+        const stringSongIds = data.map((song: { song_id: any }) => String(song.song_id));
+        batchAddToPlaylistModal.onOpen(stringSongIds, playlistId);
     }
 
     const handleEditPlaylist = async () => {
@@ -177,49 +155,52 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
     return (
       <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <button className="flex justify-center items-center">
+                <button className="flex justify-center items-center focus:outline-none">
                     <FaEllipsisH className="text-neutral-400 hover:text-white transition" size={24} />
                 </button>
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                    className="bg-neutral-900 rounded-xl p-2 shadow-lg min-w-[220px] space-y-1 animate-slide-up-fade"
+                    className="bg-neutral-900/95 backdrop-blur-md rounded-xl p-2 shadow-lg min-w-[220px] space-y-1 z-[100]"
+                    sideOffset={5}
                 >
                     {isOwner && (
                         <>
                             <DropdownMenu.Item
-                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
+                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-red-400 hover:bg-red-500/10 hover:text-red-300 transition outline-none"
                                 onClick={handleDeletePlaylist}
                             >
                                 Delete <HiOutlineTrash size={18} />
                             </DropdownMenu.Item>
                             <DropdownMenu.Item
-                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition"
+                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition outline-none"
                                 onClick={handleEditPlaylist}
                             >
                                 Edit <MdOutlineModeEditOutline size={18} />
                             </DropdownMenu.Item>
+                            <div className="h-px bg-white/10 my-1" />
                         </>
                     )}
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-green-400 hover:bg-green-500/20 hover:text-green-300 transition"
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-green-400 hover:bg-green-500/10 hover:text-green-300 transition outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleDownload}
                         disabled={!subscription}
                     >
-                        {subscription ? "Download" : "Upgrade to Pro"} {subscription ? <TbDownload size={18} /> : <TbDownloadOff size={18} />}
+                        <span>{subscription ? "Download" : "Upgrade to Pro"}</span>
+                        {subscription ? <TbDownload size={18} /> : <TbDownloadOff size={18} />}
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition"
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-purple-400 hover:bg-white/5 hover:text-white transition outline-none"
                         onClick={handleBatchAddToPlaylist}
                     >
                         Add to Playlist <MdPlaylistAdd size={18} />
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300 transition"
+                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 transition outline-none"
                         onClick={handleClonePlaylist}
                     >
                         Clone <RiPlayListFill size={18} />

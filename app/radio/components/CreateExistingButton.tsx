@@ -22,7 +22,7 @@ export const CreateExistingRadioButton = () => {
   return (
     <Button
       onClick={handleClick}
-      className="text-white w-full sm:w-auto px-6 py-2"
+      className=" w-full sm:w-auto px-6 py-2"
     >
       Create Existing Radio
     </Button>

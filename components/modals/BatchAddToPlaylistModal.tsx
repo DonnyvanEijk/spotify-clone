@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {Button} from "../button";
 import toast from "react-hot-toast";
 import { useUser } from "@/hooks/useUser";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useRouter } from "next/navigation";
 import { Playlist } from "@/types";
 import { useCreatePlaylistModal } from "@/hooks/useCreatePlaylistModal";
@@ -75,7 +75,7 @@ const BatchAddToPlaylistModal = () => {
                 return;
             }
 
-            const existingSongIds = existingPlaylistSongs.map(playlistSong => playlistSong.song_id);
+            const existingSongIds = existingPlaylistSongs.map((playlistSong: { song_id: any }) => playlistSong.song_id);
 
             const filteredSongId = songId.filter(songId => !existingSongIds.includes(songId));
             
@@ -111,20 +111,20 @@ const BatchAddToPlaylistModal = () => {
             isOpen={batchAddToPlaylistModal.isOpen}
             onChange={onChange}
         >
-            <form className="flex flex-col gap-y-4">
+            <div className="flex flex-col gap-2">
                 {playlists
                     .filter(playlist => playlist.id !== selectedPlaylistId)
                     .map(playlist => (
-                        <Button
+                        <button
                             key={playlist.id}
                             onClick={() => onSubmit(playlist.id)}
                             disabled={isLoading}
-                            className="bg-neutral-400"
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-neutral-300 hover:bg-white/10 hover:text-white transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-left"
                         >
-                            Add all songs to playlist: {playlist.name}
-                        </Button>
+                            {playlist.name}
+                        </button>
                     ))}
-            </form>
+            </div>
         </Modal>
     );
 };

@@ -1,22 +1,19 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 const getFollowerAmount = async (user_id: string): Promise<number> => {
-    const supabase = createServerComponentClient({
-        cookies: cookies
-    });
+  const supabase = await createClient();
 
-    const { count, error } = await supabase
-        .from('followers')
-        .select('id', { count: 'exact' }) // Use 'exact' to get the count
-        .eq('followed_id', user_id);
+  const { count, error } = await supabase
+    .from('followers')
+    .select('id', { count: 'exact' })
+    .eq('followed_id', user_id);
 
-    if (error) {
-        console.error(error);
-        return 0; // Return 0 in case of an error
-    }
+  if (error) {
+    console.error(error);
+    return 0;
+  }
 
-    return count || 0; // Return the count or 0 if undefined
-}
+  return count || 0;
+};
 
 export default getFollowerAmount;
