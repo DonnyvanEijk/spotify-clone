@@ -75,6 +75,7 @@ const PlaylistPage = async ({ params }: Props) => {
           PlaylistId={playlistId}
           isOwner={isOwner}
           userId={user?.id}
+          hasCustomOrder={!!playlist.custom_order}
         />
       </div>
 

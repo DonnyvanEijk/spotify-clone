@@ -17,8 +17,9 @@ import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { TbDownload, TbDownloadOff } from "react-icons/tb";
 import { RiPlayListFill } from "react-icons/ri";
-import { MdOutlineModeEditOutline, MdPlaylistAdd } from "react-icons/md";
+import { MdOutlineModeEditOutline, MdPlaylistAdd, MdDragIndicator } from "react-icons/md";
 import { Song } from "@/types";
+import useReorderMode from "@/hooks/useReorderMode";
 
 interface PlaylistPopoverProps {
     playlistId: string;
@@ -33,6 +34,7 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
     const deletePlaylistModal = useDeletePlaylist();
     const batchAddToPlaylistModal = useBatchAddToPlaylistModal();
     const clonePlaylistModal = useClonePlaylistModal();
+    const reorderMode = useReorderMode();
     const { user, subscription } = useUser();
 
     const handleDeletePlaylist = async () => {
@@ -162,48 +164,54 @@ const PlaylistPopover: React.FC<PlaylistPopoverProps> = ({ playlistId, isOwner }
 
             <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                    className="bg-neutral-900/95 backdrop-blur-md rounded-xl p-2 shadow-lg min-w-[220px] space-y-1 z-[100]"
+                    className="min-w-52.5 overflow-hidden rounded-xl p-1.5 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/50 flex flex-col z-50"
                     sideOffset={5}
                 >
                     {isOwner && (
                         <>
                             <DropdownMenu.Item
-                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-red-400 hover:bg-red-500/10 hover:text-red-300 transition outline-none"
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-red-500/15 hover:text-red-300 outline-none select-none"
                                 onClick={handleDeletePlaylist}
                             >
-                                Delete <HiOutlineTrash size={18} />
+                                <HiOutlineTrash size={15} /> Delete
                             </DropdownMenu.Item>
                             <DropdownMenu.Item
-                                className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition outline-none"
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
                                 onClick={handleEditPlaylist}
                             >
-                                Edit <MdOutlineModeEditOutline size={18} />
+                                <MdOutlineModeEditOutline size={15} /> Edit
                             </DropdownMenu.Item>
-                            <div className="h-px bg-white/10 my-1" />
+                            <DropdownMenu.Item
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
+                                onClick={() => reorderMode.onOpen(playlistId, "playlist")}
+                            >
+                                <MdDragIndicator size={15} /> Adjust order
+                            </DropdownMenu.Item>
+                            <div className="my-1 h-px bg-white/8 mx-2" />
                         </>
                     )}
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-green-400 hover:bg-green-500/10 hover:text-green-300 transition outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none data-disabled:opacity-35 data-disabled:pointer-events-none"
                         onClick={handleDownload}
                         disabled={!subscription}
                     >
-                        <span>{subscription ? "Download" : "Upgrade to Pro"}</span>
-                        {subscription ? <TbDownload size={18} /> : <TbDownloadOff size={18} />}
+                        {subscription ? <TbDownload size={15} /> : <TbDownloadOff size={15} />}
+                        {subscription ? "Download" : "Upgrade to Pro"}
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-purple-400 hover:bg-white/5 hover:text-white transition outline-none"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
                         onClick={handleBatchAddToPlaylist}
                     >
-                        Add to Playlist <MdPlaylistAdd size={18} />
+                        <MdPlaylistAdd size={15} /> Add to Playlist
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item
-                        className="flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300 transition outline-none"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
                         onClick={handleClonePlaylist}
                     >
-                        Clone <RiPlayListFill size={18} />
+                        <RiPlayListFill size={15} /> Clone
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Portal>

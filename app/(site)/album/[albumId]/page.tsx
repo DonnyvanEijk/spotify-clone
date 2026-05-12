@@ -69,6 +69,7 @@ const AlbumPage = async ({ params }: Props) => {
           AlbumId={albumId}
           isOwner={isOwner}
           userId={user?.id}
+          hasCustomOrder={!!album.custom_order}
         />
       </div>
 

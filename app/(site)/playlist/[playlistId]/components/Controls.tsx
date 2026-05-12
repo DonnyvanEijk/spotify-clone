@@ -20,9 +20,7 @@ const ShuffleControl: React.FC<ShuffleControlProps> = ({ songs, isOwner, id }) =
         <div className="flex flex-row gap-x-3 ml-5 w-full items-center">
             <UsablePlayButton songs={sortedSongs} />
             <ShuffleButton size={30} />
-            {isOwner && (
-                <PlaylistPopover playlistId={id} />
-            )}
+            <PlaylistPopover playlistId={id} isOwner={isOwner} />
         </div>
     );
 }

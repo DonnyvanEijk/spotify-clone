@@ -12,8 +12,10 @@ import toast from "react-hot-toast";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { TbDownload, TbDownloadOff } from "react-icons/tb";
-import { MdOutlineModeEditOutline } from "react-icons/md";
+import { MdOutlineModeEditOutline, MdDragIndicator, MdPlaylistAdd } from "react-icons/md";
 import { Song } from "@/types"; // Importing your existing Song interface
+import useReorderMode from "@/hooks/useReorderMode";
+import { useBatchAddToPlaylistModal } from "@/hooks/useBatchAddToPlaylistModal";
 
 interface AlbumPopoverProps {
     albumId: string;
@@ -24,6 +26,8 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
     const supabaseClient = useSupabaseClient();
     const editAlbumModal = useEditAlbumModal();
     const deleteAlbumModal = useDeleteAlbumModal();
+    const reorderMode = useReorderMode();
+    const batchAddToPlaylistModal = useBatchAddToPlaylistModal();
     const { subscription } = useUser();
 
     const handleDeleteAlbum = async () => {
@@ -36,7 +40,6 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
             return;
         }
 
-        // Use 'as any' to bypass the strict table name check
         const { data: albumData, error: albumError } = await (supabaseClient
             .from('albums' as any)
             .select('*')
@@ -44,38 +47,21 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
             .single() as any);
 
         if (albumError || !albumData) {
-            console.error('Error fetching album:', albumError);
             toast.error('Error fetching album');
             return;
         }
 
-        const { data: PsData, error: PsError } = await (supabaseClient
-            .from('album_songs' as any)
-            .select('song_id')
-            .eq('album_id', albumId) as any);
-
-        if (PsError || !PsData) {
-            console.error('Error fetching album songs:', PsError);
-            toast.error('Error fetching album songs');
-            return;
-        }
-
-        // Ensure IDs are treated as numbers for the next query
-        const numericSongIds = PsData.map((song: any) => Number(song.song_id));
-
         const { data: SData, error: SError } = await supabaseClient
             .from('songs')
             .select('*')
-            .in('id', numericSongIds);
+            .eq('album_id', albumId);
 
         if (SError || !SData) {
-            console.error('Error fetching songs:', SError);
             toast.error('Error fetching songs');
             return;
         }
 
-        // Cast to your Song interface
-        const songs = (SData as unknown as Song[]);
+        const songs = SData as unknown as Song[];
 
         const zip = new JSZip();
         const folder = zip.folder(albumData.name);
@@ -118,6 +104,18 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
         editAlbumModal.onOpen(albumId);
     }
 
+    const handleBatchAddToPlaylist = async () => {
+        const { data, error } = await supabaseClient
+            .from('songs')
+            .select('id')
+            .eq('album_id', albumId);
+
+        if (error || !data) return;
+
+        const songIds = data.map((s: any) => String(s.id));
+        batchAddToPlaylistModal.onOpen(songIds, albumId);
+    }
+
     return (
         <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
@@ -129,28 +127,32 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
             <DropdownMenu.Portal>
                 <DropdownMenu.Content
                     sideOffset={5}
-                    className="
-                        min-w-55 rounded-2xl bg-neutral-800/90 backdrop-blur-md border border-white/10
-                        shadow-lg py-2 flex flex-col text-white z-100
-                    "
+                    className="min-w-52.5 overflow-hidden rounded-xl p-1.5 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/50 flex flex-col z-50"
                 >
                     {isOwner && (
                         <>
                             <DropdownMenu.Item
                                 onClick={handleDeleteAlbum}
-                                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none"
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-red-500/15 hover:text-red-300 outline-none select-none"
                             >
-                                Delete Album <HiOutlineTrash size={20} />
+                                <HiOutlineTrash size={15} /> Delete Album
                             </DropdownMenu.Item>
 
                             <DropdownMenu.Item
                                 onClick={handleEditAlbum}
-                                className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none"
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
                             >
-                                Edit Album <MdOutlineModeEditOutline size={20} />
+                                <MdOutlineModeEditOutline size={15} /> Edit Album
                             </DropdownMenu.Item>
 
-                            <div className="my-1 h-px bg-white/10" />
+                            <DropdownMenu.Item
+                                onClick={() => reorderMode.onOpen(albumId, "album")}
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
+                            >
+                                <MdDragIndicator size={15} /> Adjust order
+                            </DropdownMenu.Item>
+
+                            <div className="my-1 h-px bg-white/8 mx-2" />
                         </>
                     )}
 
@@ -159,18 +161,18 @@ const AlbumPopover: React.FC<AlbumPopoverProps> = ({ albumId, isOwner }) => {
                             if (!subscription) e.preventDefault();
                             handleDownload();
                         }}
-                        className="flex justify-between items-center px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer outline-none disabled:text-neutral-500"
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none data-disabled:opacity-35 data-disabled:pointer-events-none"
                         disabled={!subscription}
                     >
-                        {subscription ? (
-                            <>
-                                Download Album <TbDownload size={20} />
-                            </>
-                        ) : (
-                            <>
-                                Upgrade to Pro <TbDownloadOff size={20} />
-                            </>
-                        )}
+                        {subscription ? <TbDownload size={15} /> : <TbDownloadOff size={15} />}
+                        {subscription ? "Download Album" : "Upgrade to Pro"}
+                    </DropdownMenu.Item>
+
+                    <DropdownMenu.Item
+                        onClick={handleBatchAddToPlaylist}
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
+                    >
+                        <MdPlaylistAdd size={15} /> Add to Playlist
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Portal>

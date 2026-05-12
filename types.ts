@@ -85,6 +85,7 @@ export interface Playlist {
   description: string,
   image_path: string,
   is_public: boolean,
+  custom_order?: string[] | null,
 }
 export interface ProductWithPrice extends Product {
   prices?: Price[];
@@ -115,6 +116,7 @@ export interface Album {
   author: string;
   ispublic: boolean;
   image_path: string;
+  custom_order?: string[] | null;
 }
 
 export interface Followers {

@@ -5,6 +5,7 @@ import { Radio } from "@/types";
 import { RadioItem } from "@/components/radio-item";
 import { AnimatePresence, motion } from "framer-motion";
 import NowPlayingHero from "./NowPlayingHero";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 
 interface RadioGridProps {
   radios: Radio[];
@@ -13,6 +14,7 @@ interface RadioGridProps {
 const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
   const [currentRadio, setCurrentRadio] = useState<Radio | null>(null);
   const [activeGenre, setActiveGenre] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window !== "undefined") {
@@ -33,9 +35,12 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
   }, [radios]);
 
   const filtered = useMemo(() => {
-    if (activeGenre === "All") return radios;
-    return radios.filter(r => r.genres?.toLowerCase().includes(activeGenre.toLowerCase()));
-  }, [radios, activeGenre]);
+    return radios.filter(r => {
+      const matchesGenre = activeGenre === "All" || r.genres?.toLowerCase().includes(activeGenre.toLowerCase());
+      const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
+      return matchesGenre && matchesSearch;
+    });
+  }, [radios, activeGenre, searchQuery]);
 
   const handlePlay = (radio: Radio) => {
     if (!radio.radio_path) return;
@@ -79,6 +84,18 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
         )}
       </AnimatePresence>
 
+      {/* Search bar */}
+      <div className="relative flex items-center">
+        <HiMagnifyingGlass className="absolute left-3 text-neutral-500 pointer-events-none" size={16} />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search stations..."
+          className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-white/25 transition-colors"
+        />
+      </div>
+
       {/* Genre filter carousel */}
       <div className="relative">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -101,14 +118,18 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
 
       {/* Station list */}
       <div className="flex flex-col gap-2">
-        {filtered.map(radio => (
-          <RadioItem
-            key={radio.id}
-            data={radio}
-            onPlay={handlePlay}
-            isActive={currentRadio?.id === radio.id}
-          />
-        ))}
+        {filtered.length === 0 ? (
+          <p className="text-neutral-500 text-sm px-1 py-4">No stations match your search.</p>
+        ) : (
+          filtered.map(radio => (
+            <RadioItem
+              key={radio.id}
+              data={radio}
+              onPlay={handlePlay}
+              isActive={currentRadio?.id === radio.id}
+            />
+          ))
+        )}
       </div>
     </div>
   );
