@@ -10,6 +10,9 @@ import { PlayListList } from "@/components/users/playlists/Playlist-List";
 import { SongList } from "@/components/users/songs/SongList";
 import { getImage } from "@/lib/getImage";
 import { HiOutlineUsers } from "react-icons/hi";
+import { TbMicrophone } from "react-icons/tb";
+import Link from "next/link";
+import getSongsWithoutLyrics from "@/actions/getSongsWithoutLyrics";
 
 type Props = {
     params: Promise<{ id: string }>
@@ -44,6 +47,7 @@ const UserPage = async ({ params }: Props) => {
     const playlists = await getPlaylistsByUser(user.id as string);
     const isOwnProfile = currentUser?.id === user.id;
     const isFollowing = currentFollows.some(f => f.followed_id === id);
+    const lyriclessSongs = isOwnProfile ? await getSongsWithoutLyrics(user.id as string) : [];
 
     return (
         <div className="h-full w-full overflow-hidden overflow-y-auto">
@@ -82,6 +86,30 @@ const UserPage = async ({ params }: Props) => {
                         </div>
                     )}
                 </div>
+
+                {isOwnProfile && lyriclessSongs.length > 0 && (
+                  <Link
+                    href="/missing-lyrics"
+                    className="flex items-center justify-between gap-4 px-4 py-3 bg-white/5 hover:bg-white/8 border border-white/10 rounded-xl transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/15 flex items-center justify-center shrink-0">
+                        <TbMicrophone size={15} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">Missing Lyrics</p>
+                        <p className="text-xs text-neutral-500">
+                          {lyriclessSongs.length === 0
+                            ? "All songs have lyrics"
+                            : `${lyriclessSongs.length} ${lyriclessSongs.length === 1 ? "song" : "songs"} without lyrics`}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-neutral-500 group-hover:text-white transition-colors">
+                      Manage →
+                    </span>
+                  </Link>
+                )}
 
                 {/* Songs + Playlists */}
                 <div className="grid lg:grid-cols-2 gap-6">

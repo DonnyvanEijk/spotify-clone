@@ -11,18 +11,31 @@ import getAlbums from '@/actions/getAlbums';
 import { getUserById, getUsersIndex } from '@/actions/getUsers';
 import { getImage } from '@/lib/getImage';
 import Greeting from './components/Greeting';
+import { cookies } from 'next/headers';
+import getSongsWithoutLyrics from '@/actions/getSongsWithoutLyrics';
+import LyricsAlert from '@/components/LyricsAlert';
 
 export const revalidate = 0;
 
 export default async function Home() {
-  const songs = await getSongs();
-  const playlists = await getPlaylists();
-  const publicPlaylists = await getPublicPlaylists();
-  const user = await getUser();
-  const users = await getUsersIndex();
-  const albums = await getAlbums();
+  const cookieStore = await cookies();
+  const alertDismissed = cookieStore.has("lyrics-alert-dismissed");
+
+  const [songs, playlists, publicPlaylists, user, users, albums] = await Promise.all([
+    getSongs(),
+    getPlaylists(),
+    getPublicPlaylists(),
+    getUser(),
+    getUsersIndex(),
+    getAlbums(),
+  ]);
   const currentUserData = user?.id ? await getUserById(user.id) : null;
   const avatarImage = await getImage(currentUserData?.avatar_url || "");
+
+  const lyriclessCount =
+    !alertDismissed && user?.id
+      ? (await getSongsWithoutLyrics(user.id)).length
+      : 0;
 
   return (
     <div className="h-full w-full overflow-hidden overflow-y-auto ">
@@ -31,6 +44,12 @@ export default async function Home() {
           <Greeting username={currentUserData?.username} />
         </div>
       </Header>
+
+      {lyriclessCount > 0 && (
+        <div className="px-6 md:px-12 mt-4">
+          <LyricsAlert count={lyriclessCount} />
+        </div>
+      )}
 
       <div className="px-6 md:px-12 mt-8 flex flex-col gap-10 pb-24">
         <Section title="Newest Songs" href="/songs" linkText="See all">

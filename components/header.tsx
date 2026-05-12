@@ -9,8 +9,12 @@ import { useAuthModal } from "@/hooks/useAuthModal";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { FaUserAlt } from "react-icons/fa";
+import MissingLyricsMenuItem from "./MissingLyricsMenuItem";
+import { MdOutlineSettings } from "react-icons/md";
+import { HiOutlineUser, HiArrowRightOnRectangle } from "react-icons/hi2";
 import toast from "react-hot-toast";
 import usePlayer from "@/hooks/usePlayer";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 type Props = {
     children: React.ReactNode;
@@ -54,23 +58,54 @@ export const Header  = ({children, className, image}:Props) => {
             </div>
             <div className="flex justify-between items-center gap-x-4 ">
                 {user ? (
-                    <div className="flex gap-x-4 items-center">
-                        <Button onClick={handleLogout} className="bg-purple-600/80 text-white px-6 py-2 rounded-2xl shadow-md hover:bg-purple-600 transition">
-                            Logout
-                        </Button>
-                        {image ? (
-                            <img 
-                                src={image} 
-                                alt="Profile" 
-                                className="w-10 h-10 rounded-full object-cover cursor-pointer border border-white/20 shadow-md hover:scale-105 transition-transform" 
-                                onClick={() => router.push('/account')} 
-                            />
-                        ) : (
-                            <Button className="bg-white/20 backdrop-blur-md text-purple-400 px-4 py-2 rounded-full shadow hover:bg-white/30 transition" onClick={() => router.push('/account')}>
-                                <FaUserAlt/>
-                            </Button>
-                        )}
-                    </div>
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                            {image ? (
+                                <img
+                                    src={image}
+                                    alt="Profile"
+                                    className="w-10 h-10 rounded-full object-cover cursor-pointer border border-white/20 shadow-md hover:scale-105 transition-transform outline-none"
+                                />
+                            ) : (
+                                <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-purple-400 hover:bg-white/30 transition outline-none">
+                                    <FaUserAlt size={16} />
+                                </button>
+                            )}
+                        </DropdownMenu.Trigger>
+
+                        <DropdownMenu.Portal>
+                            <DropdownMenu.Content
+                                align="end"
+                                sideOffset={8}
+                                className="min-w-52 overflow-hidden rounded-xl p-1.5 bg-neutral-950/95 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/50 flex flex-col z-50"
+                            >
+                                <DropdownMenu.Item
+                                    onClick={() => router.push(`/users/${user.id}`)}
+                                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
+                                >
+                                    <HiOutlineUser size={15} /> View Profile
+                                </DropdownMenu.Item>
+
+                                <MissingLyricsMenuItem />
+
+                                <DropdownMenu.Item
+                                    onClick={() => router.push("/account")}
+                                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-white/8 hover:text-white outline-none select-none"
+                                >
+                                    <MdOutlineSettings size={15} /> Account Settings
+                                </DropdownMenu.Item>
+
+                                <div className="my-1 h-px bg-white/8 mx-2" />
+
+                                <DropdownMenu.Item
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-neutral-300 cursor-pointer transition-colors duration-100 hover:bg-red-500/15 hover:text-red-300 outline-none select-none"
+                                >
+                                    <HiArrowRightOnRectangle size={15} /> Log out
+                                </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
                 ): (
                     <>
                         <Button className="bg-purple-600/80 text-white px-6 py-2 rounded-2xl shadow-md hover:bg-purple-600 transition" onClick={authModal.onOpen}>
