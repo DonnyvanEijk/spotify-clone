@@ -11,9 +11,11 @@ import { SongSearchModal } from "./SongSearchModal";
 import { PresenceBadge } from "@/components/PresenceBadge";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { processShortcodes } from "@/utils/emojiShortcodes";
-import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle } from "react-icons/hi";
+import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply } from "react-icons/hi";
 import { HiFaceSmile } from "react-icons/hi2";
 import { format, isToday, isYesterday } from "date-fns";
+
+const MSG_SELECT = "id, conversation_id, sender_id, content, song_id, created_at, edited_at, is_deleted, reply_to_id, song:songs(id, title, author, image_path), reply_to:reply_to_id(id, sender_id, content, is_deleted)";
 
 interface Partner {
   id: string;
@@ -69,6 +71,8 @@ export function ChatWindow({ myId, partner }: Props) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showSongSearch, setShowSongSearch] = useState(false);
   const [partnerPresence, setPartnerPresence] = useState(partner.presence ?? "offline");
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -103,7 +107,7 @@ export function ChatWindow({ myId, partner }: Props) {
 
       const { data } = await supabase
         .from("messages")
-        .select("id, conversation_id, sender_id, content, song_id, created_at, song:songs(id, title, author, image_path)")
+        .select(MSG_SELECT)
         .eq("conversation_id", convId)
         .order("created_at", { ascending: true });
 
@@ -116,7 +120,7 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => { cancelled = true; };
   }, [myId, partner.id, supabase, markAsRead]);
 
-  // Realtime: new messages + partner presence + typing broadcast
+  // Realtime
   useEffect(() => {
     if (!conversationId) return;
 
@@ -127,10 +131,9 @@ export function ChatWindow({ myId, partner }: Props) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         async (payload: any) => {
-          // Fetch with song join
           const { data: msg } = await supabase
             .from("messages")
-            .select("id, conversation_id, sender_id, content, song_id, created_at, song:songs(id, title, author, image_path)")
+            .select(MSG_SELECT)
             .eq("id", payload.new.id)
             .single();
           if (msg) {
@@ -139,7 +142,21 @@ export function ChatWindow({ myId, partner }: Props) {
           }
         }
       )
-      // Deleted messages
+      // Edited / soft-deleted messages
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload: any) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === payload.new.id
+                ? { ...m, content: payload.new.content, edited_at: payload.new.edited_at, is_deleted: payload.new.is_deleted }
+                : m
+            )
+          );
+        }
+      )
+      // Hard-deleted messages (cron cleanup)
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
@@ -191,6 +208,19 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
+  // Escape cancels reply/edit
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setReplyTo(null);
+        setEditingMessage(null);
+        setInput("");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const broadcastTyping = useCallback(
     (isTyping: boolean) => {
       realtimeChannelRef.current?.send({
@@ -219,18 +249,28 @@ export function ChatWindow({ myId, partner }: Props) {
 
       const processed = content ? processShortcodes(content.trim()) : null;
 
-      await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        sender_id: myId,
-        content: processed || null,
-        song_id: songId || null,
-      });
+      if (editingMessage) {
+        await supabase
+          .from("messages")
+          .update({ content: processed, edited_at: new Date().toISOString() } as any)
+          .eq("id", editingMessage.id);
+        setEditingMessage(null);
+      } else {
+        await supabase.from("messages").insert({
+          conversation_id: conversationId,
+          sender_id: myId,
+          content: processed || null,
+          song_id: songId || null,
+          reply_to_id: replyTo?.id || null,
+        });
+        setReplyTo(null);
+      }
 
       setInput("");
       setSending(false);
       inputRef.current?.focus();
     },
-    [conversationId, myId, supabase, broadcastTyping]
+    [conversationId, myId, supabase, broadcastTyping, editingMessage, replyTo]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -243,6 +283,33 @@ export function ChatWindow({ myId, partner }: Props) {
   const handleSongSelect = async (song: Song) => {
     setShowSongSearch(false);
     await sendMessage(undefined, song.id);
+  };
+
+  const handleReply = useCallback((msg: Message) => {
+    setReplyTo(msg);
+    setEditingMessage(null);
+    inputRef.current?.focus();
+  }, []);
+
+  const handleEdit = useCallback((msg: Message) => {
+    setEditingMessage(msg);
+    setReplyTo(null);
+    setInput(msg.content || "");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+
+  const handleDelete = useCallback(async (msg: Message) => {
+    await supabase
+      .from("messages")
+      .update({ is_deleted: true } as any)
+      .eq("id", msg.id);
+  }, [supabase]);
+
+  const cancelAction = () => {
+    setReplyTo(null);
+    setEditingMessage(null);
+    setInput("");
+    inputRef.current?.focus();
   };
 
   const insertEmoji = (emoji: string) => {
@@ -270,6 +337,8 @@ export function ChatWindow({ myId, partner }: Props) {
     }
     grouped.push({ message: msg });
   }
+
+  const activeAction = replyTo ?? editingMessage;
 
   return (
     <div className={`flex flex-col overflow-hidden transition-all duration-300 ${player.activeId ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-1rem)]"}`}>
@@ -313,7 +382,7 @@ export function ChatWindow({ myId, partner }: Props) {
 
       {/* Message list */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 flex flex-col gap-1 pb-6">
-        {/* Empty state — first time chatting */}
+        {/* Empty state */}
         {!loadingMessages && messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-16 text-center">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/10">
@@ -350,6 +419,7 @@ export function ChatWindow({ myId, partner }: Props) {
               key={item.message.id}
               message={item.message}
               isMine={item.message.sender_id === myId}
+              myId={myId}
               showAvatar={
                 i === grouped.length - 1 ||
                 grouped[i + 1]?.message?.sender_id !== item.message.sender_id
@@ -362,6 +432,9 @@ export function ChatWindow({ myId, partner }: Props) {
               })()}
               avatarUrl={partnerAvatarUrl}
               senderName={partnerName}
+              onReply={handleReply}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ) : null
         )}
@@ -390,6 +463,36 @@ export function ChatWindow({ myId, partner }: Props) {
 
       {/* Input area */}
       <div className="shrink-0 px-4 pb-4 pt-2 border-t border-white/10">
+        {/* Reply / edit context bar */}
+        {activeAction && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl">
+            {editingMessage ? (
+              <HiOutlinePencil size={13} className="text-purple-400 shrink-0" />
+            ) : (
+              <HiReply size={13} className="text-purple-400 shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
+                {editingMessage ? "Editing message" : `Replying to ${replyTo?.sender_id === myId ? "yourself" : partnerName}`}
+              </p>
+              <p className="text-xs text-neutral-400 truncate">
+                {editingMessage
+                  ? editingMessage.content
+                  : replyTo?.is_deleted
+                    ? "Message deleted"
+                    : (replyTo?.content || "🎵 Song")}
+              </p>
+            </div>
+            <button
+              onClick={cancelAction}
+              className="shrink-0 p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
+              title="Cancel (Esc)"
+            >
+              <HiX size={13} />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
           {/* Emoji picker */}
           <div className="relative shrink-0 self-end mb-0.5" ref={emojiPickerRef}>
@@ -418,38 +521,43 @@ export function ChatWindow({ myId, partner }: Props) {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={`Message ${partnerName}… (use :joy: for 😂)`}
+            placeholder={
+              editingMessage
+                ? "Edit your message…"
+                : `Message ${partnerName}… (use :joy: for 😂)`
+            }
             rows={1}
             className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 focus:outline-none resize-none max-h-32 overflow-y-auto no-scrollbar leading-relaxed py-1"
             style={{ minHeight: "1.5rem" }}
           />
 
-          {/* Song attach */}
-          <button
-            type="button"
-            onClick={() => setShowSongSearch((v) => !v)}
-            className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
-            title="Send a song"
-          >
-            <HiPlus size={18} />
-          </button>
+          {/* Song attach — hidden while editing */}
+          {!editingMessage && (
+            <button
+              type="button"
+              onClick={() => setShowSongSearch((v) => !v)}
+              className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
+              title="Send a song"
+            >
+              <HiPlus size={18} />
+            </button>
+          )}
 
-          {/* Send */}
+          {/* Send / Save */}
           <button
             onClick={() => sendMessage(input)}
-            disabled={sending || (!input.trim())}
+            disabled={sending || !input.trim()}
             className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-all"
-            title="Send (Enter)"
+            title={editingMessage ? "Save edit (Enter)" : "Send (Enter)"}
           >
             <HiOutlinePaperAirplane size={18} />
           </button>
         </div>
         <p className="text-[10px] text-neutral-600 mt-1.5 pl-1">
-          Enter to send · Shift+Enter for new line · use :shortcode: for emojis
+          Enter to send · Shift+Enter for new line · Esc to cancel · use :shortcode: for emojis
         </p>
       </div>
 
-      {/* Song search — rendered outside the flex container so overflow:hidden doesn't clip it */}
       {showSongSearch && (
         <SongSearchModal
           onSelect={handleSongSelect}

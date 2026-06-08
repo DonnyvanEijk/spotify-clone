@@ -144,6 +144,13 @@ export interface Conversation {
   created_at: string;
 }
 
+export interface MessageReply {
+  id: string;
+  sender_id: string;
+  content: string | null;
+  is_deleted: boolean;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -151,8 +158,11 @@ export interface Message {
   content: string | null;
   song_id: string | null;
   created_at: string;
-  // joined
+  edited_at: string | null;
+  is_deleted: boolean;
+  reply_to_id: string | null;
   song?: Pick<Song, "id" | "title" | "author" | "image_path"> | null;
+  reply_to?: MessageReply | null;
 }
 
 export interface ConversationRead {

@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Message } from "@/types";
-import { HiPlay } from "react-icons/hi";
+import { HiPlay, HiDotsVertical, HiOutlinePencil, HiOutlineTrash, HiReply } from "react-icons/hi";
 import { HiMusicNote } from "react-icons/hi";
 import usePlayer from "@/hooks/usePlayer";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
@@ -13,11 +14,20 @@ interface Props {
   showTimestamp: boolean;
   avatarUrl: string | null;
   senderName: string;
+  myId: string;
+  onReply: (message: Message) => void;
+  onEdit: (message: Message) => void;
+  onDelete: (message: Message) => void;
 }
 
-export function MessageBubble({ message, isMine, showAvatar, showTimestamp, avatarUrl, senderName }: Props) {
+export function MessageBubble({
+  message, isMine, showAvatar, showTimestamp,
+  avatarUrl, senderName, myId, onReply, onEdit, onDelete,
+}: Props) {
   const player = usePlayer();
   const supabase = useSupabaseClient();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const songImageUrl = message.song?.image_path
     ? supabase.storage.from("images").getPublicUrl(message.song.image_path).data.publicUrl
@@ -28,9 +38,60 @@ export function MessageBubble({ message, isMine, showAvatar, showTimestamp, avat
     minute: "2-digit",
   });
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const actions = !message.is_deleted && (
+    <div className="relative opacity-0 group-hover:opacity-100 transition-opacity self-center shrink-0" ref={menuRef}>
+      <button
+        onClick={() => setMenuOpen((v) => !v)}
+        className="p-1 rounded-lg text-neutral-600 hover:text-white hover:bg-white/10 transition-all"
+        title="Options"
+      >
+        <HiDotsVertical size={14} />
+      </button>
+
+      {menuOpen && (
+        <div className={`absolute bottom-full mb-1 z-50 bg-neutral-900 border border-white/15 rounded-xl shadow-xl overflow-hidden min-w-30 ${isMine ? "right-0" : "left-0"}`}>
+          <button
+            onClick={() => { onReply(message); setMenuOpen(false); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/8 transition-colors"
+          >
+            <HiReply size={13} /> Reply
+          </button>
+          {isMine && (
+            <>
+              <button
+                onClick={() => { onEdit(message); setMenuOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/8 transition-colors"
+              >
+                <HiOutlinePencil size={13} /> Edit
+              </button>
+              <button
+                onClick={() => { onDelete(message); setMenuOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+              >
+                <HiOutlineTrash size={13} /> Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
-      {/* Avatar (only for partner messages) */}
+    <div className={`group flex items-end gap-1 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+      {/* Avatar slot */}
       <div className="w-7 h-7 shrink-0">
         {!isMine && showAvatar && (
           <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10">
@@ -45,9 +106,25 @@ export function MessageBubble({ message, isMine, showAvatar, showTimestamp, avat
         )}
       </div>
 
-      <div className={`flex flex-col max-w-[72%] gap-1 ${isMine ? "items-end" : "items-start"}`}>
+      {/* Three-dot menu — renders on the outer side of the bubble */}
+      {actions}
+
+      {/* Bubble column */}
+      <div className={`flex flex-col max-w-[68%] gap-0.5 ${isMine ? "items-end" : "items-start"}`}>
+        {/* Reply preview */}
+        {message.reply_to && (
+          <div className="border-l-2 border-purple-500/60 bg-white/5 rounded-lg px-2.5 py-1.5 mb-0.5 max-w-full">
+            <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
+              {message.reply_to.sender_id === myId ? "You" : senderName}
+            </p>
+            <p className="text-xs text-neutral-400 truncate">
+              {message.reply_to.is_deleted ? "Message deleted" : (message.reply_to.content || "🎵 Song")}
+            </p>
+          </div>
+        )}
+
         {/* Song embed */}
-        {message.song && (
+        {message.song && !message.is_deleted && (
           <div className="bg-white/8 border border-white/10 rounded-2xl overflow-hidden w-56">
             {songImageUrl && (
               <img src={songImageUrl} alt={message.song.title} className="w-full h-28 object-cover" />
@@ -73,8 +150,12 @@ export function MessageBubble({ message, isMine, showAvatar, showTimestamp, avat
           </div>
         )}
 
-        {/* Text content */}
-        {message.content && (
+        {/* Text bubble or deleted state */}
+        {message.is_deleted ? (
+          <div className="px-3 py-2 rounded-2xl text-sm border border-white/10 text-neutral-500 italic">
+            Message deleted
+          </div>
+        ) : message.content && (
           <div
             className={`px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-break-word ${
               isMine
@@ -86,7 +167,15 @@ export function MessageBubble({ message, isMine, showAvatar, showTimestamp, avat
           </div>
         )}
 
-        {showTimestamp && <span className="text-[10px] text-neutral-600 px-1">{time}</span>}
+        {/* Edited indicator — always visible if edited */}
+        {message.edited_at && !message.is_deleted && (
+          <span className="text-[10px] text-neutral-700 px-1">· edited</span>
+        )}
+
+        {/* Timestamp — only on last message of a same-minute group */}
+        {showTimestamp && (
+          <span className="text-[10px] text-neutral-600 px-1">{time}</span>
+        )}
       </div>
     </div>
   );
