@@ -27,6 +27,7 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "date-fns": "^4.1.0",
+    "emoji-picker-react": "^4.19.1",
     "framer-motion": "^12.23.24",
     "howler": "^2.2.4",
     "jszip": "^3.10.1",

@@ -13,6 +13,8 @@ import { HiOutlineUsers } from "react-icons/hi";
 import { TbMicrophone } from "react-icons/tb";
 import Link from "next/link";
 import getSongsWithoutLyrics from "@/actions/getSongsWithoutLyrics";
+import { PresenceDot } from "@/components/PresenceBadge";
+import { UserPresenceDisplay } from "@/components/users/UserPresenceDisplay";
 
 type Props = {
     params: Promise<{ id: string }>
@@ -61,14 +63,20 @@ const UserPage = async ({ params }: Props) => {
             <div className="px-6 md:px-12 mt-6 pb-24 flex flex-col gap-6">
                 {/* Profile card */}
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                    <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-white/10">
-                        {avatarPath && (
-                            <img src={avatarPath} alt={user.username} className="w-full h-full object-cover" />
-                        )}
+                    <div className="relative shrink-0">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-white/10">
+                            {avatarPath && (
+                                <img src={avatarPath} alt={user.username} className="w-full h-full object-cover" />
+                            )}
+                        </div>
+                        <span className="absolute bottom-0.5 right-0.5 p-0.5 bg-neutral-900 rounded-full">
+                            <PresenceDot presence={user.presence ?? "offline"} />
+                        </span>
                     </div>
 
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <p className="text-lg font-semibold text-white">{user.username}</p>
+                        <UserPresenceDisplay userId={user.id} initialPresence={user.presence ?? "offline"} />
                         <p className="text-sm text-neutral-400 line-clamp-2">{user.bio || "No bio"}</p>
                         <div className="flex items-center gap-1.5 mt-1 text-xs text-neutral-500">
                             <HiOutlineUsers size={13} />

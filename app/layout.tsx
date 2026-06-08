@@ -11,7 +11,8 @@ import getSongsByUserId from "@/actions/getSongsByUser";
 import Player from "@/components/player";
 import getActiveProductsWithPrices from "@/actions/getActiveProductsWithPrices";
 import getUser from "@/actions/getUser";
-import {getIncomingNotifications} from "@/actions/getIncomingNotifications";
+import { getIncomingNotifications } from "@/actions/getIncomingNotifications";
+import getFollowerAmount from "@/actions/getFollowerAmount";
 
 const figtree = Figtree({subsets: ["latin"]});
 
@@ -31,6 +32,7 @@ export default async function RootLayout({
   const products = await getActiveProductsWithPrices();
   const user = await getUser();
   const notifications = user?.id ? await getIncomingNotifications(user.id) : 0;
+  const followerCount = user?.id ? await getFollowerAmount(user.id) : 0;
 
   return (
     <html lang="en">
@@ -45,7 +47,12 @@ export default async function RootLayout({
           <UserProvider>
             <PresenceProvider>
               <ModalProvider products={products}/>
-                <Sidebar songs={userSongs} userId={user?.id} newNotifiations={notifications}>
+                <Sidebar
+                  songs={userSongs}
+                  userId={user?.id}
+                  newNotifiations={notifications}
+                  followerCount={followerCount}
+                >
                   {children}
                 </Sidebar>
                 <Player/>

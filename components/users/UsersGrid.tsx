@@ -150,8 +150,7 @@ export const UsersGrid = ({ users }: Props) => {
                         if (player.activeId === songId) {
                           window.dispatchEvent(new Event("restartCurrentSong"));
                         } else {
-                          player.setId(songId);
-                          player.setIds([songId]);
+                          player.insertAfterCurrent(songId);
                         }
                       }}
                     />
