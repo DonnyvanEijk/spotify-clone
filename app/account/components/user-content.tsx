@@ -2,14 +2,16 @@
 
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import { useRouter } from 'next/navigation';
 import { HiOutlinePencil, HiOutlineCheck, HiOutlineX } from 'react-icons/hi';
+import { PresenceBadge } from '@/components/PresenceBadge';
+import { useSessionContext } from '@/hooks/useSessionContext';
 
 interface UserFormData {
-    avatar_url: string; // Changed from string | null to string for internal state
+    avatar_url: string;
     username: string;
     bio: string;
 }
@@ -19,9 +21,10 @@ interface UserContentProps {
     username: string | null;
     bio: string | null;
     id: string;
+    presence?: string;
 }
 
-export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, bio, id }) => {
+export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, bio, id, presence: initialPresence = 'offline' }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<UserFormData>({
         avatar_url: avatar_url || '',
@@ -30,8 +33,30 @@ export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, 
     });
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [livePresence, setLivePresence] = useState(initialPresence);
     const supabaseClient = useSupabaseClient();
+    const { supabaseClient: realtimeClient } = useSessionContext();
     const router = useRouter();
+
+    // Subscribe to own presence changes in realtime
+    useEffect(() => {
+        const channel = realtimeClient
+            .channel(`account-presence-${id}`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${id}` },
+                (payload: { new: { presence?: string } }) => {
+                    if (payload.new.presence !== undefined) {
+                        setLivePresence(payload.new.presence);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            realtimeClient.removeChannel(channel);
+        };
+    }, [id, realtimeClient]);
 
     const getPublicUrl = (path: string) =>
         supabaseClient.storage.from('images').getPublicUrl(path).data.publicUrl;
@@ -182,13 +207,19 @@ export const UserContent: React.FC<UserContentProps> = ({ avatar_url, username, 
                 </div>
             ) : (
                 <div className="flex items-center gap-5">
-                    <div className="w-20 h-20 rounded-full overflow-hidden bg-white/10 shrink-0">
-                        {displayAvatar && (
-                            <img src={displayAvatar} alt="avatar" className="w-full h-full object-cover" />
-                        )}
+                    <div className="relative shrink-0">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-white/10">
+                            {displayAvatar && (
+                                <img src={displayAvatar} alt="avatar" className="w-full h-full object-cover" />
+                            )}
+                        </div>
+                        <span className="absolute bottom-0.5 right-0.5 p-0.5 bg-neutral-900 rounded-full">
+                            <PresenceBadge presence={livePresence} showText={false} />
+                        </span>
                     </div>
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         <p className="text-lg font-semibold text-white truncate">{username || 'No username'}</p>
+                        <PresenceBadge presence={livePresence} showText={true} className="max-w-xs" />
                         <p className="text-sm text-neutral-400 line-clamp-2">{bio || 'No bio yet'}</p>
                     </div>
                     <button

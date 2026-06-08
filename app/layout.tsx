@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/sidebar";
 import { SupabaseProvider } from "@/providers/SupabaseProvider";
 import { UserProvider } from "@/providers/UserProvider";
+import { PresenceProvider } from "@/providers/PresenceProvider";
 import { ModalProvider } from "@/providers/ModalProvider";
 import { ToasterProvider } from "@/providers/ToasterProvider";
 import getSongsByUserId from "@/actions/getSongsByUser";
@@ -41,12 +42,14 @@ export default async function RootLayout({
       >
         <ToasterProvider/>
         <SupabaseProvider>
-          <UserProvider> 
-            <ModalProvider products={products}/>
-              <Sidebar songs={userSongs} userId={user?.id} newNotifiations={notifications}>
-                {children}
-              </Sidebar>
-              <Player/>
+          <UserProvider>
+            <PresenceProvider>
+              <ModalProvider products={products}/>
+                <Sidebar songs={userSongs} userId={user?.id} newNotifiations={notifications}>
+                  {children}
+                </Sidebar>
+                <Player/>
+            </PresenceProvider>
           </UserProvider>
         </SupabaseProvider>
       </body>

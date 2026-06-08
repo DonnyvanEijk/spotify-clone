@@ -85,6 +85,15 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         return () => window.removeEventListener("stopAllAudio", stopHandler);
     }, [isPlaying, pause]);
 
+    useEffect(() => {
+        const restartHandler = () => {
+            sound?.seek(0);
+            if (!isPlaying) play();
+        };
+        window.addEventListener("restartCurrentSong", restartHandler);
+        return () => window.removeEventListener("restartCurrentSong", restartHandler);
+    }, [sound, isPlaying, play]);
+
     const handlePlay = () => {
         if (isLoading) return;
         if (!isPlaying) {

@@ -40,6 +40,7 @@ const AccountPage = async () => {
                     bio={currentUser?.bio ?? null}
                     avatar_url={currentUser?.avatar_url ?? null}
                     username={currentUser?.username ?? null}
+                    presence={currentUser?.presence ?? "offline"}
                 />
 
                 {/* Followers */}

@@ -16,6 +16,7 @@ export const UsersContent = async ({ users, following }: Props) => {
       id: user.id,
       username: user.username,
       bio: user.bio,
+      presence: user.presence ?? "offline",
       avatarUrl: await getImage(user.avatar_url || ""),
       isFollowed: following.some((f) => f.followed_id === user.id),
       isCurrentUser: currentUser?.id === user.id,
