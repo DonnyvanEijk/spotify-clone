@@ -7,7 +7,7 @@ import { useSessionContext } from "@/hooks/useSessionContext";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { PresenceBadge } from "@/components/PresenceBadge";
 import usePlayer from "@/hooks/usePlayer";
-import { HiOutlineUsers, HiOutlineUser } from "react-icons/hi";
+import { HiOutlineUsers, HiOutlineUser, HiOutlineChatAlt } from "react-icons/hi";
 
 type Friend = {
   id: string;
@@ -16,7 +16,11 @@ type Friend = {
   presence: string;
 };
 
-export function SidebarFriends() {
+interface Props {
+  unreadByUserId?: Record<string, number>;
+}
+
+export function SidebarFriends({ unreadByUserId = {} }: Props) {
   const { user } = useUser();
   const { supabaseClient } = useSessionContext();
   const supabase = useSupabaseClient();
@@ -132,42 +136,58 @@ export function SidebarFriends() {
       {friends.map((friend) => {
         const presence = presenceMap[friend.id] ?? "offline";
         const avatarUrl = getAvatarUrl(friend.avatar_url);
+        const unread = unreadByUserId[friend.id] ?? 0;
         return (
-          <Link
-            key={friend.id}
-            href={`/users/${friend.id}`}
-            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors"
-          >
-            <div className="relative shrink-0">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-white/10">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={friend.username} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <HiOutlineUser size={14} className="text-neutral-500" />
-                  </div>
-                )}
+          <div key={friend.id} className="flex items-center gap-1 rounded-xl hover:bg-white/5 transition-colors group/friend">
+            <Link
+              href={`/users/${friend.id}`}
+              className="flex items-center gap-3 px-2 py-2 flex-1 min-w-0"
+            >
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-white/10">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={friend.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <HiOutlineUser size={14} className="text-neutral-500" />
+                    </div>
+                  )}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 p-0.5 bg-neutral-900 rounded-full">
+                  <PresenceBadge presence={presence} showText={false} />
+                </span>
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 p-0.5 bg-neutral-900 rounded-full">
-                <PresenceBadge presence={presence} showText={false} />
-              </span>
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm text-white truncate">{friend.username ?? "Unknown"}</span>
-              <PresenceBadge
-                presence={presence}
-                showText={true}
-                truncate={true}
-                onPlay={(songId) => {
-                  if (player.activeId === songId) {
-                    window.dispatchEvent(new Event("restartCurrentSong"));
-                  } else {
-                    player.insertAfterCurrent(songId);
-                  }
-                }}
-              />
-            </div>
-          </Link>
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-white truncate flex-1">{friend.username ?? "Unknown"}</span>
+                  {unread > 0 && (
+                    <span className="shrink-0 bg-white text-black text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                </div>
+                <PresenceBadge
+                  presence={presence}
+                  showText={true}
+                  truncate={true}
+                  onPlay={(songId) => {
+                    if (player.activeId === songId) {
+                      window.dispatchEvent(new Event("restartCurrentSong"));
+                    } else {
+                      player.insertAfterCurrent(songId);
+                    }
+                  }}
+                />
+              </div>
+            </Link>
+            <Link
+              href={`/messages/${friend.id}`}
+              title={`Message ${friend.username ?? "friend"}`}
+              className="shrink-0 mr-2 p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-white/10 opacity-0 group-hover/friend:opacity-100 transition-all"
+            >
+              <HiOutlineChatAlt size={14} />
+            </Link>
+          </div>
         );
       })}
     </div>

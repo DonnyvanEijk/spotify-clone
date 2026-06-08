@@ -136,3 +136,27 @@ export interface Notification {
   created_at: string;
   deleted_at?: string | null;
 }
+
+export interface Conversation {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string | null;
+  song_id: string | null;
+  created_at: string;
+  // joined
+  song?: Pick<Song, "id" | "title" | "author" | "image_path"> | null;
+}
+
+export interface ConversationRead {
+  conversation_id: string;
+  user_id: string;
+  last_read_at: string;
+}

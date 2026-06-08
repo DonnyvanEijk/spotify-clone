@@ -9,6 +9,7 @@ import { Library } from './library';
 import { SidebarFriends } from './sidebar/SidebarFriends';
 import { SidebarAccount } from './sidebar/SidebarAccount';
 import { useMemo, useState } from 'react';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<'library' | 'friends'>('library');
+  const { unreadByUserId, totalUnread } = useUnreadMessages();
 
   const routes = useMemo(
     () => [
@@ -82,6 +84,11 @@ const Sidebar = ({
             >
               <HiOutlineUsers size={13} />
               Friends
+              {totalUnread > 0 && (
+                <span className="bg-white text-black text-[9px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
+                  {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
             </button>
           </div>
 
@@ -90,7 +97,7 @@ const Sidebar = ({
             {activeTab === 'library' ? (
               <Library songs={songs} userId={userId} />
             ) : (
-              <SidebarFriends />
+              <SidebarFriends unreadByUserId={unreadByUserId} />
             )}
           </div>
         </div>
