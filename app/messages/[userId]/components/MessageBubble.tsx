@@ -18,11 +18,12 @@ interface Props {
   onReply: (message: Message) => void;
   onEdit: (message: Message) => void;
   onDelete: (message: Message) => void;
+  onScrollToMessage: (id: string) => void;
 }
 
 export function MessageBubble({
   message, isMine, showAvatar, showTimestamp,
-  avatarUrl, senderName, myId, onReply, onEdit, onDelete,
+  avatarUrl, senderName, myId, onReply, onEdit, onDelete, onScrollToMessage,
 }: Props) {
   const player = usePlayer();
   const supabase = useSupabaseClient();
@@ -111,16 +112,19 @@ export function MessageBubble({
 
       {/* Bubble column */}
       <div className={`flex flex-col max-w-[68%] gap-0.5 ${isMine ? "items-end" : "items-start"}`}>
-        {/* Reply preview */}
+        {/* Reply preview — click to jump to original */}
         {message.reply_to && (
-          <div className="border-l-2 border-purple-500/60 bg-white/5 rounded-lg px-2.5 py-1.5 mb-0.5 max-w-full">
+          <button
+            onClick={() => message.reply_to_id && onScrollToMessage(message.reply_to_id)}
+            className="border-l-2 border-purple-500/60 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1.5 mb-0.5 max-w-full text-left transition-colors cursor-pointer"
+          >
             <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
               {message.reply_to.sender_id === myId ? "You" : senderName}
             </p>
             <p className="text-xs text-neutral-400 truncate">
               {message.reply_to.is_deleted ? "Message deleted" : (message.reply_to.content || "🎵 Song")}
             </p>
-          </div>
+          </button>
         )}
 
         {/* Song embed */}

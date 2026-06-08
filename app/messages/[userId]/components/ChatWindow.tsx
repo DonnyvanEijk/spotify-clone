@@ -73,8 +73,10 @@ export function ChatWindow({ myId, partner }: Props) {
   const [partnerPresence, setPartnerPresence] = useState(partner.presence ?? "offline");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const realtimeChannelRef = useRef<any>(null);
@@ -305,6 +307,14 @@ export function ChatWindow({ myId, partner }: Props) {
       .eq("id", msg.id);
   }, [supabase]);
 
+  const scrollToMessage = useCallback((id: string) => {
+    const el = messageRefs.current.get(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedId(id);
+    setTimeout(() => setHighlightedId(null), 1500);
+  }, []);
+
   const cancelAction = () => {
     setReplyTo(null);
     setEditingMessage(null);
@@ -415,27 +425,36 @@ export function ChatWindow({ myId, partner }: Props) {
               <div className="flex-1 h-px bg-white/10" />
             </div>
           ) : item.message ? (
-            <MessageBubble
+            <div
               key={item.message.id}
-              message={item.message}
-              isMine={item.message.sender_id === myId}
-              myId={myId}
-              showAvatar={
-                i === grouped.length - 1 ||
-                grouped[i + 1]?.message?.sender_id !== item.message.sender_id
-              }
-              showTimestamp={(() => {
-                const fmt = (iso: string) =>
-                  new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                const next = grouped.slice(i + 1).find((g) => g.message)?.message;
-                return !next || fmt(next.created_at) !== fmt(item.message.created_at);
-              })()}
-              avatarUrl={partnerAvatarUrl}
-              senderName={partnerName}
-              onReply={handleReply}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+              ref={(el) => {
+                if (el) messageRefs.current.set(item.message!.id, el);
+                else messageRefs.current.delete(item.message!.id);
+              }}
+              className={`rounded-xl transition-colors duration-700 ${highlightedId === item.message.id ? "bg-white/10" : ""}`}
+            >
+              <MessageBubble
+                message={item.message}
+                isMine={item.message.sender_id === myId}
+                myId={myId}
+                showAvatar={
+                  i === grouped.length - 1 ||
+                  grouped[i + 1]?.message?.sender_id !== item.message.sender_id
+                }
+                showTimestamp={(() => {
+                  const fmt = (iso: string) =>
+                    new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                  const next = grouped.slice(i + 1).find((g) => g.message)?.message;
+                  return !next || fmt(next.created_at) !== fmt(item.message.created_at);
+                })()}
+                avatarUrl={partnerAvatarUrl}
+                senderName={partnerName}
+                onReply={handleReply}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onScrollToMessage={scrollToMessage}
+              />
+            </div>
           ) : null
         )}
 
