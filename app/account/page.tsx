@@ -11,6 +11,7 @@ import { getImage } from "@/lib/getImage";
 import { getFollowedUsers } from "@/actions/getCurrentlyFollowing";
 import FollowerContent from "./components/follower-content";
 import getFollowingYou from "@/actions/getFollowingYou";
+import { EqualizerContent } from "./components/EqualizerContent";
 
 const AccountPage = async () => {
     const user = await getUser();
@@ -34,7 +35,6 @@ const AccountPage = async () => {
             </Header>
 
             <div className="px-6 md:px-12 pb-24 flex flex-col gap-6 mt-6">
-                {/* Profile */}
                 <UserContent
                     id={user.id}
                     bio={currentUser?.bio ?? null}
@@ -43,16 +43,15 @@ const AccountPage = async () => {
                     presence={currentUser?.presence ?? "offline"}
                 />
 
-                {/* Followers */}
                 <FollowerContent followingYou={followingYou} followingUsers={followingUsers} />
 
-                {/* Billing + Info */}
+                <EqualizerContent userId={user.id} />
+
                 <div className="grid lg:grid-cols-2 gap-6">
                     <BillingContent />
                     <InfoContent />
                 </div>
 
-                {/* Song Likes */}
                 {user?.id && songLikes.length > 0 && (
                     <LikeOverview userId={user.id} songs={songLikes} />
                 )}

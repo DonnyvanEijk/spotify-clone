@@ -12,6 +12,7 @@ import { PresenceBadge } from "@/components/PresenceBadge";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { processShortcodes } from "@/utils/emojiShortcodes";
 import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply } from "react-icons/hi";
+import { playSendSound } from "@/utils/messageSounds";
 import { HiFaceSmile } from "react-icons/hi2";
 import { format, isToday, isYesterday } from "date-fns";
 
@@ -99,7 +100,6 @@ export function ChatWindow({ myId, partner }: Props) {
     [myId, supabase]
   );
 
-  // Init conversation + fetch messages
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -122,13 +122,11 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => { cancelled = true; };
   }, [myId, partner.id, supabase, markAsRead]);
 
-  // Realtime
   useEffect(() => {
     if (!conversationId) return;
 
     const channel = supabaseClient
       .channel(`chat-${conversationId}`)
-      // New messages
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
@@ -141,6 +139,7 @@ export function ChatWindow({ myId, partner }: Props) {
           if (msg) {
             setMessages((prev) => [...prev, msg as Message]);
             markAsRead(conversationId);
+            // Sound is handled globally in useUnreadMessages
           }
         }
       )
@@ -158,7 +157,6 @@ export function ChatWindow({ myId, partner }: Props) {
           );
         }
       )
-      // Hard-deleted messages (cron cleanup)
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
@@ -166,7 +164,6 @@ export function ChatWindow({ myId, partner }: Props) {
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
         }
       )
-      // Partner presence
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "users", filter: `id=eq.${partner.id}` },
@@ -174,7 +171,6 @@ export function ChatWindow({ myId, partner }: Props) {
           if (payload.new.presence !== undefined) setPartnerPresence(payload.new.presence);
         }
       )
-      // Typing broadcast
       .on("broadcast", { event: "typing" }, ({ payload }: any) => {
         if (payload.userId !== myId) {
           setPartnerTyping(payload.isTyping);
@@ -193,12 +189,10 @@ export function ChatWindow({ myId, partner }: Props) {
     };
   }, [conversationId, myId, partner.id, supabase, supabaseClient, markAsRead]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, partnerTyping]);
 
-  // Close emoji picker on outside click
   useEffect(() => {
     if (!showEmojiPicker) return;
     const handler = (e: MouseEvent) => {
@@ -268,6 +262,7 @@ export function ChatWindow({ myId, partner }: Props) {
         setReplyTo(null);
       }
 
+      playSendSound();
       setInput("");
       setSending(false);
       inputRef.current?.focus();

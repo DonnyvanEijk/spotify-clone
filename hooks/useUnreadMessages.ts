@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useSessionContext } from "@/hooks/useSessionContext";
 import { useUser } from "@/hooks/useUser";
+import { playReceiveSound } from "@/utils/messageSounds";
 
 export function useUnreadMessages() {
   const { user } = useUser();
@@ -71,7 +72,10 @@ export function useUnreadMessages() {
       .channel("global-unread-watch")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" },
         (payload: any) => {
-          if (payload.new.sender_id !== user.id) refresh();
+          if (payload.new.sender_id !== user.id) {
+            playReceiveSound();
+            refresh();
+          }
         })
       .on("postgres_changes", { event: "*", schema: "public", table: "conversation_reads" },
         () => refresh())
