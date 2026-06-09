@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Message } from "@/types";
 import { HiPlay, HiDotsVertical, HiOutlinePencil, HiOutlineTrash, HiReply } from "react-icons/hi";
-import { HiMusicNote } from "react-icons/hi";
 import usePlayer from "@/hooks/usePlayer";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import { detectGif } from "@/utils/gifDetector";
 
 interface Props {
   message: Message;
@@ -21,6 +21,33 @@ interface Props {
   onScrollToMessage: (id: string) => void;
 }
 
+const URL_RE = /https?:\/\/[^\s<>"']+/g;
+
+function renderWithLinks(text: string, linkClass: string) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  URL_RE.lastIndex = 0;
+  while ((match = URL_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(
+      <a
+        key={match.index}
+        href={match[0]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`underline underline-offset-2 hover:opacity-75 transition-opacity ${linkClass}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {match[0]}
+      </a>
+    );
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
 export function MessageBubble({
   message, isMine, showAvatar, showTimestamp,
   avatarUrl, senderName, myId, onReply, onEdit, onDelete, onScrollToMessage,
@@ -33,6 +60,8 @@ export function MessageBubble({
   const songImageUrl = message.song?.image_path
     ? supabase.storage.from("images").getPublicUrl(message.song.image_path).data.publicUrl
     : null;
+
+  const gif = !message.is_deleted && message.content ? detectGif(message.content) : null;
 
   const time = new Date(message.created_at).toLocaleTimeString([], {
     hour: "2-digit",
@@ -122,7 +151,11 @@ export function MessageBubble({
               {message.reply_to.sender_id === myId ? "You" : senderName}
             </p>
             <p className="text-xs text-neutral-400 truncate">
-              {message.reply_to.is_deleted ? "Message deleted" : (message.reply_to.content || "🎵 Song")}
+              {message.reply_to.is_deleted
+                ? "Message deleted"
+                : message.reply_to.content
+                  ? detectGif(message.reply_to.content) ? "🎞 GIF" : message.reply_to.content
+                  : "🎵 Song"}
             </p>
           </button>
         )}
@@ -159,16 +192,33 @@ export function MessageBubble({
           <div className="px-3 py-2 rounded-2xl text-sm border border-white/10 text-neutral-500 italic">
             Message deleted
           </div>
-        ) : message.content && (
-          <div
-            className={`px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-break-word ${
-              isMine
-                ? "bg-purple-600 text-white rounded-br-sm"
-                : "bg-white text-black rounded-bl-sm"
-            }`}
-          >
-            {message.content}
-          </div>
+        ) : (
+          <>
+            {/* GIF embed */}
+            {gif && (
+              <img
+                src={gif.url}
+                alt="GIF"
+                loading="lazy"
+                className="rounded-2xl max-w-[220px] w-full"
+              />
+            )}
+            {/* Text — hidden if the whole message was just the GIF URL */}
+            {message.content && (!gif || gif.remainingText) && (
+              <div
+                className={`w-full min-w-0 px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere ${
+                  isMine
+                    ? "bg-purple-600 text-white rounded-br-sm"
+                    : "bg-white text-black rounded-bl-sm"
+                }`}
+              >
+                {renderWithLinks(
+                  gif ? gif.remainingText : message.content!,
+                  isMine ? "text-white/90" : "text-purple-700"
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* Edited indicator — always visible if edited */}
