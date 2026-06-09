@@ -8,10 +8,12 @@ import usePlayer from "@/hooks/usePlayer";
 import { Message, Song } from "@/types";
 import { MessageBubble } from "./MessageBubble";
 import { SongSearchModal } from "./SongSearchModal";
+import { GifSearchModal } from "./GifSearchModal";
 import { PresenceBadge } from "@/components/PresenceBadge";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { processShortcodes } from "@/utils/emojiShortcodes";
 import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply } from "react-icons/hi";
+import { MdGif } from "react-icons/md";
 import { playSendSound } from "@/utils/messageSounds";
 import { HiFaceSmile } from "react-icons/hi2";
 import { format, isToday, isYesterday } from "date-fns";
@@ -71,6 +73,7 @@ export function ChatWindow({ myId, partner }: Props) {
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showSongSearch, setShowSongSearch] = useState(false);
+  const [showGifSearch, setShowGifSearch] = useState(false);
   const [partnerPresence, setPartnerPresence] = useState(partner.presence ?? "offline");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -280,6 +283,12 @@ export function ChatWindow({ myId, partner }: Props) {
   const handleSongSelect = async (song: Song) => {
     setShowSongSearch(false);
     await sendMessage(undefined, song.id);
+  };
+
+  const handleGifSelect = async (url: string) => {
+    setShowGifSearch(false);
+    setInput(url);
+    await sendMessage(url);
   };
 
   const handleReply = useCallback((msg: Message) => {
@@ -545,16 +554,26 @@ export function ChatWindow({ myId, partner }: Props) {
             style={{ minHeight: "1.5rem" }}
           />
 
-          {/* Song attach — hidden while editing */}
+          {/* Song + GIF attach — hidden while editing */}
           {!editingMessage && (
-            <button
-              type="button"
-              onClick={() => setShowSongSearch((v) => !v)}
-              className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
-              title="Send a song"
-            >
-              <HiPlus size={18} />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => { setShowGifSearch((v) => !v); setShowSongSearch(false); }}
+                className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
+                title="Send a GIF"
+              >
+                <MdGif size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSongSearch((v) => !v); setShowGifSearch(false); }}
+                className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
+                title="Send a song"
+              >
+                <HiPlus size={18} />
+              </button>
+            </>
           )}
 
           {/* Send / Save */}
@@ -576,6 +595,12 @@ export function ChatWindow({ myId, partner }: Props) {
         <SongSearchModal
           onSelect={handleSongSelect}
           onClose={() => setShowSongSearch(false)}
+        />
+      )}
+      {showGifSearch && (
+        <GifSearchModal
+          onSelect={handleGifSelect}
+          onClose={() => setShowGifSearch(false)}
         />
       )}
     </div>
