@@ -173,10 +173,13 @@ export function EqualizerContent({ userId }: Props) {
                     value={gain}
                     onChange={(e) => handleBand(i, parseFloat(e.target.value))}
                     readOnly={isDynamic}
-                    className="absolute"
                     style={{
-                      width: 112,
-                      transform: "rotate(-90deg)",
+                      // Native vertical slider so drag tracks vertical motion.
+                      // `direction: rtl` puts the max (top) at the top.
+                      writingMode: "vertical-lr",
+                      direction: "rtl",
+                      height: 112,
+                      width: 20,
                       accentColor: isDynamic ? "#a855f7" : "#9333ea",
                       cursor: isDynamic ? "default" : "pointer",
                     }}
