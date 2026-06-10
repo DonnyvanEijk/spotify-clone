@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Message } from "@/types";
-import { HiPlay, HiDotsVertical, HiOutlinePencil, HiOutlineTrash, HiReply } from "react-icons/hi";
+import { HiPlay, HiDotsVertical, HiOutlinePencil, HiOutlineTrash, HiReply, HiOutlineClipboardCopy } from "react-icons/hi";
 import usePlayer from "@/hooks/usePlayer";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { detectGif } from "@/utils/gifDetector";
 import { emojiOnlyCount } from "@/utils/emojiShortcodes";
-import { isImageDataUrl } from "@/utils/imageCompress";
+import { isImageDataUrl, copyImageToClipboard } from "@/utils/imageCompress";
 
 interface Props {
   message: Message;
@@ -21,6 +21,7 @@ interface Props {
   onEdit: (message: Message) => void;
   onDelete: (message: Message) => void;
   onScrollToMessage: (id: string) => void;
+  onOpenImage: (src: string) => void;
 }
 
 const URL_RE = /https?:\/\/[^\s<>"']+/g;
@@ -50,9 +51,9 @@ function renderWithLinks(text: string, linkClass: string) {
   return parts;
 }
 
-export function MessageBubble({
+function MessageBubbleComponent({
   message, isMine, showAvatar, showTimestamp,
-  avatarUrl, senderName, myId, onReply, onEdit, onDelete, onScrollToMessage,
+  avatarUrl, senderName, myId, onReply, onEdit, onDelete, onScrollToMessage, onOpenImage,
 }: Props) {
   const player = usePlayer();
   const supabase = useSupabaseClient();
@@ -65,6 +66,10 @@ export function MessageBubble({
 
   // Inline image sent via drag-and-drop (stored as a data-URI in content).
   const imageData = !message.is_deleted && isImageDataUrl(message.content) ? message.content! : null;
+  const replyImage =
+    message.reply_to && !message.reply_to.is_deleted && isImageDataUrl(message.reply_to.content)
+      ? message.reply_to.content!
+      : null;
 
   const gif = !message.is_deleted && !imageData && message.content ? detectGif(message.content) : null;
 
@@ -91,6 +96,16 @@ export function MessageBubble({
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
+  const handleCopyImage = async () => {
+    setMenuOpen(false);
+    if (!imageData) return;
+    try {
+      await copyImageToClipboard(imageData);
+    } catch {
+      // Clipboard unavailable or permission denied — ignore.
+    }
+  };
+
   const actions = !message.is_deleted && (
     <div className="relative opacity-0 group-hover:opacity-100 transition-opacity self-center shrink-0" ref={menuRef}>
       <button
@@ -109,6 +124,14 @@ export function MessageBubble({
           >
             <HiReply size={13} /> Reply
           </button>
+          {imageData && (
+            <button
+              onClick={handleCopyImage}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/8 transition-colors"
+            >
+              <HiOutlineClipboardCopy size={13} /> Copy image
+            </button>
+          )}
           {isMine && (
             <>
               {/* Images/GIFs aren't text-editable */}
@@ -159,20 +182,30 @@ export function MessageBubble({
         {message.reply_to && (
           <button
             onClick={() => message.reply_to_id && onScrollToMessage(message.reply_to_id)}
-            className="border-l-2 border-purple-500/60 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1.5 mb-0.5 max-w-full text-left transition-colors cursor-pointer"
+            className="flex items-center gap-2 border-l-2 border-purple-500/60 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1.5 mb-0.5 max-w-full text-left transition-colors cursor-pointer"
           >
-            <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
-              {message.reply_to.sender_id === myId ? "You" : senderName}
-            </p>
-            <p className="text-xs text-neutral-400 truncate">
-              {message.reply_to.is_deleted
-                ? "Message deleted"
-                : message.reply_to.content
-                  ? isImageDataUrl(message.reply_to.content)
-                    ? "📷 Photo"
-                    : detectGif(message.reply_to.content) ? "🎞 GIF" : message.reply_to.content
-                  : "🎵 Song"}
-            </p>
+            {replyImage && (
+              <img
+                src={replyImage}
+                alt=""
+                className="w-8 h-8 rounded object-cover shrink-0"
+                decoding="async"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
+                {message.reply_to.sender_id === myId ? "You" : senderName}
+              </p>
+              <p className="text-xs text-neutral-400 truncate">
+                {message.reply_to.is_deleted
+                  ? "Message deleted"
+                  : message.reply_to.content
+                    ? replyImage
+                      ? "Photo"
+                      : detectGif(message.reply_to.content) ? "🎞 GIF" : message.reply_to.content
+                    : "🎵 Song"}
+              </p>
+            </div>
           </button>
         )}
 
@@ -210,14 +243,14 @@ export function MessageBubble({
           </div>
         ) : imageData ? (
           /* Inline image (drag-and-dropped) */
-          <a href={imageData} target="_blank" rel="noopener noreferrer">
-            <img
-              src={imageData}
-              alt="Image"
-              loading="lazy"
-              className="rounded-2xl max-w-65 w-full hover:opacity-90 transition-opacity"
-            />
-          </a>
+          <img
+            src={imageData}
+            alt="Image"
+            loading="lazy"
+            decoding="async"
+            onClick={() => onOpenImage(imageData)}
+            className="rounded-2xl max-w-65 w-full cursor-zoom-in hover:opacity-90 transition-opacity"
+          />
         ) : (
           <>
             {/* GIF embed */}
@@ -269,3 +302,8 @@ export function MessageBubble({
     </div>
   );
 }
+
+// Memoized: with stable callbacks from the parent, a bubble only re-renders
+// when its own props change — so typing/seen/new-message updates no longer
+// repaint every (potentially image-heavy) bubble in the list.
+export const MessageBubble = memo(MessageBubbleComponent);

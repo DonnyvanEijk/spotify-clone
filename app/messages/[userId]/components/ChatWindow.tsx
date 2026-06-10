@@ -9,10 +9,11 @@ import { Message, Song } from "@/types";
 import { MessageBubble } from "./MessageBubble";
 import { SongSearchModal } from "./SongSearchModal";
 import { GifSearchModal } from "./GifSearchModal";
+import { ImageLightbox } from "./ImageLightbox";
 import { PresenceBadge } from "@/components/PresenceBadge";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { processShortcodes } from "@/utils/emojiShortcodes";
-import { fileToCompressedDataUrl } from "@/utils/imageCompress";
+import { fileToCompressedDataUrl, isImageDataUrl } from "@/utils/imageCompress";
 import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply, HiMusicNote, HiPhotograph } from "react-icons/hi";
 import { MdGif } from "react-icons/md";
 import { playSendSound } from "@/utils/messageSounds";
@@ -24,6 +25,7 @@ const MSG_SELECT = "id, conversation_id, sender_id, content, song_id, created_at
 const SLASH_COMMANDS = [
   { cmd: "/gif", title: "Send a GIF", hint: "Search GIPHY", icon: <MdGif size={20} /> },
   { cmd: "/song", title: "Send a song", hint: "Search your library", icon: <HiPlus size={16} /> },
+  { cmd: "/image", title: "Send an image", hint: "Upload from your device", icon: <HiPhotograph size={18} /> },
 ];
 
 interface Partner {
@@ -88,6 +90,7 @@ export function ChatWindow({ myId, partner }: Props) {
   const [slashHighlight, setSlashHighlight] = useState(0);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const dragDepthRef = useRef(0);
   const attachMenuRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -418,6 +421,8 @@ export function ChatWindow({ myId, partner }: Props) {
     } else if (cmd === "/song") {
       setShowSongSearch(true);
       setShowGifSearch(false);
+    } else if (cmd === "/image") {
+      imageInputRef.current?.click();
     }
     inputRef.current?.focus();
   };
@@ -532,6 +537,8 @@ export function ChatWindow({ myId, partner }: Props) {
     if (files.length) sendImageFiles(files);
     e.target.value = ""; // allow re-picking the same file
   };
+
+  const handleOpenImage = useCallback((src: string) => setLightboxSrc(src), []);
 
   const handleReply = useCallback((msg: Message) => {
     setReplyTo(msg);
@@ -715,6 +722,7 @@ export function ChatWindow({ myId, partner }: Props) {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onScrollToMessage={scrollToMessage}
+                onOpenImage={handleOpenImage}
               />
             </div>
           ) : null
@@ -792,6 +800,9 @@ export function ChatWindow({ myId, partner }: Props) {
             ) : (
               <HiReply size={13} className="text-purple-400 shrink-0" />
             )}
+            {!editingMessage && replyTo && !replyTo.is_deleted && isImageDataUrl(replyTo.content) && (
+              <img src={replyTo.content} alt="" className="w-8 h-8 rounded object-cover shrink-0" decoding="async" />
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-semibold text-purple-400 mb-0.5">
                 {editingMessage ? "Editing message" : `Replying to ${replyTo?.sender_id === myId ? "yourself" : partnerName}`}
@@ -801,7 +812,9 @@ export function ChatWindow({ myId, partner }: Props) {
                   ? editingMessage.content
                   : replyTo?.is_deleted
                     ? "Message deleted"
-                    : (replyTo?.content || "🎵 Song")}
+                    : isImageDataUrl(replyTo?.content)
+                      ? "📷 Photo"
+                      : (replyTo?.content || "🎵 Song")}
               </p>
             </div>
             <button
@@ -931,6 +944,9 @@ export function ChatWindow({ myId, partner }: Props) {
           onSelect={handleGifSelect}
           onClose={() => setShowGifSearch(false)}
         />
+      )}
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
     </div>
   );

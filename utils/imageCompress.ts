@@ -35,6 +35,22 @@ export async function fileToCompressedDataUrl(
   return webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", quality);
 }
 
+// Copy an image data-URI to the system clipboard. Re-encodes to PNG via canvas
+// because browsers only reliably accept image/png for clipboard writes.
+export async function copyImageToClipboard(dataUrl: string): Promise<void> {
+  const img = await loadImage(dataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas unavailable");
+  ctx.drawImage(img, 0, 0);
+  const blob: Blob = await new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/png")
+  );
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+}
+
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
