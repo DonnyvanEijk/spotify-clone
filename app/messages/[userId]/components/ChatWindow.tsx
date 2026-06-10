@@ -95,6 +95,9 @@ export function ChatWindow({ myId, partner }: Props) {
   const receivedTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const messagesRef = useRef<Message[]>([]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
+  const awayRef = useRef(false);
+  const pendingReadRef = useRef(false);
+  const awayTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const partnerAvatarUrl = partner.avatar_url
     ? supabase.storage.from("images").getPublicUrl(partner.avatar_url).data.publicUrl
@@ -112,9 +115,7 @@ export function ChatWindow({ myId, partner }: Props) {
     [myId, supabase]
   );
 
-  // Tell the partner I've read up to a given message (defaults to the latest).
-  // Uses broadcast rather than reading their conversation_reads row, which RLS
-  // hides. `lastReadAt` is a server-side created_at, so no clock skew.
+ 
   const broadcastRead = useCallback(
     (lastReadAt?: string) => {
       const at = lastReadAt ?? messagesRef.current[messagesRef.current.length - 1]?.created_at;
@@ -126,6 +127,12 @@ export function ChatWindow({ myId, partner }: Props) {
       });
     },
     [myId]
+  );
+
+ 
+  const isViewing = useCallback(
+    () => typeof document !== "undefined" && document.visibilityState === "visible" && !awayRef.current,
+    []
   );
 
   useEffect(() => {
@@ -174,16 +181,19 @@ export function ChatWindow({ myId, partner }: Props) {
             .single();
           if (msg) {
             setMessages((prev) => [...prev, msg as Message]);
-            markAsRead(conversationId);
-            // I'm viewing the chat, so let the partner know I've seen theirs.
             if ((msg as Message).sender_id === partner.id) {
-              broadcastRead((msg as Message).created_at);
+              if (isViewing()) {
+                markAsRead(conversationId);
+                broadcastRead((msg as Message).created_at);
+              } else {
+                pendingReadRef.current = true;
+              }
+            } else {
+              markAsRead(conversationId);
             }
-            // Sound is handled globally in useUnreadMessages
           }
         }
       )
-      // Edited / soft-deleted messages
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
@@ -229,9 +239,10 @@ export function ChatWindow({ myId, partner }: Props) {
         }
       })
       .subscribe((status: string) => {
-        // On (re)connect, announce that I've read the latest message so the
-        // partner sees "Seen" without waiting for a new message.
-        if (status === "SUBSCRIBED") broadcastRead();
+        if (status === "SUBSCRIBED") {
+          if (isViewing()) broadcastRead();
+          else pendingReadRef.current = true;
+        }
       });
 
     realtimeChannelRef.current = channel;
@@ -239,14 +250,46 @@ export function ChatWindow({ myId, partner }: Props) {
       supabaseClient.removeChannel(channel);
       realtimeChannelRef.current = null;
     };
-  }, [conversationId, myId, partner.id, supabase, supabaseClient, markAsRead, broadcastRead]);
+  }, [conversationId, myId, partner.id, supabase, supabaseClient, markAsRead, broadcastRead, isViewing]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const AWAY_MS = 5 * 60 * 1000;
+
+    const flushPendingRead = () => {
+      if (!pendingReadRef.current) return;
+      pendingReadRef.current = false;
+      markAsRead(conversationId);
+      broadcastRead();
+    };
+
+    const goActive = () => {
+      awayRef.current = false;
+      clearTimeout(awayTimerRef.current);
+      awayTimerRef.current = setTimeout(() => { awayRef.current = true; }, AWAY_MS);
+      if (document.visibilityState === "visible") flushPendingRead();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") goActive();
+    };
+
+    const events = ["mousemove", "keydown", "click", "touchstart", "scroll"] as const;
+    events.forEach((e) => window.addEventListener(e, goActive, { passive: true }));
+    document.addEventListener("visibilitychange", onVisibility);
+    awayTimerRef.current = setTimeout(() => { awayRef.current = true; }, AWAY_MS);
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, goActive));
+      document.removeEventListener("visibilitychange", onVisibility);
+      clearTimeout(awayTimerRef.current);
+    };
+  }, [conversationId, markAsRead, broadcastRead]);
 
   const didInitialScroll = useRef(false);
 
   useEffect(() => {
     if (loadingMessages) return;
-    // Jump instantly to the bottom on first load (smooth animation gets
-    // interrupted by async layout and lands short); animate afterwards.
     messagesEndRef.current?.scrollIntoView({
       behavior: didInitialScroll.current ? "smooth" : "auto",
     });
@@ -264,7 +307,6 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
-  // Escape cancels reply/edit
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -277,7 +319,6 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Auto-grow the textarea with its content (capped by max-h-32 via overflow).
   useEffect(() => {
     const ta = inputRef.current;
     if (!ta) return;
@@ -299,11 +340,8 @@ export function ChatWindow({ myId, partner }: Props) {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const raw = e.target.value;
 
-    // Reset the slash-command menu selection as the query changes.
     setSlashHighlight(0);
 
-    // Live emoji shortcodes: replace ":joy:" -> "😂" as it's typed, while
-    // keeping the caret where the user expects it.
     const processed = processShortcodes(raw);
     if (processed !== raw) {
       const caret = e.target.selectionStart ?? raw.length;
@@ -367,8 +405,6 @@ export function ChatWindow({ myId, partner }: Props) {
     inputRef.current?.focus();
   };
 
-  // Show the autocomplete while the input is a lone "/command" being typed
-  // (a slash followed by word chars, no spaces) and isn't an edit.
   const isSlashQuery = !editingMessage && /^\/\w*$/.test(input);
   const matchedCommands = isSlashQuery
     ? SLASH_COMMANDS.filter((c) => c.cmd.startsWith(input.toLowerCase()))
@@ -465,7 +501,6 @@ export function ChatWindow({ myId, partner }: Props) {
     }, 0);
   };
 
-  // Group messages with date separators
   const grouped: Array<{ separator?: string; message?: Message }> = [];
   let lastDate = "";
   for (const msg of messages) {
@@ -479,7 +514,6 @@ export function ChatWindow({ myId, partner }: Props) {
 
   const activeAction = replyTo ?? editingMessage;
 
-  // "Seen" shows under my latest message once the partner has read past it.
   const lastMessage = messages[messages.length - 1];
   const seenByPartner =
     !!lastMessage &&
@@ -490,7 +524,6 @@ export function ChatWindow({ myId, partner }: Props) {
 
   return (
     <div className={`flex flex-col overflow-hidden transition-all duration-300 ${player.activeId ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-1rem)]"}`}>
-      {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <Link
           href={`/users/${partner.id}`}
@@ -522,15 +555,12 @@ export function ChatWindow({ myId, partner }: Props) {
         </Link>
       </div>
 
-      {/* Retention notice */}
       <div className="shrink-0 flex items-center justify-center gap-1.5 py-2 px-4 bg-amber-500/10 border-b border-amber-500/20">
         <HiOutlineInformationCircle size={13} className="text-amber-400/80 shrink-0" />
         <p className="text-[11px] text-amber-400/80 font-medium">Messages older than 30 days are automatically deleted</p>
       </div>
 
-      {/* Message list */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 flex flex-col gap-1 pb-6">
-        {/* Empty state */}
         {!loadingMessages && messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-16 text-center">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/10">
@@ -633,9 +663,7 @@ export function ChatWindow({ myId, partner }: Props) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
       <div className="relative shrink-0 px-4 pb-4 pt-2 border-t border-white/10">
-        {/* Slash-command autocomplete */}
         {showSlashMenu && (
           <div className="absolute left-4 right-4 bottom-full mb-2 z-50 bg-neutral-900 border border-white/15 rounded-xl shadow-xl overflow-hidden">
             <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
@@ -644,8 +672,7 @@ export function ChatWindow({ myId, partner }: Props) {
             {matchedCommands.map((c, idx) => (
               <button
                 key={c.cmd}
-                // onMouseDown (not onClick) so the textarea keeps focus and the
-                // command fires before any blur.
+               
                 onMouseDown={(e) => { e.preventDefault(); executeSlashCommand(c.cmd); }}
                 onMouseEnter={() => setSlashHighlight(idx)}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
@@ -664,7 +691,6 @@ export function ChatWindow({ myId, partner }: Props) {
           </div>
         )}
 
-        {/* Reply / edit context bar */}
         {activeAction && (
           <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl">
             {editingMessage ? (
@@ -716,7 +742,6 @@ export function ChatWindow({ myId, partner }: Props) {
             )}
           </div>
 
-          {/* Text input */}
           <textarea
             ref={inputRef}
             value={input}
@@ -732,7 +757,6 @@ export function ChatWindow({ myId, partner }: Props) {
             style={{ minHeight: "1.5rem" }}
           />
 
-          {/* Song + GIF attach — hidden while editing */}
           {!editingMessage && (
             <>
               <button
@@ -754,7 +778,6 @@ export function ChatWindow({ myId, partner }: Props) {
             </>
           )}
 
-          {/* Send / Save */}
           <button
             onClick={() => sendMessage(input)}
             disabled={sending || !input.trim()}
