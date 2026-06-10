@@ -47,3 +47,27 @@ const SHORTCODES: Record<string, string> = {
 export function processShortcodes(text: string): string {
   return text.replace(/:([a-z0-9_+\-]+):/g, (match, code) => SHORTCODES[code] ?? match);
 }
+
+// Characters that make up emoji: pictographs, regional indicators (flags),
+// skin-tone modifiers, ZWJ / variation selectors, keycap combiner.
+const EMOJI_CHARS = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍️⃣]/gu;
+
+/**
+ * If `text` is made up of only emoji (plus whitespace), returns how many
+ * emoji it contains. Returns 0 for anything else. Used to render short
+ * emoji-only messages larger ("jumbomoji").
+ */
+export function emojiOnlyCount(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  // Anything left after removing emoji + whitespace means it's not emoji-only.
+  if (trimmed.replace(EMOJI_CHARS, "").replace(/\s/g, "") !== "") return 0;
+
+  const noSpace = trimmed.replace(/\s/g, "");
+  // Count grapheme clusters so ZWJ sequences (👨‍👩‍👧) count as one.
+  if (typeof Intl !== "undefined" && (Intl as any).Segmenter) {
+    const seg = new (Intl as any).Segmenter(undefined, { granularity: "grapheme" });
+    return [...seg.segment(noSpace)].length;
+  }
+  return Array.from(noSpace).length;
+}

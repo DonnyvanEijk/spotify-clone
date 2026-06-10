@@ -20,6 +20,11 @@ import { format, isToday, isYesterday } from "date-fns";
 
 const MSG_SELECT = "id, conversation_id, sender_id, content, song_id, created_at, edited_at, is_deleted, reply_to_id, song:songs(id, title, author, image_path), reply_to:reply_to_id(id, sender_id, content, is_deleted)";
 
+const SLASH_COMMANDS = [
+  { cmd: "/gif", title: "Send a GIF", hint: "Search GIPHY", icon: <MdGif size={20} /> },
+  { cmd: "/song", title: "Send a song", hint: "Search your library", icon: <HiPlus size={16} /> },
+];
+
 interface Partner {
   id: string;
   username?: string;
@@ -78,6 +83,8 @@ export function ChatWindow({ myId, partner }: Props) {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [partnerLastReadAt, setPartnerLastReadAt] = useState<string | null>(null);
+  const [slashHighlight, setSlashHighlight] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -86,6 +93,8 @@ export function ChatWindow({ myId, partner }: Props) {
   const realtimeChannelRef = useRef<any>(null);
   const typingBroadcastTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const receivedTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const messagesRef = useRef<Message[]>([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const partnerAvatarUrl = partner.avatar_url
     ? supabase.storage.from("images").getPublicUrl(partner.avatar_url).data.publicUrl
@@ -103,6 +112,22 @@ export function ChatWindow({ myId, partner }: Props) {
     [myId, supabase]
   );
 
+  // Tell the partner I've read up to a given message (defaults to the latest).
+  // Uses broadcast rather than reading their conversation_reads row, which RLS
+  // hides. `lastReadAt` is a server-side created_at, so no clock skew.
+  const broadcastRead = useCallback(
+    (lastReadAt?: string) => {
+      const at = lastReadAt ?? messagesRef.current[messagesRef.current.length - 1]?.created_at;
+      if (!at) return;
+      realtimeChannelRef.current?.send({
+        type: "broadcast",
+        event: "read",
+        payload: { userId: myId, lastReadAt: at },
+      });
+    },
+    [myId]
+  );
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -116,8 +141,16 @@ export function ChatWindow({ myId, partner }: Props) {
         .eq("conversation_id", convId)
         .order("created_at", { ascending: true });
 
+      const { data: readRow } = await supabase
+        .from("conversation_reads")
+        .select("last_read_at")
+        .eq("conversation_id", convId)
+        .eq("user_id", partner.id)
+        .maybeSingle();
+
       if (!cancelled) {
         setMessages((data as Message[]) || []);
+        setPartnerLastReadAt(readRow?.last_read_at ?? null);
         setLoadingMessages(false);
         markAsRead(convId);
       }
@@ -142,6 +175,10 @@ export function ChatWindow({ myId, partner }: Props) {
           if (msg) {
             setMessages((prev) => [...prev, msg as Message]);
             markAsRead(conversationId);
+            // I'm viewing the chat, so let the partner know I've seen theirs.
+            if ((msg as Message).sender_id === partner.id) {
+              broadcastRead((msg as Message).created_at);
+            }
             // Sound is handled globally in useUnreadMessages
           }
         }
@@ -183,18 +220,38 @@ export function ChatWindow({ myId, partner }: Props) {
           }
         }
       })
-      .subscribe();
+      // Partner announced they've read up to a message — advance "Seen".
+      .on("broadcast", { event: "read" }, ({ payload }: any) => {
+        if (payload.userId === partner.id && payload.lastReadAt) {
+          setPartnerLastReadAt((prev) =>
+            !prev || new Date(payload.lastReadAt) > new Date(prev) ? payload.lastReadAt : prev
+          );
+        }
+      })
+      .subscribe((status: string) => {
+        // On (re)connect, announce that I've read the latest message so the
+        // partner sees "Seen" without waiting for a new message.
+        if (status === "SUBSCRIBED") broadcastRead();
+      });
 
     realtimeChannelRef.current = channel;
     return () => {
       supabaseClient.removeChannel(channel);
       realtimeChannelRef.current = null;
     };
-  }, [conversationId, myId, partner.id, supabase, supabaseClient, markAsRead]);
+  }, [conversationId, myId, partner.id, supabase, supabaseClient, markAsRead, broadcastRead]);
+
+  const didInitialScroll = useRef(false);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, partnerTyping]);
+    if (loadingMessages) return;
+    // Jump instantly to the bottom on first load (smooth animation gets
+    // interrupted by async layout and lands short); animate afterwards.
+    messagesEndRef.current?.scrollIntoView({
+      behavior: didInitialScroll.current ? "smooth" : "auto",
+    });
+    didInitialScroll.current = true;
+  }, [messages, partnerTyping, loadingMessages]);
 
   useEffect(() => {
     if (!showEmojiPicker) return;
@@ -220,6 +277,14 @@ export function ChatWindow({ myId, partner }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // Auto-grow the textarea with its content (capped by max-h-32 via overflow).
+  useEffect(() => {
+    const ta = inputRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [input]);
+
   const broadcastTyping = useCallback(
     (isTyping: boolean) => {
       realtimeChannelRef.current?.send({
@@ -232,7 +297,23 @@ export function ChatWindow({ myId, partner }: Props) {
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const raw = e.target.value;
+
+    // Reset the slash-command menu selection as the query changes.
+    setSlashHighlight(0);
+
+    // Live emoji shortcodes: replace ":joy:" -> "😂" as it's typed, while
+    // keeping the caret where the user expects it.
+    const processed = processShortcodes(raw);
+    if (processed !== raw) {
+      const caret = e.target.selectionStart ?? raw.length;
+      const newCaret = processShortcodes(raw.slice(0, caret)).length;
+      setInput(processed);
+      setTimeout(() => inputRef.current?.setSelectionRange(newCaret, newCaret), 0);
+    } else {
+      setInput(raw);
+    }
+
     broadcastTyping(true);
     clearTimeout(typingBroadcastTimeoutRef.current);
     typingBroadcastTimeoutRef.current = setTimeout(() => broadcastTyping(false), 2000);
@@ -273,7 +354,51 @@ export function ChatWindow({ myId, partner }: Props) {
     [conversationId, myId, supabase, broadcastTyping, editingMessage, replyTo]
   );
 
+  const executeSlashCommand = (cmd: string) => {
+    setInput("");
+    setSlashHighlight(0);
+    if (cmd === "/gif") {
+      setShowGifSearch(true);
+      setShowSongSearch(false);
+    } else if (cmd === "/song") {
+      setShowSongSearch(true);
+      setShowGifSearch(false);
+    }
+    inputRef.current?.focus();
+  };
+
+  // Show the autocomplete while the input is a lone "/command" being typed
+  // (a slash followed by word chars, no spaces) and isn't an edit.
+  const isSlashQuery = !editingMessage && /^\/\w*$/.test(input);
+  const matchedCommands = isSlashQuery
+    ? SLASH_COMMANDS.filter((c) => c.cmd.startsWith(input.toLowerCase()))
+    : [];
+  const showSlashMenu = matchedCommands.length > 0;
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showSlashMenu) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSlashHighlight((h) => (h + 1) % matchedCommands.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSlashHighlight((h) => (h - 1 + matchedCommands.length) % matchedCommands.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        const pick = matchedCommands[slashHighlight] ?? matchedCommands[0];
+        executeSlashCommand(pick.cmd);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setInput("");
+        return;
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage(input);
@@ -353,6 +478,15 @@ export function ChatWindow({ myId, partner }: Props) {
   }
 
   const activeAction = replyTo ?? editingMessage;
+
+  // "Seen" shows under my latest message once the partner has read past it.
+  const lastMessage = messages[messages.length - 1];
+  const seenByPartner =
+    !!lastMessage &&
+    lastMessage.sender_id === myId &&
+    !lastMessage.is_deleted &&
+    !!partnerLastReadAt &&
+    new Date(lastMessage.created_at).getTime() <= new Date(partnerLastReadAt).getTime();
 
   return (
     <div className={`flex flex-col overflow-hidden transition-all duration-300 ${player.activeId ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-1rem)]"}`}>
@@ -481,11 +615,55 @@ export function ChatWindow({ myId, partner }: Props) {
           </div>
         )}
 
+        {seenByPartner && !partnerTyping && (
+          <div className="flex items-center justify-end gap-1 pr-1 pt-0.5">
+            <div className="w-3.5 h-3.5 rounded-full overflow-hidden bg-white/10 shrink-0">
+              {partnerAvatarUrl ? (
+                <img src={partnerAvatarUrl} alt={partnerName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[7px] font-semibold text-neutral-400">
+                  {partnerName[0]?.toUpperCase()}
+                </div>
+              )}
+            </div>
+            <span className="text-[10px] text-neutral-500">Seen</span>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}
-      <div className="shrink-0 px-4 pb-4 pt-2 border-t border-white/10">
+      <div className="relative shrink-0 px-4 pb-4 pt-2 border-t border-white/10">
+        {/* Slash-command autocomplete */}
+        {showSlashMenu && (
+          <div className="absolute left-4 right-4 bottom-full mb-2 z-50 bg-neutral-900 border border-white/15 rounded-xl shadow-xl overflow-hidden">
+            <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
+              Commands
+            </p>
+            {matchedCommands.map((c, idx) => (
+              <button
+                key={c.cmd}
+                // onMouseDown (not onClick) so the textarea keeps focus and the
+                // command fires before any blur.
+                onMouseDown={(e) => { e.preventDefault(); executeSlashCommand(c.cmd); }}
+                onMouseEnter={() => setSlashHighlight(idx)}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                  idx === slashHighlight ? "bg-white/10" : "hover:bg-white/5"
+                }`}
+              >
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-purple-400">
+                  {c.icon}
+                </span>
+                <span className="flex flex-col min-w-0">
+                  <span className="text-sm text-white font-medium">{c.cmd}</span>
+                  <span className="text-xs text-neutral-500">{c.hint}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Reply / edit context bar */}
         {activeAction && (
           <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl">
@@ -587,7 +765,7 @@ export function ChatWindow({ myId, partner }: Props) {
           </button>
         </div>
         <p className="text-[10px] text-neutral-600 mt-1.5 pl-1">
-          Enter to send · Shift+Enter for new line · Esc to cancel · use :shortcode: for emojis
+          Enter to send · type / for commands · :shortcode: for emojis · Esc to cancel
         </p>
       </div>
 

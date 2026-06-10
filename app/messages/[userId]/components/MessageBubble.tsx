@@ -6,6 +6,7 @@ import { HiPlay, HiDotsVertical, HiOutlinePencil, HiOutlineTrash, HiReply } from
 import usePlayer from "@/hooks/usePlayer";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { detectGif } from "@/utils/gifDetector";
+import { emojiOnlyCount } from "@/utils/emojiShortcodes";
 
 interface Props {
   message: Message;
@@ -62,6 +63,12 @@ export function MessageBubble({
     : null;
 
   const gif = !message.is_deleted && message.content ? detectGif(message.content) : null;
+
+  // Render short emoji-only messages large, with no bubble background.
+  const jumboCount = !message.is_deleted && message.content && !gif && !message.song
+    ? emojiOnlyCount(message.content)
+    : 0;
+  const isJumbo = jumboCount > 0 && jumboCount <= 3;
 
   const time = new Date(message.created_at).toLocaleTimeString([], {
     hour: "2-digit",
@@ -203,20 +210,29 @@ export function MessageBubble({
                 className="rounded-2xl max-w-[220px] w-full"
               />
             )}
-            {/* Text — hidden if the whole message was just the GIF URL */}
-            {message.content && (!gif || gif.remainingText) && (
+            {/* Emoji-only message — big, no bubble */}
+            {isJumbo ? (
               <div
-                className={`w-full min-w-0 px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere ${
-                  isMine
-                    ? "bg-purple-600 text-white rounded-br-sm"
-                    : "bg-white text-black rounded-bl-sm"
-                }`}
+                className={`px-1 leading-none ${jumboCount === 1 ? "text-5xl" : jumboCount === 2 ? "text-4xl" : "text-3xl"}`}
               >
-                {renderWithLinks(
-                  gif ? gif.remainingText : message.content!,
-                  isMine ? "text-white/90" : "text-purple-700"
-                )}
+                {message.content}
               </div>
+            ) : (
+              /* Text — hidden if the whole message was just the GIF URL */
+              message.content && (!gif || gif.remainingText) && (
+                <div
+                  className={`w-full min-w-0 px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere ${
+                    isMine
+                      ? "bg-purple-600 text-white rounded-br-sm"
+                      : "bg-white text-black rounded-bl-sm"
+                  }`}
+                >
+                  {renderWithLinks(
+                    gif ? gif.remainingText : message.content!,
+                    isMine ? "text-white/90" : "text-purple-700"
+                  )}
+                </div>
+              )
             )}
           </>
         )}
