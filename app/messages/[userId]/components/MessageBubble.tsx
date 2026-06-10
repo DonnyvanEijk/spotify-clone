@@ -7,6 +7,7 @@ import usePlayer from "@/hooks/usePlayer";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { detectGif } from "@/utils/gifDetector";
 import { emojiOnlyCount } from "@/utils/emojiShortcodes";
+import { isImageDataUrl } from "@/utils/imageCompress";
 
 interface Props {
   message: Message;
@@ -62,10 +63,13 @@ export function MessageBubble({
     ? supabase.storage.from("images").getPublicUrl(message.song.image_path).data.publicUrl
     : null;
 
-  const gif = !message.is_deleted && message.content ? detectGif(message.content) : null;
+  // Inline image sent via drag-and-drop (stored as a data-URI in content).
+  const imageData = !message.is_deleted && isImageDataUrl(message.content) ? message.content! : null;
+
+  const gif = !message.is_deleted && !imageData && message.content ? detectGif(message.content) : null;
 
   // Render short emoji-only messages large, with no bubble background.
-  const jumboCount = !message.is_deleted && message.content && !gif && !message.song
+  const jumboCount = !message.is_deleted && !imageData && message.content && !gif && !message.song
     ? emojiOnlyCount(message.content)
     : 0;
   const isJumbo = jumboCount > 0 && jumboCount <= 3;
@@ -107,12 +111,15 @@ export function MessageBubble({
           </button>
           {isMine && (
             <>
-              <button
-                onClick={() => { onEdit(message); setMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/8 transition-colors"
-              >
-                <HiOutlinePencil size={13} /> Edit
-              </button>
+              {/* Images/GIFs aren't text-editable */}
+              {!imageData && !gif && (
+                <button
+                  onClick={() => { onEdit(message); setMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/8 transition-colors"
+                >
+                  <HiOutlinePencil size={13} /> Edit
+                </button>
+              )}
               <button
                 onClick={() => { onDelete(message); setMenuOpen(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
@@ -161,7 +168,9 @@ export function MessageBubble({
               {message.reply_to.is_deleted
                 ? "Message deleted"
                 : message.reply_to.content
-                  ? detectGif(message.reply_to.content) ? "🎞 GIF" : message.reply_to.content
+                  ? isImageDataUrl(message.reply_to.content)
+                    ? "📷 Photo"
+                    : detectGif(message.reply_to.content) ? "🎞 GIF" : message.reply_to.content
                   : "🎵 Song"}
             </p>
           </button>
@@ -199,6 +208,16 @@ export function MessageBubble({
           <div className="px-3 py-2 rounded-2xl text-sm border border-white/10 text-neutral-500 italic">
             Message deleted
           </div>
+        ) : imageData ? (
+          /* Inline image (drag-and-dropped) */
+          <a href={imageData} target="_blank" rel="noopener noreferrer">
+            <img
+              src={imageData}
+              alt="Image"
+              loading="lazy"
+              className="rounded-2xl max-w-65 w-full hover:opacity-90 transition-opacity"
+            />
+          </a>
         ) : (
           <>
             {/* GIF embed */}

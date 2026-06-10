@@ -12,7 +12,8 @@ import { GifSearchModal } from "./GifSearchModal";
 import { PresenceBadge } from "@/components/PresenceBadge";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { processShortcodes } from "@/utils/emojiShortcodes";
-import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply } from "react-icons/hi";
+import { fileToCompressedDataUrl } from "@/utils/imageCompress";
+import { HiArrowLeft, HiOutlinePaperAirplane, HiPlus, HiOutlineInformationCircle, HiX, HiOutlinePencil, HiReply, HiMusicNote, HiPhotograph } from "react-icons/hi";
 import { MdGif } from "react-icons/md";
 import { playSendSound } from "@/utils/messageSounds";
 import { HiFaceSmile } from "react-icons/hi2";
@@ -85,6 +86,11 @@ export function ChatWindow({ myId, partner }: Props) {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [partnerLastReadAt, setPartnerLastReadAt] = useState<string | null>(null);
   const [slashHighlight, setSlashHighlight] = useState(0);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const dragDepthRef = useRef(0);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -308,6 +314,17 @@ export function ChatWindow({ myId, partner }: Props) {
   }, [showEmojiPicker]);
 
   useEffect(() => {
+    if (!showAttachMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target as Node)) {
+        setShowAttachMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showAttachMenu]);
+
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setReplyTo(null);
@@ -452,6 +469,70 @@ export function ChatWindow({ myId, partner }: Props) {
     await sendMessage(url);
   };
 
+  // Compress dropped image files and send each as an inline data-URI message.
+  const sendImageFiles = useCallback(
+    async (files: File[]) => {
+      const images = files.filter((f) => f.type.startsWith("image/"));
+      for (const file of images) {
+        try {
+          const dataUrl = await fileToCompressedDataUrl(file);
+          await sendMessage(dataUrl);
+        } catch {
+          // Skip files that fail to load/encode.
+        }
+      }
+    },
+    [sendMessage]
+  );
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    setIsDraggingImage(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (Array.from(e.dataTransfer.types).includes("Files")) e.preventDefault();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+    e.preventDefault();
+    dragDepthRef.current -= 1;
+    if (dragDepthRef.current <= 0) {
+      dragDepthRef.current = 0;
+      setIsDraggingImage(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+    e.preventDefault();
+    dragDepthRef.current = 0;
+    setIsDraggingImage(false);
+    sendImageFiles(Array.from(e.dataTransfer.files));
+  };
+
+  // Paste a copied image straight into the conversation.
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageFiles = Array.from(e.clipboardData.items)
+      .filter((it) => it.kind === "file" && it.type.startsWith("image/"))
+      .map((it) => it.getAsFile())
+      .filter((f): f is File => !!f);
+    if (imageFiles.length) {
+      e.preventDefault();
+      sendImageFiles(imageFiles);
+    }
+  };
+
+  // "+" menu → pick image from disk.
+  const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length) sendImageFiles(files);
+    e.target.value = ""; // allow re-picking the same file
+  };
+
   const handleReply = useCallback((msg: Message) => {
     setReplyTo(msg);
     setEditingMessage(null);
@@ -523,7 +604,20 @@ export function ChatWindow({ myId, partner }: Props) {
     new Date(lastMessage.created_at).getTime() <= new Date(partnerLastReadAt).getTime();
 
   return (
-    <div className={`flex flex-col overflow-hidden transition-all duration-300 ${player.activeId ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-1rem)]"}`}>
+    <div
+      className={`relative flex flex-col overflow-hidden transition-all duration-300 ${player.activeId ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-1rem)]"}`}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDraggingImage && (
+        <div className="absolute inset-0 z-50 m-3 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-purple-500/60 bg-neutral-950/80 backdrop-blur-sm pointer-events-none">
+          <HiPlus size={28} className="text-purple-400" />
+          <p className="text-sm font-semibold text-white">Drop image to send</p>
+          <p className="text-xs text-neutral-400">It'll be compressed and added to the chat</p>
+        </div>
+      )}
       <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <Link
           href={`/users/${partner.id}`}
@@ -747,6 +841,7 @@ export function ChatWindow({ myId, partner }: Props) {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={
               editingMessage
                 ? "Edit your message…"
@@ -761,20 +856,44 @@ export function ChatWindow({ myId, partner }: Props) {
             <>
               <button
                 type="button"
-                onClick={() => { setShowGifSearch((v) => !v); setShowSongSearch(false); }}
+                onClick={() => { setShowGifSearch((v) => !v); setShowSongSearch(false); setShowAttachMenu(false); }}
                 className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
                 title="Send a GIF"
               >
                 <MdGif size={22} />
               </button>
-              <button
-                type="button"
-                onClick={() => { setShowSongSearch((v) => !v); setShowGifSearch(false); }}
-                className="shrink-0 self-end mb-0.5 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-all"
-                title="Send a song"
-              >
-                <HiPlus size={18} />
-              </button>
+
+              {/* Attach popover: song or image */}
+              <div className="relative shrink-0 self-end mb-0.5" ref={attachMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => { setShowAttachMenu((v) => !v); setShowGifSearch(false); setShowSongSearch(false); }}
+                  className={`p-1.5 rounded-lg transition-all ${
+                    showAttachMenu ? "text-white bg-white/10" : "text-neutral-500 hover:text-white hover:bg-white/10"
+                  }`}
+                  title="Attach"
+                >
+                  <HiPlus size={18} />
+                </button>
+                {showAttachMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 z-50 w-40 bg-neutral-900 border border-white/15 rounded-xl shadow-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => { setShowAttachMenu(false); setShowSongSearch(true); setShowGifSearch(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-200 hover:text-white hover:bg-white/8 transition-colors"
+                    >
+                      <HiMusicNote size={15} className="text-purple-400" /> Song
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAttachMenu(false); imageInputRef.current?.click(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-200 hover:text-white hover:bg-white/8 transition-colors"
+                    >
+                      <HiPhotograph size={15} className="text-purple-400" /> Image
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
@@ -790,6 +909,15 @@ export function ChatWindow({ myId, partner }: Props) {
         <p className="text-[10px] text-neutral-600 mt-1.5 pl-1">
           Enter to send · type / for commands · :shortcode: for emojis · Esc to cancel
         </p>
+
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={handleImagePick}
+        />
       </div>
 
       {showSongSearch && (
