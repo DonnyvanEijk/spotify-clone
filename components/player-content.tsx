@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Song } from "@/types";
 import MediaItem from "./media-item";
 import { LikeButton } from "./like-button";
@@ -14,8 +14,7 @@ import toast from "react-hot-toast";
 import { getAudioDuration, getAudioDurationInSecconds } from "@/lib/getDuration";
 import PlayerSlider from "./player-slider";
 import PlaylistButton from "./PlaylistButton";
-import { MdAudiotrack, MdClose, MdLoop } from "react-icons/md";
-import AudioVisualizer from "./Visualizer";
+import { MdLoop } from "react-icons/md";
 
 interface PlayerContentProps {
     song: Song;
@@ -31,15 +30,12 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     const [durationInSeconds, setDurationInSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState<string | null>(null);
     const [currentTimeInSeconds, setCurrentTimeInSeconds] = useState<number | null>(null);
-    const [showVisualizer, setShowVisualizer] = useState(false);
 
     const cachedVolume = localStorage.getItem("player-volume");
     const initialVolume = cachedVolume ? parseFloat(cachedVolume) : 1;
 
     const [volume, setVolume] = useState<number>(initialVolume);
     const [lastVolume, setLastVolume] = useState<number>(initialVolume);
-    const showVisualizerRef = useRef(showVisualizer);
-
 
     const isLooping = player.loop;
     const toggleLoop = player.toggleLoop;
@@ -54,13 +50,6 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         onpause: () => setIsPlaying(false),
         format: ["mp3"]
     });
-
-    const handleVisualizerToggle = () => {
-  setShowVisualizer(prev => {
-    showVisualizerRef.current = !prev; 
-    return !prev;
-  });
-};
 
     const handleSongEnd = () => {
         if (isLooping) {
@@ -242,15 +231,6 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                         <button onClick={toggleLoop} className={`p-2 rounded-full transition ${isLooping ? "bg-white text-black" : "bg-gray-700 text-gray-300"}`}>
                             <MdLoop />
                         </button>
-                        {
-                          !showVisualizer && (
-                          <button onClick={() => setShowVisualizer(true)} className="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition">
-                            <MdAudiotrack />
-                        </button>
-                          )
-
-                        }
-                       
                     </div>
                     <div className="flex flex-row items-center w-full gap-2">
                         <p className="mt-2 text-center">{currentTime}</p>
@@ -270,23 +250,6 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                     </div>
                 </div>
             </div>
-
-{showVisualizer && (
-  <div className="fixed inset-0 z-50 flex items-center justify-end px-4 pointer-events-none">
-    <div className="relative  bg-neutral-900 lg:mr-[16vw] 2xl:mr-[10vw] rounded-xl p-4 w-25 sm:hidden lg:block lg:w-50 2xl:w-137.5 flex flex-col items-center pointer-events-auto">
-      <button
-        onClick={handleVisualizerToggle}
-        className="absolute top-2 right-2 text-white text-xl"
-      >
-        <MdClose />
-      </button>
-      <AudioVisualizer isPlaying={isPlaying} height={50} />
-    </div>
-  </div>
-)}
-
-
-
         </div>
     );
 };
