@@ -83,6 +83,10 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         return () => window.removeEventListener("restartCurrentSong", restartHandler);
     }, [sound, isPlaying, play]);
 
+    useEffect(() => {
+        player.setIsPlaying(isPlaying);
+    }, [isPlaying]);
+
     const handlePlay = () => {
         if (isLoading) return;
         if (!isPlaying) {
@@ -132,6 +136,20 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         const previousSong = player.ids[currentIndex - 1] || player.ids[player.ids.length - 1];
         player.setId(previousSong);
     };
+
+    useEffect(() => {
+        const toggleHandler = () => handlePlay();
+        const nextHandler = () => onPlayNext();
+        const previousHandler = () => onPlayPrevious();
+        window.addEventListener("playerTogglePlay", toggleHandler);
+        window.addEventListener("playerNext", nextHandler);
+        window.addEventListener("playerPrevious", previousHandler);
+        return () => {
+            window.removeEventListener("playerTogglePlay", toggleHandler);
+            window.removeEventListener("playerNext", nextHandler);
+            window.removeEventListener("playerPrevious", previousHandler);
+        };
+    }, [handlePlay, onPlayNext, onPlayPrevious]);
 
     //@ts-expect-error works but expects void?
     useEffect(() => {

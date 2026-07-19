@@ -6,11 +6,13 @@ interface PlayerStore {
   volume: number;
   loop: boolean;
   shuffle: boolean;
+  isPlaying: boolean;
   toggleShuffle: () => void;
   toggleLoop: () => void;
   setId: (id: string) => void;
   setIds: (ids: string[]) => void;
   setVolume: (volume: number) => void;
+  setIsPlaying: (isPlaying: boolean) => void;
   reset: () => void;
   insertAfterCurrent: (id: string) => void;
 }
@@ -21,11 +23,13 @@ const usePlayer = create<PlayerStore>((set) => ({
   volume: 1,
   loop: false,
   shuffle: false,
+  isPlaying: false,
   toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
   toggleLoop: () => set((state) => ({ loop: !state.loop })),
   setId: (id: string) => set({ activeId: id }),
   setIds: (ids: string[]) => set({ ids }),
   setVolume: (volume: number) => set({ volume }),
+  setIsPlaying: (isPlaying: boolean) => set({ isPlaying }),
   reset: () => set({ ids: [], activeId: undefined, volume: 1, loop: false }),
   insertAfterCurrent: (id: string) =>
     set((state) => {
