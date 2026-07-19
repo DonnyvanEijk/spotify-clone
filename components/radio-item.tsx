@@ -7,6 +7,7 @@ import * as ContextMenu from "@radix-ui/react-context-menu";
 import { differenceInHours } from "date-fns";
 import { LuPlay, LuPause } from "react-icons/lu";
 import { motion } from "framer-motion";
+import RadioRightClickContent from "./right_click/RadioRightClickContent";
 
 interface RadioItemProps {
   data: Radio;
@@ -105,6 +106,8 @@ export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive }) 
           </div>
         </div>
       </ContextMenu.Trigger>
+
+      <RadioRightClickContent radio={data} />
     </ContextMenu.Root>
   );
 };

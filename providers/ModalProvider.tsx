@@ -9,6 +9,8 @@ import CreateAlbumModal from "@/components/modals/CreateAlbumModal"
 import CreateExistingRadioModal from "@/components/modals/CreateExistingRadioModal"
 import CreatePlaylistModal from "@/components/modals/CreatePlaylistModal"
 import DeleteAlbumModal from "@/components/modals/DeleteAlbumModal"
+import DeleteRadioModal from "@/components/modals/DeleteRadioModal"
+import EditRadioModal from "@/components/modals/EditRadioModal"
 import DeletePlaylistModal from "@/components/modals/DeletePlaylistModal"
 import DeleteSongModal from "@/components/modals/DeleteSongModal"
 import AlbumEditModal from "@/components/modals/EditAlbumModal"
@@ -56,7 +58,9 @@ export const ModalProvider: React.FC<Props> = ({ products }) => {
             <ClonePlaylistModal />
             <CreateAlbumModal />
             <AlbumEditModal />
-    
+            <EditRadioModal />
+            <DeleteRadioModal />
+
         </>
     )
 }
