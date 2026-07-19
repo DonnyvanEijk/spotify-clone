@@ -163,6 +163,7 @@ export interface Message {
   reply_to_id: string | null;
   song?: Pick<Song, "id" | "title" | "author" | "image_path"> | null;
   reply_to?: MessageReply | null;
+  pending?: boolean;
 }
 
 export interface ConversationRead {

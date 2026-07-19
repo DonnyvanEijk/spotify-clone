@@ -64,7 +64,6 @@ function MessageBubbleComponent({
     ? supabase.storage.from("images").getPublicUrl(message.song.image_path).data.publicUrl
     : null;
 
-  // Inline image sent via drag-and-drop (stored as a data-URI in content).
   const imageData = !message.is_deleted && isImageDataUrl(message.content) ? message.content! : null;
   const replyImage =
     message.reply_to && !message.reply_to.is_deleted && isImageDataUrl(message.reply_to.content)
@@ -73,18 +72,18 @@ function MessageBubbleComponent({
 
   const gif = !message.is_deleted && !imageData && message.content ? detectGif(message.content) : null;
 
-  // Render short emoji-only messages large, with no bubble background.
   const jumboCount = !message.is_deleted && !imageData && message.content && !gif && !message.song
     ? emojiOnlyCount(message.content)
     : 0;
   const isJumbo = jumboCount > 0 && jumboCount <= 3;
+
+  const pending = !!message.pending;
 
   const time = new Date(message.created_at).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
@@ -102,9 +101,14 @@ function MessageBubbleComponent({
     try {
       await copyImageToClipboard(imageData);
     } catch {
-      // Clipboard unavailable or permission denied — ignore.
     }
   };
+
+  const pendingSpinner = (
+    <div className="self-center shrink-0 flex items-center" title="Sending…">
+      <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-400/30 border-t-purple-300 animate-spin" />
+    </div>
+  );
 
   const actions = !message.is_deleted && (
     <div className="relative opacity-0 group-hover:opacity-100 transition-opacity self-center shrink-0" ref={menuRef}>
@@ -134,7 +138,6 @@ function MessageBubbleComponent({
           )}
           {isMine && (
             <>
-              {/* Images/GIFs aren't text-editable */}
               {!imageData && !gif && (
                 <button
                   onClick={() => { onEdit(message); setMenuOpen(false); }}
@@ -158,7 +161,6 @@ function MessageBubbleComponent({
 
   return (
     <div className={`group flex items-end gap-1 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
-      {/* Avatar slot */}
       <div className="w-7 h-7 shrink-0">
         {!isMine && showAvatar && (
           <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10">
@@ -173,12 +175,13 @@ function MessageBubbleComponent({
         )}
       </div>
 
-      {/* Three-dot menu — renders on the outer side of the bubble */}
-      {actions}
+      {pending ? pendingSpinner : actions}
 
-      {/* Bubble column */}
-      <div className={`flex flex-col max-w-[68%] gap-0.5 ${isMine ? "items-end" : "items-start"}`}>
-        {/* Reply preview — click to jump to original */}
+      <div
+        className={`flex flex-col max-w-[68%] gap-0.5 ${isMine ? "items-end" : "items-start"} ${
+          pending ? "opacity-50 saturate-50" : ""
+        } transition-opacity duration-200`}
+      >
         {message.reply_to && (
           <button
             onClick={() => message.reply_to_id && onScrollToMessage(message.reply_to_id)}
@@ -209,7 +212,6 @@ function MessageBubbleComponent({
           </button>
         )}
 
-        {/* Song embed */}
         {message.song && !message.is_deleted && (
           <div className="bg-white/8 border border-white/10 rounded-2xl overflow-hidden w-56">
             {songImageUrl && (
@@ -236,13 +238,11 @@ function MessageBubbleComponent({
           </div>
         )}
 
-        {/* Text bubble or deleted state */}
         {message.is_deleted ? (
           <div className="px-3 py-2 rounded-2xl text-sm border border-white/10 text-neutral-500 italic">
             Message deleted
           </div>
         ) : imageData ? (
-          /* Inline image (drag-and-dropped) */
           <img
             src={imageData}
             alt="Image"
@@ -253,16 +253,14 @@ function MessageBubbleComponent({
           />
         ) : (
           <>
-            {/* GIF embed */}
             {gif && (
               <img
                 src={gif.url}
                 alt="GIF"
                 loading="lazy"
-                className="rounded-2xl max-w-[220px] w-full"
+                className="rounded-2xl max-w-55 w-full"
               />
             )}
-            {/* Emoji-only message — big, no bubble */}
             {isJumbo ? (
               <div
                 className={`px-1 leading-none ${jumboCount === 1 ? "text-5xl" : jumboCount === 2 ? "text-4xl" : "text-3xl"}`}
@@ -270,7 +268,6 @@ function MessageBubbleComponent({
                 {message.content}
               </div>
             ) : (
-              /* Text — hidden if the whole message was just the GIF URL */
               message.content && (!gif || gif.remainingText) && (
                 <div
                   className={`w-full min-w-0 px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere ${
@@ -289,21 +286,19 @@ function MessageBubbleComponent({
           </>
         )}
 
-        {/* Edited indicator — always visible if edited */}
         {message.edited_at && !message.is_deleted && (
           <span className="text-[10px] text-neutral-700 px-1">· edited</span>
         )}
 
-        {/* Timestamp — only on last message of a same-minute group */}
-        {showTimestamp && (
-          <span className="text-[10px] text-neutral-600 px-1">{time}</span>
+        {pending ? (
+          <span className="text-[10px] text-purple-300/70 px-1 animate-pulse">Sending…</span>
+        ) : (
+          showTimestamp && (
+            <span className="text-[10px] text-neutral-600 px-1">{time}</span>
+          )
         )}
       </div>
     </div>
   );
 }
-
-// Memoized: with stable callbacks from the parent, a bubble only re-renders
-// when its own props change — so typing/seen/new-message updates no longer
-// repaint every (potentially image-heavy) bubble in the list.
 export const MessageBubble = memo(MessageBubbleComponent);

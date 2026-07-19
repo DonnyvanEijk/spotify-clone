@@ -19,6 +19,7 @@ import { MdGif } from "react-icons/md";
 import { playSendSound } from "@/utils/messageSounds";
 import { HiFaceSmile } from "react-icons/hi2";
 import { format, isToday, isYesterday } from "date-fns";
+import toast from "react-hot-toast";
 
 const MSG_SELECT = "id, conversation_id, sender_id, content, song_id, created_at, edited_at, is_deleted, reply_to_id, song:songs(id, title, author, image_path), reply_to:reply_to_id(id, sender_id, content, is_deleted)";
 
@@ -189,7 +190,19 @@ export function ChatWindow({ myId, partner }: Props) {
             .eq("id", payload.new.id)
             .single();
           if (msg) {
-            setMessages((prev) => [...prev, msg as Message]);
+            setMessages((prev) => {
+              const real = msg as Message;
+              if (prev.some((m) => m.id === real.id)) return prev;
+              if (real.sender_id === myId) {
+                const idx = prev.findIndex((m) => m.pending);
+                if (idx !== -1) {
+                  const copy = [...prev];
+                  copy[idx] = real;
+                  return copy;
+                }
+              }
+              return [...prev, real];
+            });
             if ((msg as Message).sender_id === partner.id) {
               if (isViewing()) {
                 markAsRead(conversationId);
@@ -239,7 +252,6 @@ export function ChatWindow({ myId, partner }: Props) {
           }
         }
       })
-      // Partner announced they've read up to a message — advance "Seen".
       .on("broadcast", { event: "read" }, ({ payload }: any) => {
         if (payload.userId === partner.id && payload.lastReadAt) {
           setPartnerLastReadAt((prev) =>
@@ -378,36 +390,96 @@ export function ChatWindow({ myId, partner }: Props) {
   };
 
   const sendMessage = useCallback(
-    async (content?: string, songId?: string) => {
+    async (content?: string, songId?: string, optimisticSong?: Song) => {
       if (!conversationId) return;
       if (!content?.trim() && !songId) return;
-      setSending(true);
+
       broadcastTyping(false);
       clearTimeout(typingBroadcastTimeoutRef.current);
 
       const processed = content ? processShortcodes(content.trim()) : null;
 
       if (editingMessage) {
+        setSending(true);
         await supabase
           .from("messages")
           .update({ content: processed, edited_at: new Date().toISOString() } as any)
           .eq("id", editingMessage.id);
         setEditingMessage(null);
-      } else {
-        await supabase.from("messages").insert({
+        playSendSound();
+        setInput("");
+        setSending(false);
+        inputRef.current?.focus();
+        return;
+      }
+
+      const currentReplyTo = replyTo;
+      const tempId = `temp-${
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2)
+      }`;
+
+      const optimistic: Message = {
+        id: tempId,
+        conversation_id: conversationId,
+        sender_id: myId,
+        content: processed || null,
+        song_id: songId || null,
+        created_at: new Date().toISOString(),
+        edited_at: null,
+        is_deleted: false,
+        reply_to_id: currentReplyTo?.id || null,
+        song: optimisticSong
+          ? {
+              id: optimisticSong.id,
+              title: optimisticSong.title,
+              author: optimisticSong.author,
+              image_path: optimisticSong.image_path,
+            }
+          : null,
+        reply_to: currentReplyTo
+          ? {
+              id: currentReplyTo.id,
+              sender_id: currentReplyTo.sender_id,
+              content: currentReplyTo.content,
+              is_deleted: currentReplyTo.is_deleted,
+            }
+          : null,
+        pending: true,
+      };
+
+      setMessages((prev) => [...prev, optimistic]);
+      setInput("");
+      setReplyTo(null);
+      playSendSound();
+      inputRef.current?.focus();
+
+      const { data: inserted, error } = await supabase
+        .from("messages")
+        .insert({
           conversation_id: conversationId,
           sender_id: myId,
           content: processed || null,
           song_id: songId || null,
-          reply_to_id: replyTo?.id || null,
-        });
-        setReplyTo(null);
+          reply_to_id: currentReplyTo?.id || null,
+        })
+        .select(MSG_SELECT)
+        .single();
+
+      if (error || !inserted) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        toast.error("Message failed to send");
+        return;
       }
 
-      playSendSound();
-      setInput("");
-      setSending(false);
-      inputRef.current?.focus();
+      const real = inserted as Message;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === real.id)) {
+          return prev.filter((m) => m.id !== tempId);
+        }
+        return prev.map((m) => (m.id === tempId ? real : m));
+      });
     },
     [conversationId, myId, supabase, broadcastTyping, editingMessage, replyTo]
   );
@@ -465,7 +537,7 @@ export function ChatWindow({ myId, partner }: Props) {
 
   const handleSongSelect = async (song: Song) => {
     setShowSongSearch(false);
-    await sendMessage(undefined, song.id);
+    await sendMessage(undefined, song.id, song);
   };
 
   const handleGifSelect = async (url: string) => {
@@ -474,7 +546,6 @@ export function ChatWindow({ myId, partner }: Props) {
     await sendMessage(url);
   };
 
-  // Compress dropped image files and send each as an inline data-URI message.
   const sendImageFiles = useCallback(
     async (files: File[]) => {
       const images = files.filter((f) => f.type.startsWith("image/"));
@@ -483,7 +554,6 @@ export function ChatWindow({ myId, partner }: Props) {
           const dataUrl = await fileToCompressedDataUrl(file);
           await sendMessage(dataUrl);
         } catch {
-          // Skip files that fail to load/encode.
         }
       }
     },
@@ -519,7 +589,6 @@ export function ChatWindow({ myId, partner }: Props) {
     sendImageFiles(Array.from(e.dataTransfer.files));
   };
 
-  // Paste a copied image straight into the conversation.
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imageFiles = Array.from(e.clipboardData.items)
       .filter((it) => it.kind === "file" && it.type.startsWith("image/"))
@@ -531,11 +600,10 @@ export function ChatWindow({ myId, partner }: Props) {
     }
   };
 
-  // "+" menu → pick image from disk.
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length) sendImageFiles(files);
-    e.target.value = ""; // allow re-picking the same file
+    e.target.value = ""; 
   };
 
   const handleOpenImage = useCallback((src: string) => setLightboxSrc(src), []);
@@ -828,7 +896,6 @@ export function ChatWindow({ myId, partner }: Props) {
         )}
 
         <div className="flex items-end gap-2 bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
-          {/* Emoji picker */}
           <div className="relative shrink-0 self-end mb-0.5" ref={emojiPickerRef}>
             <button
               type="button"
@@ -876,7 +943,6 @@ export function ChatWindow({ myId, partner }: Props) {
                 <MdGif size={22} />
               </button>
 
-              {/* Attach popover: song or image */}
               <div className="relative shrink-0 self-end mb-0.5" ref={attachMenuRef}>
                 <button
                   type="button"
