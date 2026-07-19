@@ -213,7 +213,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         <div className="relative w-full">
             <div className="grid grid-cols-2 md:grid-cols-3 h-full">
                 <div className="flex w-full justify-start">
-                    <div className="flex items-center gap-x-4 md:w-[220px] lg:w-[400px] 2xl:w-[600px] xl:w-[400px] w-[300px] lg:truncate md:truncate">
+                    <div className="flex items-center gap-x-4 md:w-55 lg:w-100 2xl:w-150 xl:w-100 w-75 lg:truncate md:truncate">
                         <MediaItem hideBackground className="border-none bg-transparent mb-2" data={song} reactive={false} isPlayer={true} isOwner={false} />
                     </div>
                 </div>
@@ -228,7 +228,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                     </div>
                 </div>
 
-                <div className="hidden h-full md:flex flex-col justify-center items-center w-full max-w-[722px] gap-x-6">
+                <div className="hidden h-full md:flex flex-col justify-center items-center w-full max-w-180.5 gap-x-6">
                     <div className="flex items-center gap-x-6">
                         <AiFillStepBackward size={30} className="text-neutral-400 cursor-pointer hover:text-white transition" onClick={onPlayPrevious} />
                         <div onClick={handlePlay} className="flex items-center justify-center h-10 w-10 rounded-full bg-white p-1 cursor-pointer">
@@ -264,7 +264,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                         <LikeButton songId={song.id} creatorId={song.user_id} />
                         <PlaylistButton songId={song.id} />
                     </div>
-                    <div className="flex items-center gap-x-2 w-[120px]">
+                    <div className="flex items-center gap-x-2 w-30">
                         <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={34} />
                         <Slider value={volume} onChange={(v) => setVolume(v)} />
                     </div>
@@ -273,7 +273,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
 
 {showVisualizer && (
   <div className="fixed inset-0 z-50 flex items-center justify-end px-4 pointer-events-none">
-    <div className="relative  bg-neutral-900 lg:mr-[16vw] 2xl:mr-[10vw] rounded-xl p-4 w-[100px] sm:hidden lg:block lg:w-[200px] 2xl:w-[550px] flex flex-col items-center pointer-events-auto">
+    <div className="relative  bg-neutral-900 lg:mr-[16vw] 2xl:mr-[10vw] rounded-xl p-4 w-25 sm:hidden lg:block lg:w-50 2xl:w-137.5 flex flex-col items-center pointer-events-auto">
       <button
         onClick={handleVisualizerToggle}
         className="absolute top-2 right-2 text-white text-xl"
