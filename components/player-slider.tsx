@@ -5,7 +5,7 @@ import * as RadixSlider from "@radix-ui/react-slider";
 interface PlayerSliderProps {
     duration: number | null;
     currentTime: number | null;
-    onSeek: (value: number) => void; // Add an `onSeek` prop
+    onSeek: (value: number) => void; 
 }
 
 const PlayerSlider: React.FC<PlayerSliderProps> = ({
@@ -13,14 +13,14 @@ const PlayerSlider: React.FC<PlayerSliderProps> = ({
     currentTime,
     onSeek,
 }) => {
-    if (!duration) duration = 1; // Avoid division by zero
+    if (!duration) duration = 1; 
     if (!currentTime) currentTime = 0;
 
-    const percentage = (currentTime / duration) * 100; // Calculate the percentage of the current time
+    const percentage = (currentTime / duration) * 100;
 
     const handleValueChange = (value: number[]) => {
-        const newTime = (value[0] / 100) * duration!; // Calculate the new time based on slider value
-        onSeek(newTime); // Call the `onSeek` handler with the new time
+        const newTime = (value[0] / 100) * duration!; 
+        onSeek(newTime); 
     };
 
     return (
@@ -36,7 +36,7 @@ const PlayerSlider: React.FC<PlayerSliderProps> = ({
                 h-10
             "
             value={[percentage]}
-            onValueChange={handleValueChange} // Attach handler
+            onValueChange={handleValueChange} 
             max={100}
             step={0.1}
             aria-label="Duration"
@@ -47,7 +47,7 @@ const PlayerSlider: React.FC<PlayerSliderProps> = ({
                     relative
                     grow
                     rounded-full
-                    h-[3px]
+                    h-0.75
                 "
             >
                 <RadixSlider.Range

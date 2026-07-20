@@ -87,6 +87,10 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         player.setIsPlaying(isPlaying);
     }, [isPlaying]);
 
+    useEffect(() => {
+        player.setVolume(volume);
+    }, [volume]);
+
     const handlePlay = () => {
         if (isLoading) return;
         if (!isPlaying) {
@@ -141,15 +145,31 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         const toggleHandler = () => handlePlay();
         const nextHandler = () => onPlayNext();
         const previousHandler = () => onPlayPrevious();
+        const seekHandler = (e: Event) => {
+            const value = (e as CustomEvent<number>).detail;
+            if (typeof value === "number") {
+                sound?.seek(value);
+                setCurrentTimeInSeconds(value);
+                usePlayer.getState().setCurrentTime(value);
+            }
+        };
+        const volumeHandler = (e: Event) => {
+            const value = (e as CustomEvent<number>).detail;
+            if (typeof value === "number") setVolume(value);
+        };
         window.addEventListener("playerTogglePlay", toggleHandler);
         window.addEventListener("playerNext", nextHandler);
         window.addEventListener("playerPrevious", previousHandler);
+        window.addEventListener("playerSeek", seekHandler);
+        window.addEventListener("playerSetVolume", volumeHandler);
         return () => {
             window.removeEventListener("playerTogglePlay", toggleHandler);
             window.removeEventListener("playerNext", nextHandler);
             window.removeEventListener("playerPrevious", previousHandler);
+            window.removeEventListener("playerSeek", seekHandler);
+            window.removeEventListener("playerSetVolume", volumeHandler);
         };
-    }, [handlePlay, onPlayNext, onPlayPrevious]);
+    }, [handlePlay, onPlayNext, onPlayPrevious, sound]);
 
     //@ts-expect-error works but expects void?
     useEffect(() => {
@@ -167,6 +187,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
 
     useEffect(() => {
         let raf: number;
+        let lastPushedSec = -1;
         const update = () => {
             if (sound) {
                 const currentSec = sound.seek();
@@ -174,6 +195,11 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
                 const minutes = Math.floor(currentSec / 60);
                 const seconds = Math.floor(currentSec % 60);
                 setCurrentTime(`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`);
+                const flooredSec = Math.floor(currentSec);
+                if (flooredSec !== lastPushedSec) {
+                    lastPushedSec = flooredSec;
+                    usePlayer.getState().setCurrentTime(currentSec);
+                }
                 raf = requestAnimationFrame(update);
             }
         };
@@ -191,6 +217,10 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
             else setDurationInSeconds(seconds);
         });
     }, [songUrl]);
+
+    useEffect(() => {
+        usePlayer.getState().setDuration(durationInSeconds ?? 0);
+    }, [durationInSeconds]);
 
     useEffect(() => {
         const interval = setInterval(() => {

@@ -36,7 +36,7 @@ const Slider: React.FC<SlideProps> = ({ value = 1, onChange }) => {
           relative 
           grow 
           rounded-full 
-          h-[3px]
+          h-0.75
           hover:cursor-pointer
         '
       >

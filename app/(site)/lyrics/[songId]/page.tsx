@@ -5,12 +5,15 @@ import Image from 'next/image';
 import { MdFullscreen, MdFullscreenExit } from 'react-icons/md';
 import { BsPauseFill, BsPlayFill } from 'react-icons/bs';
 import { AiFillStepBackward, AiFillStepForward } from 'react-icons/ai';
+import { HiSpeakerWave, HiSpeakerXMark } from 'react-icons/hi2';
 import { useSupabaseClient } from '@/hooks/useSupabaseClient';
 import getSongsLyricsById from '@/actions/getSongLyricsById';
 import getSongById from '@/actions/getSongById';
 import useLoadImage from '@/hooks/useLoadImage';
 import { Header } from '@/components/header';
 import usePlayer from '@/hooks/usePlayer';
+import Slider from '@/components/slider';
+import * as RadixSlider from '@radix-ui/react-slider';
 import { Song } from '@/types';
 
 interface Props {
@@ -31,6 +34,9 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
     const supabaseClient = useSupabaseClient();
     const activeId = usePlayer((state) => state.activeId);
     const isPlaying = usePlayer((state) => state.isPlaying);
+    const volume = usePlayer((state) => state.volume);
+    const currentTime = usePlayer((state) => state.currentTime);
+    const duration = usePlayer((state) => state.duration);
 
     // Follow the currently playing song; fall back to the URL song on first load.
     const effectiveSongId = activeId ?? songId;
@@ -44,6 +50,7 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
     const firstLoadRef = useRef(true);
     const fsScrollRef = useRef<HTMLDivElement>(null);
     const pageRef = useRef<HTMLDivElement>(null);
+    const lastVolumeRef = useRef(1);
 
     const imageUrl = useLoadImage(song);
     const isNowPlaying = activeId === effectiveSongId && !!activeId;
@@ -161,6 +168,32 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
                 </p>
             ))
         );
+
+    const fmtTime = (seconds: number) => {
+        const s = Math.max(0, Math.floor(seconds || 0));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return `${m}:${r < 10 ? '0' : ''}${r}`;
+    };
+
+    const handleSeek = (value: number) => {
+        usePlayer.getState().setCurrentTime(value);
+        window.dispatchEvent(new CustomEvent('playerSeek', { detail: value }));
+    };
+
+    const handleVolumeChange = (value: number) => {
+        if (value > 0) lastVolumeRef.current = value;
+        window.dispatchEvent(new CustomEvent('playerSetVolume', { detail: value }));
+    };
+
+    const toggleMute = () => {
+        if (volume > 0) {
+            lastVolumeRef.current = volume;
+            handleVolumeChange(0);
+        } else {
+            handleVolumeChange(lastVolumeRef.current || 1);
+        }
+    };
 
     if (loading) {
         return (
@@ -292,39 +325,67 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
                     </button>
 
                     <div className="relative flex w-full max-w-md shrink-0 flex-col items-center justify-center gap-8 p-10">
-                        <div className="relative">
-                            {imageUrl && (
-                                <div
-                                    className="absolute -inset-4 rounded-4xl opacity-60 blur-3xl"
-                                    style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-                                />
-                            )}
-                            <div className="relative aspect-square w-64 overflow-hidden rounded-3xl ring-1 ring-white/25 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]">
-                                {imageUrl ? (
-                                    <Image fill sizes="256px" src={imageUrl} alt={song?.title ?? 'Artwork'} className="object-cover" />
-                                ) : (
-                                    <div className="h-full w-full bg-white/10" />
+                        <div
+                            className={`flex flex-col items-center gap-8 transition-all duration-400 ease-out ${
+                                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+                            }`}
+                        >
+                            <div className="relative">
+                                {imageUrl && (
+                                    <div
+                                        className="absolute -inset-4 rounded-4xl opacity-60 blur-3xl"
+                                        style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                                    />
                                 )}
-                                <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-transparent via-white/10 to-white/25" />
+                                <div className="relative aspect-square w-64 overflow-hidden rounded-3xl ring-1 ring-white/25 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]">
+                                    {imageUrl ? (
+                                        <Image fill sizes="256px" src={imageUrl} alt={song?.title ?? 'Artwork'} className="object-cover" />
+                                    ) : (
+                                        <div className="h-full w-full bg-white/10" />
+                                    )}
+                                    <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-transparent via-white/10 to-white/25" />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 text-center">
+                                {isNowPlaying && (
+                                    <span className="inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold text-purple-100 ring-1 ring-inset ring-purple-400/40">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-75" />
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-300" />
+                                        </span>
+                                        Now playing
+                                    </span>
+                                )}
+                                <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-b from-white to-purple-200 bg-clip-text text-transparent">
+                                    {song?.title ?? 'Lyrics'}
+                                </h1>
+                                {song?.author && (
+                                    <p className="text-lg font-medium text-purple-200/80">{song.author}</p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-center gap-2 text-center">
-                            {isNowPlaying && (
-                                <span className="inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold text-purple-100 ring-1 ring-inset ring-purple-400/40">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-75" />
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-300" />
-                                    </span>
-                                    Now playing
-                                </span>
-                            )}
-                            <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-b from-white to-purple-200 bg-clip-text text-transparent">
-                                {song?.title ?? 'Lyrics'}
-                            </h1>
-                            {song?.author && (
-                                <p className="text-lg font-medium text-purple-200/80">{song.author}</p>
-                            )}
+                        <div className="flex w-full items-center gap-3">
+                            <span className="w-10 shrink-0 text-right text-xs tabular-nums text-purple-200/70">
+                                {fmtTime(currentTime)}
+                            </span>
+                            <RadixSlider.Root
+                                className="relative flex grow items-center select-none touch-none h-10"
+                                value={[duration > 0 ? (currentTime / duration) * 100 : 0]}
+                                onValueChange={(value) => handleSeek((value[0] / 100) * (duration || 0))}
+                                max={100}
+                                step={0.1}
+                                aria-label="Seek"
+                            >
+                                <RadixSlider.Track className="bg-neutral-600 relative grow rounded-full h-0.75">
+                                    <RadixSlider.Range className="absolute bg-white rounded-full h-full" />
+                                </RadixSlider.Track>
+                                <RadixSlider.Thumb className="block h-3 w-3 rounded-full bg-white shadow transition hover:scale-110 focus:outline-none" />
+                            </RadixSlider.Root>
+                            <span className="w-10 shrink-0 text-xs tabular-nums text-purple-200/70">
+                                {fmtTime(duration)}
+                            </span>
                         </div>
 
                         <div className="flex items-center gap-8">
@@ -350,20 +411,37 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
                                 <AiFillStepForward size={34} />
                             </button>
                         </div>
+
+                        <div className="flex w-full max-w-[16rem] items-center gap-3">
+                            <button
+                                onClick={toggleMute}
+                                aria-label={volume === 0 ? 'Unmute' : 'Mute'}
+                                className="shrink-0 text-neutral-300 transition hover:text-white"
+                            >
+                                {volume === 0 ? <HiSpeakerXMark size={22} /> : <HiSpeakerWave size={22} />}
+                            </button>
+                            <Slider value={volume} onChange={handleVolumeChange} />
+                        </div>
                     </div>
 
                     <div ref={fsScrollRef} className="relative flex-1 overflow-y-auto px-8 lg:px-14 py-20">
-                        {hasLyrics ? (
-                            <div className="flex max-w-3xl flex-col gap-5 lg:gap-6">
-                                {renderLyricLines('text-4xl lg:text-5xl xl:text-6xl')}
-                            </div>
-                        ) : (
-                            <div className="flex h-full items-center justify-center">
-                                <p className="text-center font-semibold text-2xl text-purple-200/80">
-                                    This song has no lyrics.
-                                </p>
-                            </div>
-                        )}
+                        <div
+                            className={`min-h-full transition-all duration-400 ease-out ${
+                                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+                            }`}
+                        >
+                            {hasLyrics ? (
+                                <div className="flex max-w-3xl flex-col gap-5 lg:gap-6">
+                                    {renderLyricLines('text-4xl lg:text-5xl xl:text-6xl')}
+                                </div>
+                            ) : (
+                                <div className="flex h-full items-center justify-center">
+                                    <p className="text-center font-semibold text-2xl text-purple-200/80">
+                                        This song has no lyrics.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
