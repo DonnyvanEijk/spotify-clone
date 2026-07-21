@@ -2,6 +2,7 @@
 
 import { HiHome, HiOutlineUsers } from 'react-icons/hi';
 import { BiBell, BiRadio, BiSearch } from 'react-icons/bi';
+import { BsSpotify } from 'react-icons/bs';
 import { usePathname } from 'next/navigation';
 import { Song } from '@/types';
 import { SidebarItem } from './sidebar-item';
@@ -35,6 +36,7 @@ const Sidebar = ({
       { icon: HiHome,    label: 'Home',          href: '/',             active: pathname === '/' },
       { icon: BiSearch,  label: 'Search',         href: '/search',       active: pathname === '/search' },
       { icon: BiRadio,   label: 'Radio',          href: '/radio',        active: pathname === '/radio' },
+      { icon: BsSpotify, label: 'Spotify',        href: '/spotify',      active: pathname === '/spotify' },
       ...(userId ? [{ icon: BiBell, label: 'Notifications', href: '/notifications', active: pathname === '/notifications' }] : []),
     ],
     [pathname, userId]
