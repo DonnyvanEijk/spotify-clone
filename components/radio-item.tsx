@@ -6,6 +6,7 @@ import { twMerge } from "tailwind-merge";
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import { differenceInHours } from "date-fns";
 import { LuPlay, LuPause } from "react-icons/lu";
+import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { motion } from "framer-motion";
 import RadioRightClickContent from "./right_click/RadioRightClickContent";
 
@@ -13,9 +14,11 @@ interface RadioItemProps {
   data: Radio;
   onPlay: (radio: Radio) => void;
   isActive?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: (radioId: string) => void;
 }
 
-export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive }) => {
+export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive, isFavorite, onToggleFavorite }) => {
   const imagePath = useLoadImage(data);
   if (!data) return null;
 
@@ -89,6 +92,21 @@ export const RadioItem: React.FC<RadioItemProps> = ({ data, onPlay, isActive }) 
 
           {/* Live indicator / play button */}
           <div className="shrink-0 flex items-center gap-3">
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(data.id);
+                }}
+                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                className={`transition-all duration-150 hover:scale-110 ${
+                  isFavorite ? "text-red-400" : "text-neutral-500 hover:text-white"
+                }`}
+              >
+                {isFavorite ? <AiFillHeart size={18} /> : <AiOutlineHeart size={18} />}
+              </button>
+            )}
             {isActive && (
               <span className="flex items-center gap-1.5 text-xs font-semibold text-red-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />

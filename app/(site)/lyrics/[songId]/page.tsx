@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { MdFullscreen, MdFullscreenExit } from 'react-icons/md';
 import { BsPauseFill, BsPlayFill } from 'react-icons/bs';
 import { AiFillStepBackward, AiFillStepForward } from 'react-icons/ai';
@@ -247,7 +247,7 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
                                 )}
                                 <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden ring-1 ring-white/25 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)]">
                                     {imageUrl ? (
-                                        <Image
+                                        <ImageWithFallback
                                             fill
                                             sizes="144px"
                                             src={imageUrl}
@@ -339,7 +339,7 @@ const LyricsPage: React.FC<Props> = ({ params }) => {
                                 )}
                                 <div className="relative aspect-square w-64 overflow-hidden rounded-3xl ring-1 ring-white/25 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)]">
                                     {imageUrl ? (
-                                        <Image fill sizes="256px" src={imageUrl} alt={song?.title ?? 'Artwork'} className="object-cover" />
+                                        <ImageWithFallback fill sizes="256px" src={imageUrl} alt={song?.title ?? 'Artwork'} className="object-cover" />
                                     ) : (
                                         <div className="h-full w-full bg-white/10" />
                                     )}

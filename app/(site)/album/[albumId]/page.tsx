@@ -1,7 +1,7 @@
 import React from "react";
 import getAlbum from "@/actions/getAlbum";
 import { getImage } from "@/lib/getImage";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import getAlbumSongs from "@/actions/getAlbumSongs";
 import AlbumContent from "./components/AlbumContent";
 import ShuffleControl from "./components/Controls";
@@ -35,7 +35,7 @@ const AlbumPage = async ({ params }: Props) => {
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
             {/* Album Cover */}
             <div className="relative h-32 w-32 md:h-44 md:w-44 lg:h-52 lg:w-52 shrink-0 rounded-2xl overflow-hidden shadow-lg shadow-black/30">
-              <Image
+              <ImageWithFallback
                 fill
                 sizes="(max-width: 768px) 128px, (max-width: 1024px) 176px, 208px"
                 src={imagePath || "/images/liked.png"}

@@ -6,15 +6,24 @@ import { RadioItem } from "@/components/radio-item";
 import { AnimatePresence, motion } from "framer-motion";
 import NowPlayingHero from "./NowPlayingHero";
 import { HiMagnifyingGlass } from "react-icons/hi2";
+import { AiFillHeart } from "react-icons/ai";
+import { useUser } from "@/hooks/useUser";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import toast from "react-hot-toast";
 
 interface RadioGridProps {
   radios: Radio[];
 }
 
 const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
+  const { user } = useUser();
+  const supabaseClient = useSupabaseClient();
+
   const [currentRadio, setCurrentRadio] = useState<Radio | null>(null);
   const [activeGenre, setActiveGenre] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, setVolume] = useState<number>(() => {
     if (typeof window !== "undefined") {
@@ -29,18 +38,76 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
     localStorage.setItem("radio-volume", volume.toString());
   }, [volume]);
 
+  useEffect(() => {
+    if (!user?.id) {
+      setFavorites(new Set());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabaseClient
+        .from("radio_favorite")
+        .select("radio_id")
+        .eq("user_id", user.id);
+      if (!cancelled && data) {
+        setFavorites(new Set(data.map((r: any) => r.radio_id)));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, supabaseClient]);
+
+  const toggleFavorite = async (radioId: string) => {
+    if (!user?.id) {
+      toast.error("Sign in to favorite stations");
+      return;
+    }
+
+    const wasFavorite = favorites.has(radioId);
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (wasFavorite) next.delete(radioId);
+      else next.add(radioId);
+      return next;
+    });
+
+    const { error } = wasFavorite
+      ? await supabaseClient
+          .from("radio_favorite")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("radio_id", radioId)
+      : await supabaseClient
+          .from("radio_favorite")
+          .insert({ user_id: user.id, radio_id: radioId });
+
+    if (error) {
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (wasFavorite) next.add(radioId);
+        else next.delete(radioId);
+        return next;
+      });
+      toast.error("Failed to update favorite");
+    }
+  };
+
   const genres = useMemo(() => {
     const all = radios.flatMap(r => r.genres?.split(/[,·]/).map(g => g.trim()).filter(Boolean) ?? []);
     return ["All", ...Array.from(new Set(all))];
   }, [radios]);
 
   const filtered = useMemo(() => {
-    return radios.filter(r => {
-      const matchesGenre = activeGenre === "All" || r.genres?.toLowerCase().includes(activeGenre.toLowerCase());
-      const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
-      return matchesGenre && matchesSearch;
-    });
-  }, [radios, activeGenre, searchQuery]);
+    return radios
+      .filter(r => {
+        const matchesGenre = activeGenre === "All" || r.genres?.toLowerCase().includes(activeGenre.toLowerCase());
+        const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
+        const matchesFavorite = !showFavoritesOnly || favorites.has(r.id);
+        return matchesGenre && matchesSearch && matchesFavorite;
+      })
+      .sort((a, b) => (favorites.has(b.id) ? 1 : 0) - (favorites.has(a.id) ? 1 : 0));
+  }, [radios, activeGenre, searchQuery, showFavoritesOnly, favorites]);
 
   const handlePlay = (radio: Radio) => {
     if (!radio.radio_path) return;
@@ -99,6 +166,17 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
       {/* Genre filter carousel */}
       <div className="relative">
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button
+            onClick={() => setShowFavoritesOnly(v => !v)}
+            className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 ${
+              showFavoritesOnly
+                ? "bg-red-500/20 text-red-200 border-red-400/40"
+                : "bg-white/5 text-neutral-400 border-white/10 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            <AiFillHeart size={12} className={showFavoritesOnly ? "text-red-300" : "text-neutral-500"} />
+            Favorites
+          </button>
           {genres.map(genre => (
             <button
               key={genre}
@@ -119,7 +197,9 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
       {/* Station list */}
       <div className="flex flex-col gap-2">
         {filtered.length === 0 ? (
-          <p className="text-neutral-500 text-sm px-1 py-4">No stations match your search.</p>
+          <p className="text-neutral-500 text-sm px-1 py-4">
+            {showFavoritesOnly ? "No favorite stations yet." : "No stations match your search."}
+          </p>
         ) : (
           filtered.map(radio => (
             <RadioItem
@@ -127,6 +207,8 @@ const RadioGrid: React.FC<RadioGridProps> = ({ radios }) => {
               data={radio}
               onPlay={handlePlay}
               isActive={currentRadio?.id === radio.id}
+              isFavorite={favorites.has(radio.id)}
+              onToggleFavorite={toggleFavorite}
             />
           ))
         )}

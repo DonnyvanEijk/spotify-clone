@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import useLoadImage from '@/hooks/useLoadImage';
 import { Song } from '@/types';
 import PlayButton from './playbutton';
@@ -28,6 +29,11 @@ const SongItem: React.FC<SongItemProps> = ({
   const imagePath = useLoadImage(data);
   const isNew = differenceInHours(new Date(), new Date(data.created_at)) <= 24;
 
+  const [imgSrc, setImgSrc] = useState(imagePath || '/images/fallback.png');
+  useEffect(() => {
+    setImgSrc(imagePath || '/images/fallback.png');
+  }, [imagePath]);
+
   return (
     <ContextMenu.Root modal={false}>
       <ContextMenu.Trigger>
@@ -55,9 +61,11 @@ const SongItem: React.FC<SongItemProps> = ({
         >
           <div className="relative w-full pt-[100%] rounded-2xl overflow-hidden shadow-inner shadow-white/10 bg-white/10">
             <img
-              src={imagePath || '/images/fallback.png'}
+              src={imgSrc}
               alt={data.title}
-              onError={(e) => (e.currentTarget.src = '/images/fallback.png')}
+              onError={() => {
+                if (imgSrc !== '/images/fallback.png') setImgSrc('/images/fallback.png');
+              }}
               className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-2xl"
             />
 

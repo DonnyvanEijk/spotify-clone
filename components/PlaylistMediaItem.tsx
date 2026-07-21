@@ -2,7 +2,7 @@
 
 import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
 import { Playlist } from "@/types";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { useRouter } from "next/navigation";
 import { twMerge } from "tailwind-merge";
 import * as ContextMenu from "@radix-ui/react-context-menu";
@@ -37,7 +37,7 @@ const PlaylistMediaItem: React.FC<PlaylistMediaItemProps> = ({ data, onClick, is
                 >
                     <div className="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-white/10">
                         {imageUrl ? (
-                            <Image fill sizes="44px" src={imageUrl} alt={data.name} className="object-cover" />
+                            <ImageWithFallback fill sizes="44px" src={imageUrl} alt={data.name} className="object-cover" />
                         ) : (
                             <div className="w-full h-full bg-white/10" />
                         )}

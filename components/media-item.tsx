@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { twMerge } from 'tailwind-merge';
 import { motion } from 'framer-motion';
 import * as ContextMenu from "@radix-ui/react-context-menu";
@@ -59,7 +59,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
           {/* Thumbnail */}
           <div className="relative shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-white/10">
             {imageUrl ? (
-              <Image
+              <ImageWithFallback
                 fill
                 sizes="44px"
                 src={imageUrl}

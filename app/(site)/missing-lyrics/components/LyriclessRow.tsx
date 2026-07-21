@@ -7,7 +7,7 @@ import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { useUser } from "@/hooks/useUser";
 import useLoadImage from "@/hooks/useLoadImage";
 import toast from "react-hot-toast";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { TbMicrophone } from "react-icons/tb";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi2";
 
@@ -51,7 +51,7 @@ const LyriclessRow: React.FC<LyriclessRowProps> = ({ song }) => {
       <div className="flex items-center gap-4 px-4 py-3 bg-white/5">
         <div className="relative shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-white/10">
           {imageUrl ? (
-            <Image src={imageUrl} alt={song.title} fill className="object-cover" />
+            <ImageWithFallback src={imageUrl} alt={song.title} fill className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <TbMicrophone size={16} className="text-neutral-500" />

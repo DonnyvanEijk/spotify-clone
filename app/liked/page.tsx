@@ -1,6 +1,6 @@
 import getLikedSongs from "@/actions/getLikedSongs";
 import { Header } from "@/components/header";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import LikedContent from "./components/liked_content";
 import getUser from "@/actions/getUser";
 import ShuffleControl from "./components/Controls";
@@ -23,7 +23,7 @@ const LikedPage = async () => {
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
             {/* Liked Songs Cover */}
             <div className="relative h-32 w-32 md:h-44 md:w-44 lg:h-52 lg:w-52 shrink-0 rounded-2xl overflow-hidden shadow-lg shadow-black/30">
-              <Image
+              <ImageWithFallback
                 fill
                 sizes="(max-width: 768px) 128px, (max-width: 1024px) 176px, 208px"
                 src="/images/liked.png"

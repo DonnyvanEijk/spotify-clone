@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 
 import useLoadPlaylistImage from "@/hooks/useLoadPlaylistImage";
 import { Playlist } from "@/types";
@@ -13,7 +13,7 @@ const PlaylistImage: React.FC<PlaylistImageProps> = ({ playlist }) => {
 
     return (
         <div className="w-full flex flext-row justify-center">
-            <Image
+            <ImageWithFallback
                 src={imagePath || '/images/liked.png'}
                 alt="Playlist Image"
                 width={200}
