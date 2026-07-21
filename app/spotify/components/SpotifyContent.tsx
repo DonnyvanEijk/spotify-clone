@@ -3,7 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsSpotify } from "react-icons/bs";
 import { HiMagnifyingGlass } from "react-icons/hi2";
-import { LuPlay, LuPause } from "react-icons/lu";
+import { LuPlay, LuPause, LuSkipBack, LuSkipForward } from "react-icons/lu";
+import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
+import {
+  MdDevices,
+  MdComputer,
+  MdSmartphone,
+  MdSpeaker,
+  MdCast,
+  MdCheck,
+} from "react-icons/md";
+import Slider from "@/components/slider";
 import toast from "react-hot-toast";
 
 interface Profile {
@@ -41,22 +51,86 @@ interface Playlist {
   url: string | null;
 }
 
+interface Device {
+  id: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  volumePercent: number;
+}
+
+interface Playback {
+  active: boolean;
+  isPlaying: boolean;
+  progressMs: number;
+  durationMs: number;
+  track: { id: string; uri: string; name: string; artists: string; image: string | null } | null;
+  device: { id: string; name: string; type: string; volumePercent?: number } | null;
+}
+
+function deviceIcon(type: string, size = 16) {
+  const t = (type || "").toLowerCase();
+  if (t.includes("computer")) return <MdComputer size={size} />;
+  if (t.includes("smartphone") || t.includes("phone")) return <MdSmartphone size={size} />;
+  if (t.includes("speaker")) return <MdSpeaker size={size} />;
+  if (t.includes("tv") || t.includes("cast")) return <MdCast size={size} />;
+  return <MdDevices size={size} />;
+}
+
+function fmtMs(ms: number) {
+  const s = Math.floor((ms || 0) / 1000);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r < 10 ? "0" : ""}${r}`;
+}
+
 const SpotifyContent = () => {
   const [status, setStatus] = useState<Status | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [query, setQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [searching, setSearching] = useState(false);
-  const [previewId, setPreviewId] = useState<string | null>(null);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  const [playback, setPlayback] = useState<Playback | null>(null);
+  const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
+
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const volumeTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const deviceMenuRef = useRef<HTMLDivElement>(null);
 
   const loadStatus = useCallback(async () => {
     const res = await fetch("/api/spotify/status");
     const data = await res.json();
     setStatus(data);
     return data as Status;
+  }, []);
+
+  const loadDevices = useCallback(async () => {
+    const res = await fetch("/api/spotify/devices");
+    if (!res.ok) return;
+    const data = await res.json();
+    const list: Device[] = data.devices ?? [];
+    setDevices(list);
+    setSelectedDeviceId((prev) =>
+      prev && list.some((d) => d.id === prev)
+        ? prev
+        : list.find((d) => d.isActive)?.id ?? list[0]?.id ?? null
+    );
+  }, []);
+
+  const loadPlayer = useCallback(async () => {
+    const res = await fetch("/api/spotify/player");
+    if (!res.ok) {
+      setPlayback(null);
+      return;
+    }
+    const data = await res.json();
+    setPlayback(data.active ? data : null);
+    if (data.active && data.device?.id) {
+      setSelectedDeviceId((prev) => prev ?? data.device.id);
+    }
   }, []);
 
   useEffect(() => {
@@ -77,11 +151,38 @@ const SpotifyContent = () => {
     }
   }, [loadStatus]);
 
+  // Poll live playback + devices while connected.
   useEffect(() => {
-    return () => {
-      audioRef.current?.pause();
+    if (!status?.connected) return;
+    loadDevices();
+    loadPlayer();
+    const iv = setInterval(loadPlayer, 4000);
+    return () => clearInterval(iv);
+  }, [status?.connected, loadDevices, loadPlayer]);
+
+  useEffect(() => {
+    if (!deviceMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (deviceMenuRef.current && !deviceMenuRef.current.contains(e.target as Node)) {
+        setDeviceMenuOpen(false);
+      }
     };
-  }, []);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [deviceMenuOpen]);
+
+  // Advance the progress bar locally between polls so it reads as live.
+  useEffect(() => {
+    if (!playback?.active || !playback.isPlaying) return;
+    const iv = setInterval(() => {
+      setPlayback((prev) =>
+        prev && prev.active
+          ? { ...prev, progressMs: Math.min(prev.progressMs + 1000, prev.durationMs) }
+          : prev
+      );
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [playback?.active, playback?.isPlaying]);
 
   const runSearch = useCallback((q: string) => {
     if (!q.trim()) {
@@ -102,29 +203,123 @@ const SpotifyContent = () => {
     searchTimeout.current = setTimeout(() => runSearch(v), 350);
   };
 
-  const togglePreview = (track: Track) => {
-    if (!track.previewUrl) {
-      toast.error("No preview available for this track");
+  const handlePlayError = async (res: Response) => {
+    const d = await res.json().catch(() => ({}));
+    if (d.error === "premium_required") toast.error("Spotify Premium is required for playback");
+    else if (d.error === "no_active_device")
+      toast.error("That device isn't available — open Spotify on it first");
+    else toast.error("Couldn't control playback");
+  };
+
+  const playTrack = async (track: Track) => {
+    if (!selectedDeviceId) {
+      toast.error("Pick a device to play on first");
+      loadDevices();
+      setDeviceMenuOpen(true);
       return;
     }
-    if (previewId === track.id) {
-      audioRef.current?.pause();
-      setPreviewId(null);
+    const res = await fetch("/api/spotify/play", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uri: track.uri, deviceId: selectedDeviceId }),
+    });
+    if (!res.ok) return handlePlayError(res);
+    const dev = devices.find((d) => d.id === selectedDeviceId);
+    toast.success(`Playing on ${dev?.name ?? "your device"}`);
+    setTimeout(loadPlayer, 800);
+  };
+
+  const control = async (action: "play" | "pause" | "next" | "previous") => {
+    // Optimistic feedback so the buttons feel instant instead of waiting for a poll.
+    if (action === "play" || action === "pause") {
+      setPlayback((prev) =>
+        prev && prev.active ? { ...prev, isPlaying: action === "play" } : prev
+      );
+    }
+    const res = await fetch("/api/spotify/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, deviceId: selectedDeviceId }),
+    });
+    if (!res.ok) {
+      handlePlayError(res);
+      loadPlayer(); // revert optimistic state to reality
       return;
     }
-    if (!audioRef.current) audioRef.current = new Audio();
-    audioRef.current.src = track.previewUrl;
-    audioRef.current.play().catch(() => {});
-    audioRef.current.onended = () => setPreviewId(null);
-    setPreviewId(track.id);
+    // Reconcile from Spotify; skips change the track so poll twice.
+    setTimeout(loadPlayer, 350);
+    if (action === "next" || action === "previous") setTimeout(loadPlayer, 1200);
+  };
+
+  const seekTo = async (positionMs: number) => {
+    setPlayback((prev) =>
+      prev && prev.active
+        ? { ...prev, progressMs: Math.max(0, Math.min(positionMs, prev.durationMs)) }
+        : prev
+    );
+    const res = await fetch("/api/spotify/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "seek", positionMs: Math.round(positionMs), deviceId: selectedDeviceId }),
+    });
+    if (!res.ok) {
+      handlePlayError(res);
+      loadPlayer();
+      return;
+    }
+    setTimeout(loadPlayer, 500);
+  };
+
+  const setDeviceVolume = (percent: number) => {
+    // Update the slider instantly; debounce the API call while dragging.
+    setPlayback((prev) =>
+      prev && prev.active && prev.device
+        ? { ...prev, device: { ...prev.device, volumePercent: percent } }
+        : prev
+    );
+    clearTimeout(volumeTimeout.current);
+    volumeTimeout.current = setTimeout(async () => {
+      const res = await fetch("/api/spotify/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "volume", volumePercent: percent, deviceId: selectedDeviceId }),
+      });
+      if (!res.ok) {
+        handlePlayError(res);
+        loadPlayer();
+      }
+    }, 180);
+  };
+
+  const selectDevice = async (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    setDeviceMenuOpen(false);
+    // If something is already playing, move it to the chosen device.
+    if (playback?.active) {
+      const res = await fetch("/api/spotify/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "transfer", deviceId }),
+      });
+      if (res.ok) {
+        toast.success("Switched device");
+        setTimeout(() => {
+          loadPlayer();
+          loadDevices();
+        }, 700);
+      } else {
+        handlePlayError(res);
+      }
+    }
   };
 
   const disconnect = async () => {
     await fetch("/api/spotify/disconnect", { method: "POST" });
-    audioRef.current?.pause();
-    setPreviewId(null);
     setPlaylists([]);
     setTracks([]);
+    setDevices([]);
+    setPlayback(null);
+    setSelectedDeviceId(null);
     setStatus({ authed: true, connected: false });
     toast.success("Spotify disconnected");
   };
@@ -154,8 +349,8 @@ const SpotifyContent = () => {
         <BsSpotify size={48} className="mx-auto text-green-500 mb-4" />
         <p className="text-white text-lg font-semibold">Connect your Spotify</p>
         <p className="text-neutral-400 text-sm mt-1 mb-6">
-          Link your account to browse your playlists and search Spotify from inside DonBeat.
-          Full-track playback requires Spotify Premium.
+          Link your account to browse your playlists and play tracks on any of your Spotify
+          devices. Playback requires Spotify Premium.
         </p>
         <a
           href="/api/spotify/login"
@@ -167,12 +362,64 @@ const SpotifyContent = () => {
     );
   }
 
+  // --- Connected ---
   const profile = status.profile;
   const isPremium = profile?.product === "premium";
+  const selectedDevice = devices.find((d) => d.id === selectedDeviceId) ?? null;
+  const currentTrackId = playback?.active ? playback.track?.id : null;
+
+  const devicePicker = (
+    <div className="relative" ref={deviceMenuRef}>
+      <button
+        onClick={() => {
+          loadDevices();
+          setDeviceMenuOpen((v) => !v);
+        }}
+        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-neutral-200 hover:bg-white/10 hover:text-white transition-colors"
+      >
+        {selectedDevice ? deviceIcon(selectedDevice.type, 16) : <MdDevices size={16} />}
+        <span className="max-w-40 truncate">
+          {selectedDevice ? selectedDevice.name : "Choose a device"}
+        </span>
+      </button>
+
+      {deviceMenuOpen && (
+        <div className="absolute right-0 mt-2 w-64 z-50 rounded-xl bg-neutral-900 border border-white/15 shadow-xl overflow-hidden">
+          <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
+            Play on device
+          </p>
+          {devices.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-neutral-500">
+              No devices found. Open Spotify on a phone, computer, or speaker, then refresh.
+            </p>
+          ) : (
+            devices.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => selectDevice(d.id)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm text-neutral-200 hover:bg-white/8 hover:text-white transition-colors"
+              >
+                <span className="text-green-400">{deviceIcon(d.type, 18)}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block truncate">{d.name}</span>
+                  <span className="block text-[11px] text-neutral-500 capitalize">
+                    {d.type}
+                    {d.isActive ? " · active" : ""}
+                  </span>
+                </span>
+                {d.id === selectedDeviceId && <MdCheck size={16} className="text-green-400" />}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+      {/* Account header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="flex items-center gap-3 min-w-0">
           {profile?.image ? (
             <img src={profile.image} alt={profile.display_name} className="w-11 h-11 rounded-full object-cover" />
@@ -195,21 +442,125 @@ const SpotifyContent = () => {
             <p className="text-neutral-400 text-xs truncate">{profile?.email}</p>
           </div>
         </div>
-        <button
-          onClick={disconnect}
-          className="shrink-0 text-sm text-neutral-300 border border-white/10 rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors"
-        >
-          Disconnect
-        </button>
+        <div className="flex items-center gap-3">
+          {devicePicker}
+          <button
+            onClick={disconnect}
+            className="shrink-0 text-sm text-neutral-300 border border-white/10 rounded-full px-4 py-2 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            Disconnect
+          </button>
+        </div>
       </div>
 
       {!isPremium && (
         <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 text-xs text-amber-300">
-          Your Spotify account is Free — you can browse and preview (30s), but full-track playback
-          in DonBeat will require Spotify Premium.
+          Your Spotify account is Free — remote playback control requires Spotify Premium.
         </div>
       )}
 
+      {/* Now playing remotely bar */}
+      {playback?.active && playback.track && (
+        <div className="relative flex items-center gap-4 rounded-2xl border border-green-500/20 bg-green-500/5 p-4">
+          <span className="absolute top-3 right-4 inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-300">
+            <MdCast size={13} /> Playing remotely
+          </span>
+
+          <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white/10">
+            {playback.track.image && (
+              <img src={playback.track.image} alt={playback.track.name} className="w-full h-full object-cover" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-white text-sm font-semibold truncate">{playback.track.name}</p>
+            <p className="text-neutral-400 text-xs truncate">{playback.track.artists}</p>
+            {playback.device && (
+              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-green-300/90">
+                {deviceIcon(playback.device.type, 13)}
+                on {playback.device.name}
+              </p>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+              <span className="w-8 text-right text-[10px] tabular-nums text-neutral-400">
+                {fmtMs(playback.progressMs)}
+              </span>
+              <div
+                role="slider"
+                aria-label="Seek"
+                aria-valuenow={Math.round(playback.progressMs / 1000)}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+                  seekTo(ratio * playback.durationMs);
+                }}
+                className="group/seek relative h-1.5 flex-1 rounded-full bg-white/15 overflow-hidden cursor-pointer hover:h-2 transition-[height]"
+              >
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-green-400 group-hover/seek:bg-green-300 transition-[width] duration-1000 ease-linear"
+                  style={{
+                    width: `${
+                      playback.durationMs
+                        ? Math.min(100, (playback.progressMs / playback.durationMs) * 100)
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <span className="w-8 text-[10px] tabular-nums text-neutral-400">
+                {fmtMs(playback.durationMs)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => control("previous")}
+                className="text-neutral-300 hover:text-white transition-colors"
+                aria-label="Previous"
+              >
+                <LuSkipBack size={20} />
+              </button>
+              <button
+                onClick={() => control(playback.isPlaying ? "pause" : "play")}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform"
+                aria-label={playback.isPlaying ? "Pause" : "Play"}
+              >
+                {playback.isPlaying ? <LuPause size={18} /> : <LuPlay size={18} className="ml-0.5" />}
+              </button>
+              <button
+                onClick={() => control("next")}
+                className="text-neutral-300 hover:text-white transition-colors"
+                aria-label="Next"
+              >
+                <LuSkipForward size={20} />
+              </button>
+            </div>
+            {typeof playback.device?.volumePercent === "number" && (
+              <div className="flex w-32 items-center gap-2">
+                <button
+                  onClick={() => setDeviceVolume(playback.device!.volumePercent! > 0 ? 0 : 60)}
+                  className="shrink-0 text-neutral-400 hover:text-white transition-colors"
+                  aria-label={playback.device.volumePercent > 0 ? "Mute" : "Unmute"}
+                >
+                  {playback.device.volumePercent > 0 ? (
+                    <HiSpeakerWave size={16} />
+                  ) : (
+                    <HiSpeakerXMark size={16} />
+                  )}
+                </button>
+                <Slider
+                  value={(playback.device.volumePercent ?? 0) / 100}
+                  onChange={(v) => setDeviceVolume(Math.round(v * 100))}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Search */}
       <div className="flex flex-col gap-4">
         <div className="relative flex items-center max-w-xl">
           <HiMagnifyingGlass className="absolute left-3 text-neutral-500 pointer-events-none" size={16} />
@@ -225,46 +576,57 @@ const SpotifyContent = () => {
 
         {tracks.length > 0 && (
           <div className="flex flex-col gap-1">
-            {tracks.map((t) => (
-              <div
-                key={t.id}
-                className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <div className="relative w-11 h-11 shrink-0 rounded-md overflow-hidden bg-white/10">
-                  {t.image && <img src={t.image} alt={t.name} className="w-full h-full object-cover" />}
-                  <button
-                    onClick={() => togglePreview(t)}
-                    title={t.previewUrl ? "Preview (30s)" : "No preview available"}
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {previewId === t.id ? (
-                      <LuPause className="text-white" size={16} />
-                    ) : (
-                      <LuPlay className="text-white ml-0.5" size={16} />
-                    )}
-                  </button>
+            {tracks.map((t) => {
+              const isCurrent = currentTrackId === t.id;
+              const isPlayingThis = isCurrent && playback?.isPlaying;
+              return (
+                <div
+                  key={t.id}
+                  className={`group flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                    isCurrent ? "bg-green-500/10" : "hover:bg-white/5"
+                  }`}
+                >
+                  <div className="relative w-11 h-11 shrink-0 rounded-md overflow-hidden bg-white/10">
+                    {t.image && <img src={t.image} alt={t.name} className="w-full h-full object-cover" />}
+                    <button
+                      onClick={() =>
+                        isCurrent ? control(isPlayingThis ? "pause" : "play") : playTrack(t)
+                      }
+                      title="Play on selected device"
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      {isPlayingThis ? (
+                        <LuPause className="text-white" size={16} />
+                      ) : (
+                        <LuPlay className="text-white ml-0.5" size={16} />
+                      )}
+                    </button>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-medium truncate ${isCurrent ? "text-green-300" : "text-white"}`}>
+                      {t.name}
+                    </p>
+                    <p className="text-neutral-400 text-xs truncate">{t.artists}</p>
+                  </div>
+                  {t.url && (
+                    <a
+                      href={t.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-green-500 hover:text-green-400 transition-colors"
+                      title="Open in Spotify"
+                    >
+                      <BsSpotify size={18} />
+                    </a>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-white text-sm font-medium truncate">{t.name}</p>
-                  <p className="text-neutral-400 text-xs truncate">{t.artists}</p>
-                </div>
-                {t.url && (
-                  <a
-                    href={t.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 text-green-500 hover:text-green-400 transition-colors"
-                    title="Open in Spotify"
-                  >
-                    <BsSpotify size={18} />
-                  </a>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
+      {/* Playlists */}
       {playlists.length > 0 && (
         <div className="flex flex-col gap-4">
           <h2 className="text-white text-xl font-bold">Your Spotify playlists</h2>
