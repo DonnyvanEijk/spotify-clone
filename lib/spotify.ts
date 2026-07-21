@@ -11,6 +11,7 @@ export const SPOTIFY_SCOPES = [
   "playlist-read-private",
   "playlist-read-collaborative",
   "user-library-read",
+  "user-read-recently-played",
   "streaming",
   "user-read-playback-state",
   "user-modify-playback-state",
@@ -43,6 +44,9 @@ export function getAuthorizeUrl(state: string) {
     scope: SPOTIFY_SCOPES,
     redirect_uri: redirectUri,
     state,
+    // Force the consent screen so newly-added scopes are actually granted on
+    // reconnect (Spotify otherwise skips it for an already-authorized app).
+    show_dialog: "true",
   });
   return `${SPOTIFY_ACCOUNTS}/authorize?${params.toString()}`;
 }
@@ -104,28 +108,62 @@ export async function disconnect(userId: string) {
   await admin.from("spotify_accounts").delete().eq("user_id", userId);
 }
 
+// The scopes actually granted to the stored token (for debugging scope issues).
+export async function getStoredScope(userId: string): Promise<string | null> {
+  const { data } = await admin
+    .from("spotify_accounts")
+    .select("scope")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.scope ?? null;
+}
+
 // Returns a valid access token for the user, refreshing if needed, or null if
 // the user hasn't linked Spotify.
 export async function getValidAccessToken(userId: string): Promise<string | null> {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("spotify_accounts")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (error) {
+    console.error("Spotify: failed reading spotify_accounts:", error.message);
+    return null;
+  }
   if (!data) return null;
 
+  const token = (data.access_token || "").trim();
   const expiresAt = new Date(data.expires_at).getTime();
-  // Refresh a minute early to avoid edge-of-expiry failures.
-  if (Date.now() < expiresAt - 60_000) return data.access_token;
+  const notExpired = Number.isFinite(expiresAt) && Date.now() < expiresAt - 60_000;
 
-  const tokens = await tokenRequest({
-    grant_type: "refresh_token",
-    refresh_token: data.refresh_token,
-  });
+  // Use the stored token only if it's actually present and unexpired.
+  if (token && notExpired) return token;
+
+  if (!data.refresh_token) {
+    console.error("Spotify: no refresh token stored — user must reconnect.");
+    return null;
+  }
+
+  let tokens: { access_token?: string; expires_in?: number; refresh_token?: string; scope?: string };
+  try {
+    tokens = await tokenRequest({
+      grant_type: "refresh_token",
+      refresh_token: data.refresh_token,
+    });
+  } catch (e) {
+    console.error("Spotify: token refresh failed —", (e as Error).message);
+    return null; // treated as "not connected" so the UI prompts a reconnect
+  }
+
+  const newToken = (tokens.access_token || "").trim();
+  if (!newToken) {
+    console.error("Spotify: refresh returned no access_token.");
+    return null;
+  }
 
   const update: Record<string, unknown> = {
-    access_token: tokens.access_token,
+    access_token: newToken,
     expires_at: new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -134,7 +172,7 @@ export async function getValidAccessToken(userId: string): Promise<string | null
   if (tokens.scope) update.scope = tokens.scope;
 
   await admin.from("spotify_accounts").update(update).eq("user_id", userId);
-  return tokens.access_token;
+  return newToken;
 }
 
 // Authenticated fetch against the Spotify Web API for a given user.

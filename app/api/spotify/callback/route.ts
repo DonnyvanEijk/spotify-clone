@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const tokens = await exchangeCodeForTokens(code);
+    console.log("Spotify granted scopes:", tokens.scope);
     const profile = await getSpotifyProfile(tokens.access_token);
     await saveTokens(user.id, tokens, profile);
   } catch (e) {

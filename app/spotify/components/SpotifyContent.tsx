@@ -51,6 +51,16 @@ interface Playlist {
   url: string | null;
 }
 
+interface Album {
+  id: string;
+  uri: string;
+  name: string;
+  artists: string;
+  image: string | null;
+  totalTracks: number;
+  url: string | null;
+}
+
 interface Device {
   id: string;
   name: string;
@@ -87,6 +97,8 @@ function fmtMs(ms: number) {
 const SpotifyContent = () => {
   const [status, setStatus] = useState<Status | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [recent, setRecent] = useState<Track[]>([]);
   const [query, setQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [searching, setSearching] = useState(false);
@@ -95,10 +107,15 @@ const SpotifyContent = () => {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
+  const [devicesError, setDevicesError] = useState<"scope" | "error" | null>(null);
+  const [devicesLoading, setDevicesLoading] = useState(false);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const volumeTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const deviceMenuRef = useRef<HTMLDivElement>(null);
+  const inactivePollsRef = useRef(0);
+  const seekAbortRef = useRef<AbortController | null>(null);
+  const volumeAbortRef = useRef<AbortController | null>(null);
 
   const loadStatus = useCallback(async () => {
     const res = await fetch("/api/spotify/status");
@@ -108,29 +125,53 @@ const SpotifyContent = () => {
   }, []);
 
   const loadDevices = useCallback(async () => {
-    const res = await fetch("/api/spotify/devices");
-    if (!res.ok) return;
-    const data = await res.json();
-    const list: Device[] = data.devices ?? [];
-    setDevices(list);
-    setSelectedDeviceId((prev) =>
-      prev && list.some((d) => d.id === prev)
-        ? prev
-        : list.find((d) => d.isActive)?.id ?? list[0]?.id ?? null
-    );
+    setDevicesLoading(true);
+    try {
+      const res = await fetch("/api/spotify/devices");
+      if (!res.ok) {
+        // 403 almost always means the linked token lacks the playback scope.
+        setDevicesError(res.status === 403 ? "scope" : "error");
+        return;
+      }
+      const data = await res.json();
+      const list: Device[] = data.devices ?? [];
+      setDevices(list);
+      setDevicesError(null);
+      setSelectedDeviceId((prev) =>
+        prev && list.some((d) => d.id === prev)
+          ? prev
+          : list.find((d) => d.isActive)?.id ?? list[0]?.id ?? null
+      );
+    } catch {
+      setDevicesError("error");
+    } finally {
+      setDevicesLoading(false);
+    }
   }, []);
 
   const loadPlayer = useCallback(async () => {
-    const res = await fetch("/api/spotify/player");
-    if (!res.ok) {
-      setPlayback(null);
+    let res: Response;
+    try {
+      res = await fetch("/api/spotify/player");
+    } catch {
+      return; // network hiccup — keep whatever we're showing
+    }
+    if (!res.ok) return; // transient error — don't clear the bar
+
+    const data = await res.json().catch(() => null);
+
+    if (data && data.active && data.track) {
+      inactivePollsRef.current = 0;
+      setPlayback(data);
+      if (data.device?.id) setSelectedDeviceId((prev) => prev ?? data.device.id);
       return;
     }
-    const data = await res.json();
-    setPlayback(data.active ? data : null);
-    if (data.active && data.device?.id) {
-      setSelectedDeviceId((prev) => prev ?? data.device.id);
-    }
+
+    // Spotify's /me/player is flaky and returns 204/empty even mid-playback.
+    // Only hide the bar after several consecutive inactive polls so it doesn't
+    // flicker in and out.
+    inactivePollsRef.current += 1;
+    if (inactivePollsRef.current >= 3) setPlayback(null);
   }, []);
 
   useEffect(() => {
@@ -139,6 +180,14 @@ const SpotifyContent = () => {
         fetch("/api/spotify/playlists")
           .then((r) => r.json())
           .then((d) => setPlaylists(d.playlists ?? []))
+          .catch(() => {});
+        fetch("/api/spotify/recently-played")
+          .then((r) => r.json())
+          .then((d) => setRecent(d.tracks ?? []))
+          .catch(() => {});
+        fetch("/api/spotify/albums")
+          .then((r) => r.json())
+          .then((d) => setAlbums(d.albums ?? []))
           .catch(() => {});
       }
     });
@@ -211,7 +260,10 @@ const SpotifyContent = () => {
     else toast.error("Couldn't control playback");
   };
 
-  const playTrack = async (track: Track) => {
+  const startPlayback = async (
+    body: { uri?: string; contextUri?: string },
+    label: string
+  ) => {
     if (!selectedDeviceId) {
       toast.error("Pick a device to play on first");
       loadDevices();
@@ -221,13 +273,19 @@ const SpotifyContent = () => {
     const res = await fetch("/api/spotify/play", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uri: track.uri, deviceId: selectedDeviceId }),
+      body: JSON.stringify({ ...body, deviceId: selectedDeviceId }),
     });
     if (!res.ok) return handlePlayError(res);
     const dev = devices.find((d) => d.id === selectedDeviceId);
-    toast.success(`Playing on ${dev?.name ?? "your device"}`);
+    toast.success(`Playing ${label} on ${dev?.name ?? "your device"}`);
+    inactivePollsRef.current = 0;
     setTimeout(loadPlayer, 800);
+    setTimeout(loadPlayer, 2000);
   };
+
+  const playTrack = (track: Track) => startPlayback({ uri: track.uri }, track.name);
+  const playContext = (contextUri: string, label: string) =>
+    startPlayback({ contextUri }, label);
 
   const control = async (action: "play" | "pause" | "next" | "previous") => {
     // Optimistic feedback so the buttons feel instant instead of waiting for a poll.
@@ -247,31 +305,43 @@ const SpotifyContent = () => {
       return;
     }
     // Reconcile from Spotify; skips change the track so poll twice.
+    inactivePollsRef.current = 0;
     setTimeout(loadPlayer, 350);
     if (action === "next" || action === "previous") setTimeout(loadPlayer, 1200);
   };
 
   const seekTo = async (positionMs: number) => {
+    const clamped = Math.max(0, Math.round(positionMs));
     setPlayback((prev) =>
       prev && prev.active
-        ? { ...prev, progressMs: Math.max(0, Math.min(positionMs, prev.durationMs)) }
+        ? { ...prev, progressMs: Math.min(clamped, prev.durationMs) }
         : prev
     );
-    const res = await fetch("/api/spotify/control", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "seek", positionMs: Math.round(positionMs), deviceId: selectedDeviceId }),
-    });
-    if (!res.ok) {
-      handlePlayError(res);
-      loadPlayer();
-      return;
+    // Cancel any in-flight seek — the latest drag/click wins.
+    seekAbortRef.current?.abort();
+    const ac = new AbortController();
+    seekAbortRef.current = ac;
+    try {
+      const res = await fetch("/api/spotify/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "seek", positionMs: clamped, deviceId: selectedDeviceId }),
+        signal: ac.signal,
+      });
+      if (!res.ok) {
+        handlePlayError(res);
+        loadPlayer();
+        return;
+      }
+      setTimeout(loadPlayer, 500);
+    } catch (e) {
+      // A superseded (aborted) request is expected — ignore it.
+      if ((e as Error)?.name !== "AbortError") loadPlayer();
     }
-    setTimeout(loadPlayer, 500);
   };
 
   const setDeviceVolume = (percent: number) => {
-    // Update the slider instantly; debounce the API call while dragging.
+    // Update the slider instantly; debounce + supersede the API call while dragging.
     setPlayback((prev) =>
       prev && prev.active && prev.device
         ? { ...prev, device: { ...prev.device, volumePercent: percent } }
@@ -279,14 +349,22 @@ const SpotifyContent = () => {
     );
     clearTimeout(volumeTimeout.current);
     volumeTimeout.current = setTimeout(async () => {
-      const res = await fetch("/api/spotify/control", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "volume", volumePercent: percent, deviceId: selectedDeviceId }),
-      });
-      if (!res.ok) {
-        handlePlayError(res);
-        loadPlayer();
+      volumeAbortRef.current?.abort();
+      const ac = new AbortController();
+      volumeAbortRef.current = ac;
+      try {
+        const res = await fetch("/api/spotify/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "volume", volumePercent: percent, deviceId: selectedDeviceId }),
+          signal: ac.signal,
+        });
+        if (!res.ok) {
+          handlePlayError(res);
+          loadPlayer();
+        }
+      } catch (e) {
+        if ((e as Error)?.name !== "AbortError") loadPlayer();
       }
     }, 180);
   };
@@ -368,6 +446,51 @@ const SpotifyContent = () => {
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId) ?? null;
   const currentTrackId = playback?.active ? playback.track?.id : null;
 
+  const trackRow = (t: Track, keyPrefix = "") => {
+    const isCurrent = currentTrackId === t.id;
+    const isPlayingThis = isCurrent && playback?.isPlaying;
+    return (
+      <div
+        key={`${keyPrefix}${t.id}`}
+        className={`group flex items-center gap-3 p-2 rounded-xl transition-colors ${
+          isCurrent ? "bg-green-500/10" : "hover:bg-white/5"
+        }`}
+      >
+        <div className="relative w-11 h-11 shrink-0 rounded-md overflow-hidden bg-white/10">
+          {t.image && <img src={t.image} alt={t.name} className="w-full h-full object-cover" />}
+          <button
+            onClick={() => (isCurrent ? control(isPlayingThis ? "pause" : "play") : playTrack(t))}
+            title="Play on selected device"
+            className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {isPlayingThis ? (
+              <LuPause className="text-white" size={16} />
+            ) : (
+              <LuPlay className="text-white ml-0.5" size={16} />
+            )}
+          </button>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm font-medium truncate ${isCurrent ? "text-green-300" : "text-white"}`}>
+            {t.name}
+          </p>
+          <p className="text-neutral-400 text-xs truncate">{t.artists}</p>
+        </div>
+        {t.url && (
+          <a
+            href={t.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 text-green-500 hover:text-green-400 transition-colors"
+            title="Open in Spotify"
+          >
+            <BsSpotify size={18} />
+          </a>
+        )}
+      </div>
+    );
+  };
+
   const devicePicker = (
     <div className="relative" ref={deviceMenuRef}>
       <button
@@ -384,13 +507,32 @@ const SpotifyContent = () => {
       </button>
 
       {deviceMenuOpen && (
-        <div className="absolute right-0 mt-2 w-64 z-50 rounded-xl bg-neutral-900 border border-white/15 shadow-xl overflow-hidden">
-          <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
-            Play on device
-          </p>
-          {devices.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-neutral-500">
-              No devices found. Open Spotify on a phone, computer, or speaker, then refresh.
+        <div className="absolute right-0 mt-2 w-72 z-50 rounded-xl bg-neutral-900 border border-white/15 shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between px-3 pt-2 pb-1">
+            <p className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
+              Play on device
+            </p>
+            <button
+              onClick={() => loadDevices()}
+              className="text-[11px] text-green-400 hover:text-green-300 transition-colors"
+            >
+              {devicesLoading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+
+          {devicesError === "scope" ? (
+            <p className="px-3 py-3 text-xs text-amber-300">
+              Playback permission is missing. Click <span className="font-semibold">Disconnect</span>{" "}
+              then reconnect Spotify to grant device control.
+            </p>
+          ) : devicesError === "error" ? (
+            <p className="px-3 py-3 text-xs text-red-300">
+              Couldn&apos;t load devices. Try Refresh.
+            </p>
+          ) : devices.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-neutral-500 leading-relaxed">
+              No devices found. Open the Spotify app (same account you linked), play/pause once to
+              wake it, then hit Refresh.
             </p>
           ) : (
             devices.map((d) => (
@@ -461,101 +603,103 @@ const SpotifyContent = () => {
 
       {/* Now playing remotely bar */}
       {playback?.active && playback.track && (
-        <div className="relative flex items-center gap-4 rounded-2xl border border-green-500/20 bg-green-500/5 p-4">
-          <span className="absolute top-3 right-4 inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-300">
+        <div className="flex flex-col gap-3 rounded-2xl border border-green-500/20 bg-green-500/5 p-4">
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-green-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-300">
             <MdCast size={13} /> Playing remotely
           </span>
 
-          <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white/10">
-            {playback.track.image && (
-              <img src={playback.track.image} alt={playback.track.name} className="w-full h-full object-cover" />
-            )}
-          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white/10">
+              {playback.track.image && (
+                <img src={playback.track.image} alt={playback.track.name} className="w-full h-full object-cover" />
+              )}
+            </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-sm font-semibold truncate">{playback.track.name}</p>
-            <p className="text-neutral-400 text-xs truncate">{playback.track.artists}</p>
-            {playback.device && (
-              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-green-300/90">
-                {deviceIcon(playback.device.type, 13)}
-                on {playback.device.name}
-              </p>
-            )}
-            <div className="mt-2 flex items-center gap-2">
-              <span className="w-8 text-right text-[10px] tabular-nums text-neutral-400">
-                {fmtMs(playback.progressMs)}
-              </span>
-              <div
-                role="slider"
-                aria-label="Seek"
-                aria-valuenow={Math.round(playback.progressMs / 1000)}
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-                  seekTo(ratio * playback.durationMs);
-                }}
-                className="group/seek relative h-1.5 flex-1 rounded-full bg-white/15 overflow-hidden cursor-pointer hover:h-2 transition-[height]"
-              >
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-sm font-semibold truncate">{playback.track.name}</p>
+              <p className="text-neutral-400 text-xs truncate">{playback.track.artists}</p>
+              {playback.device && (
+                <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-green-300/90">
+                  {deviceIcon(playback.device.type, 13)}
+                  on {playback.device.name}
+                </p>
+              )}
+              <div className="mt-2 flex items-center gap-2">
+                <span className="w-8 text-right text-[10px] tabular-nums text-neutral-400">
+                  {fmtMs(playback.progressMs)}
+                </span>
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-green-400 group-hover/seek:bg-green-300 transition-[width] duration-1000 ease-linear"
-                  style={{
-                    width: `${
-                      playback.durationMs
-                        ? Math.min(100, (playback.progressMs / playback.durationMs) * 100)
-                        : 0
-                    }%`,
+                  role="slider"
+                  aria-label="Seek"
+                  aria-valuenow={Math.round(playback.progressMs / 1000)}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+                    seekTo(ratio * playback.durationMs);
                   }}
-                />
-              </div>
-              <span className="w-8 text-[10px] tabular-nums text-neutral-400">
-                {fmtMs(playback.durationMs)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => control("previous")}
-                className="text-neutral-300 hover:text-white transition-colors"
-                aria-label="Previous"
-              >
-                <LuSkipBack size={20} />
-              </button>
-              <button
-                onClick={() => control(playback.isPlaying ? "pause" : "play")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform"
-                aria-label={playback.isPlaying ? "Pause" : "Play"}
-              >
-                {playback.isPlaying ? <LuPause size={18} /> : <LuPlay size={18} className="ml-0.5" />}
-              </button>
-              <button
-                onClick={() => control("next")}
-                className="text-neutral-300 hover:text-white transition-colors"
-                aria-label="Next"
-              >
-                <LuSkipForward size={20} />
-              </button>
-            </div>
-            {typeof playback.device?.volumePercent === "number" && (
-              <div className="flex w-32 items-center gap-2">
-                <button
-                  onClick={() => setDeviceVolume(playback.device!.volumePercent! > 0 ? 0 : 60)}
-                  className="shrink-0 text-neutral-400 hover:text-white transition-colors"
-                  aria-label={playback.device.volumePercent > 0 ? "Mute" : "Unmute"}
+                  className="group/seek relative h-1.5 flex-1 rounded-full bg-white/15 overflow-hidden cursor-pointer hover:h-2 transition-[height]"
                 >
-                  {playback.device.volumePercent > 0 ? (
-                    <HiSpeakerWave size={16} />
-                  ) : (
-                    <HiSpeakerXMark size={16} />
-                  )}
-                </button>
-                <Slider
-                  value={(playback.device.volumePercent ?? 0) / 100}
-                  onChange={(v) => setDeviceVolume(Math.round(v * 100))}
-                />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-green-400 group-hover/seek:bg-green-300"
+                    style={{
+                      width: `${
+                        playback.durationMs
+                          ? Math.min(100, (playback.progressMs / playback.durationMs) * 100)
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <span className="w-8 text-[10px] tabular-nums text-neutral-400">
+                  {fmtMs(playback.durationMs)}
+                </span>
               </div>
-            )}
+            </div>
+
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => control("previous")}
+                  className="text-neutral-300 hover:text-white transition-colors"
+                  aria-label="Previous"
+                >
+                  <LuSkipBack size={20} />
+                </button>
+                <button
+                  onClick={() => control(playback.isPlaying ? "pause" : "play")}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform"
+                  aria-label={playback.isPlaying ? "Pause" : "Play"}
+                >
+                  {playback.isPlaying ? <LuPause size={18} /> : <LuPlay size={18} className="ml-0.5" />}
+                </button>
+                <button
+                  onClick={() => control("next")}
+                  className="text-neutral-300 hover:text-white transition-colors"
+                  aria-label="Next"
+                >
+                  <LuSkipForward size={20} />
+                </button>
+              </div>
+              {typeof playback.device?.volumePercent === "number" && (
+                <div className="flex w-32 items-center gap-2">
+                  <button
+                    onClick={() => setDeviceVolume(playback.device!.volumePercent! > 0 ? 0 : 60)}
+                    className="shrink-0 text-neutral-400 hover:text-white transition-colors"
+                    aria-label={playback.device.volumePercent > 0 ? "Mute" : "Unmute"}
+                  >
+                    {playback.device.volumePercent > 0 ? (
+                      <HiSpeakerWave size={16} />
+                    ) : (
+                      <HiSpeakerXMark size={16} />
+                    )}
+                  </button>
+                  <Slider
+                    value={(playback.device.volumePercent ?? 0) / 100}
+                    onChange={(v) => setDeviceVolume(Math.round(v * 100))}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -576,83 +720,114 @@ const SpotifyContent = () => {
 
         {tracks.length > 0 && (
           <div className="flex flex-col gap-1">
-            {tracks.map((t) => {
-              const isCurrent = currentTrackId === t.id;
-              const isPlayingThis = isCurrent && playback?.isPlaying;
-              return (
-                <div
-                  key={t.id}
-                  className={`group flex items-center gap-3 p-2 rounded-xl transition-colors ${
-                    isCurrent ? "bg-green-500/10" : "hover:bg-white/5"
-                  }`}
-                >
-                  <div className="relative w-11 h-11 shrink-0 rounded-md overflow-hidden bg-white/10">
-                    {t.image && <img src={t.image} alt={t.name} className="w-full h-full object-cover" />}
-                    <button
-                      onClick={() =>
-                        isCurrent ? control(isPlayingThis ? "pause" : "play") : playTrack(t)
-                      }
-                      title="Play on selected device"
-                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      {isPlayingThis ? (
-                        <LuPause className="text-white" size={16} />
-                      ) : (
-                        <LuPlay className="text-white ml-0.5" size={16} />
-                      )}
-                    </button>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-medium truncate ${isCurrent ? "text-green-300" : "text-white"}`}>
-                      {t.name}
-                    </p>
-                    <p className="text-neutral-400 text-xs truncate">{t.artists}</p>
-                  </div>
-                  {t.url && (
-                    <a
-                      href={t.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 text-green-500 hover:text-green-400 transition-colors"
-                      title="Open in Spotify"
-                    >
-                      <BsSpotify size={18} />
-                    </a>
-                  )}
-                </div>
-              );
-            })}
+            {tracks.map((t) => trackRow(t, "search-"))}
           </div>
         )}
       </div>
+
+      {/* Recently played */}
+      {!query && recent.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-white text-xl font-bold">Recently played</h2>
+          <div className="flex flex-col gap-1">
+            {recent.map((t) => trackRow(t, "recent-"))}
+          </div>
+        </div>
+      )}
+
+      {/* Saved albums */}
+      {albums.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-white text-xl font-bold">Saved albums</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-5">
+            {albums.map((a) => (
+              <div
+                key={a.id}
+                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10 shadow-lg shadow-black/30">
+                  {a.image ? (
+                    <img
+                      src={a.image}
+                      alt={a.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <BsSpotify className="text-green-500/40" size={36} />
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <button
+                    onClick={() => playContext(a.uri, a.name)}
+                    title="Play album on selected device"
+                    aria-label={`Play ${a.name}`}
+                    className="absolute bottom-2 right-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-black shadow-lg shadow-black/40 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-green-400 transition-all duration-300"
+                  >
+                    <LuPlay size={22} className="ml-0.5" />
+                  </button>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{a.name}</p>
+                  <p className="text-neutral-400 text-xs truncate">{a.artists}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Playlists */}
       {playlists.length > 0 && (
         <div className="flex flex-col gap-4">
           <h2 className="text-white text-xl font-bold">Your Spotify playlists</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-5">
             {playlists.map((p) => (
-              <a
+              <div
                 key={p.id}
-                href={p.url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col gap-2 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all"
+                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10">
+                <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10 shadow-lg shadow-black/30">
                   {p.image ? (
-                    <img src={p.image} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <BsSpotify className="text-green-500/50" size={32} />
+                      <BsSpotify className="text-green-500/40" size={36} />
                     </div>
                   )}
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <button
+                    onClick={() => playContext(`spotify:playlist:${p.id}`, p.name)}
+                    title="Play playlist on selected device"
+                    aria-label={`Play ${p.name}`}
+                    className="absolute bottom-2 right-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-black shadow-lg shadow-black/40 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-green-400 transition-all duration-300"
+                  >
+                    <LuPlay size={22} className="ml-0.5" />
+                  </button>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-semibold truncate">{p.name}</p>
-                  <p className="text-neutral-400 text-xs truncate">{p.tracks} tracks</p>
+                <div className="flex items-start justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-semibold truncate">{p.name}</p>
+                    <p className="text-neutral-400 text-xs truncate">{p.tracks} tracks</p>
+                  </div>
+                  {p.url && (
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 mt-0.5 text-neutral-500 hover:text-green-400 transition-colors"
+                      title="Open in Spotify"
+                    >
+                      <BsSpotify size={16} />
+                    </a>
+                  )}
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </div>

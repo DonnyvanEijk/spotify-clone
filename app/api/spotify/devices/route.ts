@@ -11,7 +11,11 @@ export async function GET() {
 
   const res = await spotifyFetch(user.id, "/me/player/devices");
   if (!res) return NextResponse.json({ error: "not_connected" }, { status: 401 });
-  if (!res.ok) return NextResponse.json({ error: "spotify_error" }, { status: res.status });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    console.error(`Spotify /me/player/devices ${res.status}: ${detail}`);
+    return NextResponse.json({ error: "spotify_error" }, { status: res.status });
+  }
 
   const data = await res.json();
   const devices = (data.devices ?? []).map((d: any) => ({
