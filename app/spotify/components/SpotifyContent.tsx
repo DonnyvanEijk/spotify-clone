@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BsSpotify } from "react-icons/bs";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 import { LuPlay, LuPause, LuSkipBack, LuSkipForward } from "react-icons/lu";
@@ -95,6 +96,7 @@ function fmtMs(ms: number) {
 }
 
 const SpotifyContent = () => {
+  const router = useRouter();
   const [status, setStatus] = useState<Status | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -608,7 +610,8 @@ const SpotifyContent = () => {
             <MdCast size={13} /> Playing remotely
           </span>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0 sm:flex-1">
             <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white/10">
               {playback.track.image && (
                 <img src={playback.track.image} alt={playback.track.name} className="w-full h-full object-cover" />
@@ -655,8 +658,9 @@ const SpotifyContent = () => {
                 </span>
               </div>
             </div>
+            </div>
 
-            <div className="flex flex-col items-center gap-2 shrink-0">
+            <div className="flex flex-col items-center gap-2 shrink-0 sm:pl-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => control("previous")}
@@ -729,8 +733,40 @@ const SpotifyContent = () => {
       {!query && recent.length > 0 && (
         <div className="flex flex-col gap-4">
           <h2 className="text-white text-xl font-bold">Recently played</h2>
-          <div className="flex flex-col gap-1">
-            {recent.map((t) => trackRow(t, "recent-"))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-5">
+            {recent.slice(0, 7).map((t) => (
+              <div
+                key={`recent-${t.id}`}
+                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10 shadow-lg shadow-black/30">
+                  {t.image ? (
+                    <img
+                      src={t.image}
+                      alt={t.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <BsSpotify className="text-green-500/40" size={36} />
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <button
+                    onClick={() => playTrack(t)}
+                    title="Play on selected device"
+                    aria-label={`Play ${t.name}`}
+                    className="absolute bottom-2 right-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-black shadow-lg shadow-black/40 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-green-400 transition-all duration-300"
+                  >
+                    <LuPlay size={22} className="ml-0.5" />
+                  </button>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{t.name}</p>
+                  <p className="text-neutral-400 text-xs truncate">{t.artists}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -743,7 +779,8 @@ const SpotifyContent = () => {
             {albums.map((a) => (
               <div
                 key={a.id}
-                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
+                onClick={() => router.push(`/spotify/album/${a.id}`)}
+                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               >
                 <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10 shadow-lg shadow-black/30">
                   {a.image ? (
@@ -759,7 +796,10 @@ const SpotifyContent = () => {
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <button
-                    onClick={() => playContext(a.uri, a.name)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playContext(a.uri, a.name);
+                    }}
                     title="Play album on selected device"
                     aria-label={`Play ${a.name}`}
                     className="absolute bottom-2 right-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-black shadow-lg shadow-black/40 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-green-400 transition-all duration-300"
@@ -785,7 +825,8 @@ const SpotifyContent = () => {
             {playlists.map((p) => (
               <div
                 key={p.id}
-                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
+                onClick={() => router.push(`/spotify/playlist/${p.id}`)}
+                className="group relative flex flex-col gap-3 p-3 rounded-2xl bg-white/3 border border-white/10 hover:bg-white/8 hover:border-white/20 hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               >
                 <div className="relative w-full pt-[100%] rounded-xl overflow-hidden bg-white/10 shadow-lg shadow-black/30">
                   {p.image ? (
@@ -801,7 +842,10 @@ const SpotifyContent = () => {
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <button
-                    onClick={() => playContext(`spotify:playlist:${p.id}`, p.name)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playContext(`spotify:playlist:${p.id}`, p.name);
+                    }}
                     title="Play playlist on selected device"
                     aria-label={`Play ${p.name}`}
                     className="absolute bottom-2 right-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-black shadow-lg shadow-black/40 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 hover:bg-green-400 transition-all duration-300"
